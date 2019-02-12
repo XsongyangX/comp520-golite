@@ -1,6 +1,4 @@
-# Assignment Template
-
-To organize your assignments and project for class, please follow the skeleton provided in this repository
+# Go Project COMP 520
 
 We provide 3 scripts for convenience and two directories for organization:
 
