@@ -1,7 +1,7 @@
 package main
 
 func main() {
-	// missing i/o
+	// there is no functionality for reading from stdin
 	print(fib(10))
 }
 
