@@ -15,5 +15,7 @@ Comments found in both files provide more details as to the requirements. Since 
 
 ## Milestone 1
 Assignment description: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone1.pdf
+
 Specification: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone1_Specifications.pdf
+
 Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone1_Rubric.pdf
