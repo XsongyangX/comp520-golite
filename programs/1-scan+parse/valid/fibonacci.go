@@ -1,3 +1,4 @@
+/* Computes the fibonacci of 10 */
 package main
 
 func main() {
