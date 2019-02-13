@@ -20,14 +20,8 @@ int main(int argc, char** argv)
     if(freopen(currentFile, "r", stdin) != NULL)
     {
         
-        // if(strncmp(*(argv+1), "parse", 5) == 0)
-        // {
-        //     isToken = 0;
-        //     typecheck = 0;
-        //     yyparse();
-        //     printf("OK\n");
-        // }
-        else if(strncmp(*(argv+1), "scan", 4) == 0)
+        
+        if(strncmp(*(argv+1), "scan", 4) == 0)
         {
             isToken = 0;
             typecheck = 0;
@@ -39,6 +33,13 @@ int main(int argc, char** argv)
             typecheck = 0;
             while(yylex()){};
         }
+        // else if(strncmp(*(argv+1), "parse", 5) == 0)
+        // {
+        //     isToken = 0;
+        //     typecheck = 0;
+        //     yyparse();
+        //     printf("OK\n");
+        // }
         // else if (strncmp(*(argv+1), "pretty", 6) == 0){
         //     isToken = 0;
         //     typecheck = 0;
