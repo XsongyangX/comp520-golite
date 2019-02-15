@@ -1,5 +1,5 @@
 %{
-#include "parser.tab.h"
+#include "y.tab.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -16,12 +16,15 @@ int requiresIns = 0;
 %option noinput
 %option nounput
 
+/* Helper */
+PUNCTUATION [?<>+-=,^$|&]
+
 %%
-//BLANK SPACES
 [ \t\r\n]+ {if(requiresIns){ requiresIns = 0; return tSEMICOLON;}}
 
-//OPERATORS
-"+" {if(isToken){printf("tPLUS\n");} return tPLUS;}
+
+"+" { // OPERATORS
+	if(isToken){printf("tPLUS\n");} return tPLUS;}
 "-" {if(isToken){printf("tMINUS\n");} return tMINUS;}
 "*" {if(isToken){printf("tTIMES\n");} return tTIMES;}
 "/" {if(isToken){printf("tDIV\n");} return tDIV;}
@@ -68,8 +71,9 @@ int requiresIns = 0;
 "," {if(isToken){printf("tCOMMA\n");} return tCOMMA;} 
 "." {if(isToken){printf("tPERIOD\n");} return tPERIOD;} 
 
-//KEYWORDS
-"break" {if(isToken){printf("tBREAK\n");} requiresIns = 1; return tBREAK;}
+
+"break" { // KEYWORDS
+	if(isToken){printf("tBREAK\n");} requiresIns = 1; return tBREAK;}
 "case" {if(isToken){printf("tCASE\n");} return tCASE;}
 "chan" {if(isToken){printf("tCHAN\n");} return tCHAN;}
 "const" {if(isToken){printf("tCONST\n");} return tCONST;}
@@ -95,12 +99,15 @@ int requiresIns = 0;
 "type" {if(isToken){printf("tTYPE\n");} return tTYPE;}
 "var" {if(isToken){printf("tVAR\n");} return tVAR;}
 
-//COMMENTS
-\/\/.* {//line comments}
-\/\*.*\*\/ {//block comments}
 
-//INT LITERALS
-0|([1-9][0-9]*) {//DECIMAL VALUE
+"//".* {//line comments
+	}
+"/*" .* "*/" {//block comments
+	}
+
+
+0|([1-9][0-9]*) { // INT
+	//DECIMAL VALUE
     yylval.intval = atoi(yytext);
     if(isToken){
         fprintf(stdout, "tINTDECVAL(%s)\n", yytext);
@@ -116,7 +123,7 @@ int requiresIns = 0;
     requiresIns = 1; 
     return tINTOCTVAL;
 }
-0(x|X)[0-9a-f]*{//HEXADECIMAL VALUE
+0(x|X)[0-9a-f]* {//HEXADECIMAL VALUE
     yylval.strval = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tINTHEXVAL(%s)\n", yytext);
@@ -125,8 +132,9 @@ int requiresIns = 0;
     return tINTHEXVAL;
 }
 
-//FLOATS
-[1-9][0-9]*.[0-9]*{//LEFT of period
+
+[1-9][0-9]*.[0-9]* { // FLOAT
+	//LEFT of period
     yylval.floatval = atof(yytext);
     if(isToken){
         fprintf(stdout, "tFLOATVAL(%s)\n", yytext);
@@ -134,7 +142,7 @@ int requiresIns = 0;
     requiresIns = 1; 
     return tFLOATVAL;
 }
-([1-9][0-9]*)*.[0-9][0-9]*{//RIGHT of period
+([1-9][0-9]*)*.[0-9][0-9]* {//RIGHT of period
     yylval.floatval = atof(yytext);
     if(isToken){
         fprintf(stdout, "tFLOATVAL(%s)\n", yytext);
@@ -143,8 +151,9 @@ int requiresIns = 0;
     return tFLOATVAL;
 }
 
-//RUNES (CHARS)
-'[ a-zA-Z0-9~@#%\*/_`.:;!]|"?"|"<"|">"|"+"|"-"|"="|","|"^"|"$"|"|"|"&"|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')'{
+
+[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' 
+{
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRUNEVAL(%s)\n", yytext);
@@ -153,8 +162,9 @@ int requiresIns = 0;
     return tRUNEVAL;
 }
 
-//STRINGS
-\"([ a-zA-Z0-9~@#%\*/'_`.:;!]|"?"|"<"|">"|"+"|"-"|"="|","|"^"|"$"|"|"|"&"|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\"    {
+
+\"([ a-zA-Z0-9~@#%\*/'_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\"
+{
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tSTRINGVAL(%s)\n", yytext);
@@ -162,7 +172,9 @@ int requiresIns = 0;
     requiresIns = 1; 
     return tSTRINGVAL;
 }
-`([ a-zA-Z0-9~@#%\*/'_.:;!]|"?"|"<"|">"|"+"|"-"|"="|","|"^"|"$"|"|"|"&"|\\|\{|\}|\[|\]|\(|\)|(\"))*`    {
+
+`([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*`    
+{
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRAWSTRINGVAL(%s)\n", yytext);
@@ -173,9 +185,11 @@ int requiresIns = 0;
 }
 
 
-//ERROR
+
 . {
     fprintf(stderr, "Error: (line %d) unexpected character '%s'\n", yylineno, yytext);
     exit(1);
 
 %%
+
+int isToken;
