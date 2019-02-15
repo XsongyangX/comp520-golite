@@ -1,8 +1,10 @@
+/* Computes the fibonacci of 10 */
 package main
 
 func main() {
-	// missing i/o
-	print(fib(10))
+	// there is no functionality for reading from stdin
+	println("Prints fibonacci of 10")
+	println(fib(10))
 }
 
 func fib(n int) int {
