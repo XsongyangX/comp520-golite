@@ -3,7 +3,8 @@ package main
 
 func main() {
 	// there is no functionality for reading from stdin
-	print(fib(10))
+	println("Prints fibonacci of 10")
+	println(fib(10))
 }
 
 func fib(n int) int {
