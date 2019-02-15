@@ -28,4 +28,5 @@ fi
 #
 # You MUST replace the following command with the command for invoking your compiler
 
-./src/minic "$1" < "$2"
+filename="${2%.*}"
+./src/minic "$1" "$filename" < "$2"
