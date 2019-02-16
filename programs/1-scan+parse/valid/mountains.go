@@ -1,10 +1,6 @@
 /* Prints ASCII art of mountains */
 package main
 
-import (
-	"fmt"
-)
-
 type Mountain struct {
 	top    string
 	base   string
