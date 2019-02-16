@@ -1,0 +1,7 @@
+*.swp
+.nfs*
+lex.yy.c
+minic
+y.*
+*.o
+*.gch
