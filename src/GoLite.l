@@ -177,5 +177,5 @@ int requiresIns = 0;
 . {
     fprintf(stderr, "Error: (line %d) unexpected character '%s'\n", yylineno, yytext);
     exit(1);
-
+}
 %%
