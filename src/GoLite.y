@@ -47,25 +47,46 @@ void yyerror(const char *s) {
  * yylval union] and an identifier. Multiple tokens can eb defined per directive by using a list
  * of identifiers separated by spaces.
  */
-%token <intval> tINTVAL
-%token <floatval> tFLOATVAL
-%token <strval> tSTRVAL
-%token <boolval> tBOOLVAL
-%token <identifier> tIDENTIFIER
+%token tINT
+%token tFLOAT
+%token tSTRING
+%token tBOOL
+%token tRUNE
+%token tINTLITERAL
+%token tFLOATLITERAL
+%token tSTRINGLITERAL
+%token tBOOLLITERAL
+%token tRUNELITERAL
+%token tIDENTIFIER
+%token tTYPE
+%token tSTRUCT
+%token tFUNC
 %token tGEQ
 %token tLEQ
 %token tNEQ
 %token tEQ
+%token tLSHIFT
+%token tRSHIFT
+%token tANDNOT
+%token tDOUBLEPLUS
+%token tDOUBLEMINUS
 %token tVAR
 %token tPRINT
+%token tPRINTLN
+%token tBREAK
+%token tCONTINUE
+%token tAPPEND
+%token tLEN
+%token tCAP
 %token tREAD
 %token tWHILE
 %token tIF
 %token tELSE
-%token tINT
-%token tSTR
-%token tBOOL
-%token tFLOAT
+%token tFOR
+%token tSWITCH
+%token tCASE
+%token tDEFAULT
+%token tRETURN
 %token UMINUS
 
 /* Precedence directives resolve grammar ambiguities by breaking ties between shift/reduce
@@ -99,14 +120,13 @@ void yyerror(const char *s) {
  * same LHS may be joined together and separated with a pipe.
  */
 %% 
-prgrm           : tPACKAGE tIDENTIFIER codeblock
+
+/* Represents the entire program. Makes sure there is only one package dec */
+prgrm           : tPACKAGE tIDENTIFIER stmts
                 ;
 
-
-codeblock       : codeblock decs
-                | codeblock stmts
-                ;
-
+/* Expressions of all kinds. Expands to trm for precedence reasons. Other predecence
+is to be solved using directives. */
 exp             : '+' exp
                 | '-' exp
                 | '!' exp
@@ -129,6 +149,7 @@ exp             : '+' exp
                 | trm
                 ;
 
+/* Expansion of exp for precedence. Expands to ftr */
 trm             : trm '*' ftr
                 | trm '/' ftr
                 | trm '%' ftr
@@ -139,6 +160,8 @@ trm             : trm '*' ftr
                 | ftr
                 ;
 
+/* The final expansion of exp. Can expand back to exp with parentheses. Also handles literals
+ and function calls. */
 ftr             : '(' exp ')'
                 | tIDENTIFIER
                 | tINTLITERAL
@@ -149,53 +172,66 @@ ftr             : '(' exp ')'
                 | funccall
                 ;
 
-dec             : tVAR idents type
-                | tVAR decexps
+/* variable declarations */
+dec             : tVAR idents type ';'
+                | tVAR decexps ';'
                 | tVAR '(' decdistrubted ')'
+                | typedec ';'
                 ;
 
+/* an arbitrily long list of expressions, separated by commas */
 exps            : exps ',' exp
                 | exp
 
+/* an arbitrily long list of identifiers, separated by commas */
 idents          : idents ',' tIDENTIFIER
                 | tIDENTIFIER
                 ;
 
-manyidents      : manyidents idents
+/* a block of lists of identifiers. Used in the distributed var () type statements. */
+blockidents     : blockidents idents
 
+/* A list of comma-separated identifiers and an equally long list of
+comma-separated expressions with an equals and possibly a type in the middle.
+This kind of structure is required to ensure that the number of idents
+and exps is the same, but it might be hard to put into the AST... */ 
 decexps         : tIDENTIFIER ',' decexps ',' exp
                 | tIDENTIFIER '=' exp
                 | tIDENTIFIER type '=' exp
                 ;
 
+/* A block of things put into a distributed var () statement */
 decdistributed  : decdistributed idents type
                 | decdistributed decexps
                 | idents type
                 | decexps
                 ;
 
-typedecs        : typedecs typedec
-                | typedec
-                ;
-
+/* Used for declaring user-defined types */
 typedec         : tTYPE tIDENTIFIER type
-                | tTYPE tIDENTIFIER tSTRUCT '{' manyidents '}'
+                | tTYPE tIDENTIFIER tSTRUCT '{' blockidents '}'
                 | tTYPE '(' typedistributed ')'
                 ;
 
+/* Used for declaring user defined types with the distributed type () syntax */
 typedistributed : typedistributed tIDENTIFIER type
-                | typedistributed tIDENTIFIER tSTRUCT '{' manyidents '}'
+                | typedistributed tIDENTIFIER tSTRUCT '{' blockidents '}'
                 | tIDENTIFIER type
-                | tIDENTIFIER tSTRUCT '{' manyidents '}'
+                | tIDENTIFIER tSTRUCT '{' blockidents '}'
                 ;
 
-funcdef         : tFUNC tIDENTIFIER '(' typelist ')' '{' codeblock returnstmt '}'
+/* function definitions */
+funcdef         : tFUNC tIDENTIFIER '(' typelist ')' '{' stmts returnstmt '}'
                 ;
 
-typelist        : typelist tIDENTIFIER type
-                | typelist idents type
+/* Defines the syntax for types in function headers */
+typelist        : typelist ',' tIDENTIFIER type
+                | typelist ',' idents type
+                | tIDENTIFIER type
+                | idents type
                 ;
 
+/* Defines the various kinds of types that can be used. Should structs be in here...? */
 type            : tINT
                 | tFLOAT
                 | tBOOL
@@ -213,6 +249,9 @@ type            : tINT
                 | '[' tINTLITERAL ']' tSTRING
                 ;
 
+
+/* Defines the kinds of statements that can be used in any context 
+A potential issue is having returnstmt in here. Should you be able to return from anywhere?*/
 stmt            : simplestmt
                 | tPRINT '(' exps ')' ';'
                 | tPRINTLN '(' exps ')' ';'
@@ -221,8 +260,11 @@ stmt            : simplestmt
                 | ifstmt
                 | switchstmt
                 | forstmt
+                | returnstmt
                 ;
 
+/* A subset of statements that can be used in certain extra contexts,
+such as before the conditional expressions of if statements */
 simplestmt      : funccall ';' 
                 | tIDENTIFIER tDOUBLEMINUS ';'
                 | tIDENTIFIER tDOUBLEPLUS ';'
@@ -230,33 +272,41 @@ simplestmt      : funccall ';'
                 |
                 ;
 
-ifstmt          : tIF exp '{' codeblock '}'
-                | tIF simplestmt exp '{' codeblock '}'
-                | tIF exp '{' codeblock '}' tELSE '{' codeblock '}'
-                | tIF simplestmt exp '{' codeblock '}' tELSE '{' codeblock '}'
-                | tIF exp '{' codeblock '}' tELSE ifstmt
-                | tIF simplestmt exp '{' codeblock '}' tELSE ifstmt
+/* Defines all kinds of if statement, with or without a simplestmt before the conditional */
+ifstmt          : tIF exp '{' stmts '}'
+                | tIF simplestmt exp '{' stmts '}'
+                | tIF exp '{' stmts '}' tELSE '{' stmts '}'
+                | tIF simplestmt exp '{' stmts '}' tELSE '{' stmts '}'
+                | tIF exp '{' stmts '}' tELSE ifstmt
+                | tIF simplestmt exp '{' stmts '}' tELSE ifstmt
                 ;
 
+/* Defines switch statements */
 switchstmt      : tSWITCH '{' switchbody '}'
                 | tSWITCH simplestmt '{' switchbody '}'
                 | tSWITCH exp '{' switchbody '}'
                 | tSWITCH simplestmt exp '{' switchbody '}'
                 ;
 
+/* Defines the body of a switch statement */
 switchbody      : switchbody tCASE exps ':' stmts
                 | switchbody tDEFAULT ':' stmts
                 | tCASE exps ':' stmts
                 | tDEFAULT exps ':' stmts
                 ;
 
-forstmt         : tFOR '{' codeblock '}'
-                | tFOR exp '{' codeblock '}'
-                | tFOR simplestmt exp simplestmt '{' codeblock '}'
+/* Defines all three supported kinds of support statements */
+forstmt         : tFOR '{' stmts '}'
+                | tFOR exp '{' stmts '}'
+                | tFOR simplestmt exp simplestmt '{' stmts '}'
 
+/* Defines return statements */
 returnstmt      : tRETURN ';'
                 | tRETURN exp ';'
 
+/* Defines the kind of valid assignment expressions.
+Again, we need to account for an equal number of idents and exps on either side.
+We also need to account for the operand-equals construction. */
 asnexps         : tIDENTIFIER ',' asnexps ',' exp
                 | tIDENTIFIER '=' exp
                 | tIDENTIFIER ':=' exp
