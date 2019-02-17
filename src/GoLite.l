@@ -101,10 +101,9 @@ PUNCTUATION [?<>+-=,^$|&]
 "var" {if(isToken){printf("tVAR\n");} return tVAR;}
 
 
-"//".* {//line comments
-	}
-"/*" .* "*/" {//block comments
-	}
+("//".*) {/*line comments*/}
+	
+("/*".*"*/") {/*block comments*/}
 
 
 0|([1-9][0-9]*) { // INT
@@ -153,8 +152,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 
-[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' 
-{//RUNE (CHAR)
+[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' {//RUNE (CHAR)
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRUNEVAL(%s)\n", yytext);
@@ -164,8 +162,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 
-\"([ a-zA-Z0-9~@#%\*/'_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\"
-{//STRING
+\"([ a-zA-Z0-9~@#%\*/'_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\" {//STRING
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tSTRINGVAL(%s)\n", yytext);
@@ -174,8 +171,7 @@ PUNCTUATION [?<>+-=,^$|&]
     return tSTRINGVAL;
 }
 
-`([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*`    
-{//RAW STRING
+`([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*` {//RAW STRING
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRAWSTRINGVAL(%s)\n", yytext);
