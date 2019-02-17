@@ -25,14 +25,14 @@ PUNCTUATION [?<>+-=,^$|&]
 "\n" {if(requiresIns){ requiresIns = 0; return tSEMICOLON;}}
 
 "+" { // OPERATORS
-	if(isToken){printf("tPLUS\n");} return tPLUS;}
-"-" {if(isToken){printf("tMINUS\n");} return tMINUS;}
-"*" {if(isToken){printf("tTIMES\n");} return tTIMES;}
-"/" {if(isToken){printf("tDIV\n");} return tDIV;}
-"%" {if(isToken){printf("tMODULO\n");} return tMODULO;}
-"&" {if(isToken){printf("tAMPERSAND\n");} return tAMPERSAND;}
-"|" {if(isToken){printf("tVERTBAR\n");} return tVERTBAR;}
-"^" {if(isToken){printf("tPOWER\n");} return tPOWER;}
+	if(isToken){printf("tPLUS\n");} return '+';}
+"-" {if(isToken){printf("tMINUS\n");} return '-';}
+"*" {if(isToken){printf("tTIMES\n");} return '*';}
+"/" {if(isToken){printf("tDIV\n");} return '/';}
+"%" {if(isToken){printf("tMODULO\n");} return '%';}
+"&" {if(isToken){printf("tAMPERSAND\n");} return '&';}
+"|" {if(isToken){printf("tVERTBAR\n");} return '|';}
+"^" {if(isToken){printf("tPOWER\n");} return '^';}
 "<<" {if(isToken){printf("tLEFTSHIFT\n");} return tLEFTSHIFT;}
 ">>" {if(isToken){printf("tRIGHTSHIFT\n");} return tRIGHTSHIFT;}
 "&^" {if(isToken){printf("tAMPPOWER\n");} return tAMPPOWER;}
@@ -52,25 +52,25 @@ PUNCTUATION [?<>+-=,^$|&]
 "++" {if(isToken){printf("tINCREMENT\n");} requiresIns = 1; return tINCREMENT;}
 "--" {if(isToken){printf("tDECREMENT\n");} requiresIns = 1; return tDECREMENT;}
 "==" {if(isToken){printf("tEQUALS\n");} return tEQUALS;} 
-"<" {if(isToken){printf("tLESS\n");} return tLESS;}
-">" {if(isToken){printf("tGREATER\n");} return tGREATER;}
-"=" {if(isToken){printf("tASSIGN\n");} return tASSIGN;}
-"!" {if(isToken){printf("tBANG\n");} return tBANG;} 
+"<" {if(isToken){printf("tLESS\n");} return '<';}
+">" {if(isToken){printf("tGREATER\n");} return '>';}
+"=" {if(isToken){printf("tASSIGN\n");} return '=';}
+"!" {if(isToken){printf("tBANG\n");} return '!';} 
 "!=" {if(isToken){printf("tNOTEQUALS\n");} return tNOTEQUALS;} 
 "<=" {if(isToken){printf("tLESSEQUALS\n");} return tLESSEQUALS;} 
 ">=" {if(isToken){printf("tGREATEREQUALS\n");} return tGREATEREQUALS;} 
 ":=" {if(isToken){printf("tCOLONASSIGN\n");} return tCOLONASSIGN;} 
 "..." {if(isToken){printf("tDOTS\n");} return tDOTS;} 
-"(" {if(isToken){printf("tLEFTPAREN\n");} return tLEFTPAREN;}
-")" {if(isToken){printf("tRIGHTPAREN\n");} requiresIns = 1; return tRIGHTPAREN;}
-"{" {if(isToken){printf("tLEFTBRACE\n");} return tLEFTBRACE;}
-"}" {if(isToken){printf("tRIGHTBRACE\n");} requiresIns = 1; return tRIGHTBRACE;}
-"[" {if(isToken){printf("tLEFTBRACKET\n");} return tLEFTBRACKET;}
-"]" {if(isToken){printf("tRIGHTBRACKET\n");} requiresIns = 1; return tRIGHTBRACKET;}
-":" {if(isToken){printf("tCOLON\n");} return tCOLON;} 
-";" {if(isToken){printf("tSEMICOLON\n");} requiresIns = 0; return tSEMICOLON;} //remove marker for semi-colon insertion
-"," {if(isToken){printf("tCOMMA\n");} return tCOMMA;} 
-"." {if(isToken){printf("tPERIOD\n");} return tPERIOD;} 
+"(" {if(isToken){printf("tLEFTPAREN\n");} return '(';}
+")" {if(isToken){printf("tRIGHTPAREN\n");} requiresIns = 1; return ')';}
+"{" {if(isToken){printf("tLEFTBRACE\n");} return '{';}
+"}" {if(isToken){printf("tRIGHTBRACE\n");} requiresIns = 1; return '}';}
+"[" {if(isToken){printf("tLEFTBRACKET\n");} return '[';}
+"]" {if(isToken){printf("tRIGHTBRACKET\n");} requiresIns = 1; return ']';}
+":" {if(isToken){printf("tCOLON\n");} return ':';} 
+";" {if(isToken){printf("tSEMICOLON\n");} requiresIns = 0; return ';';} //remove marker for semi-colon insertion
+"," {if(isToken){printf("tCOMMA\n");} return ',';} 
+"." {if(isToken){printf("tPERIOD\n");} return '.';} 
 
 
 "break" { // KEYWORDS
