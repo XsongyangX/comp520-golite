@@ -1,5 +1,5 @@
 # Go Project COMP 520
-There a project task tab and wiki tab. Check them out!
+There's a project task tab and wiki tab. Check them out!
 
 We provide 3 scripts for convenience and two directories for organization:
 
