@@ -7,13 +7,6 @@ type Mountain struct {
 	height int
 }
 
-func main() {
-	println("Mountain")
-	var m Mountain = makeMountain("*", "&", 4)
-	print(paintMountain(m))
-
-}
-
 func makeMountain(top string, base string, height int) Mountain {
 	var m Mountain
 	m.top = top
@@ -45,4 +38,11 @@ func paintMountain(m Mountain) string {
 		art = art + "\n"
 	}
 	return art
+}
+
+func main() {
+	println("Mountain")
+	var m Mountain = makeMountain("*", "&", 4)
+	print(paintMountain(m))
+
 }
