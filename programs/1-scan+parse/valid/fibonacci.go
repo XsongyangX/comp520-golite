@@ -1,12 +1,6 @@
 /* Computes the fibonacci of 10 */
 package main
 
-func main() {
-	// there is no functionality for reading from stdin
-	println("Prints fibonacci of 10")
-	println(fib(10))
-}
-
 func fib(n int) int {
 	if n == 1 {
 		return 1
@@ -16,3 +10,10 @@ func fib(n int) int {
 		return fib(n-2) + fib(n-1)
 	}
 }
+
+func main() {
+	// there is no functionality for reading from stdin
+	println("Prints fibonacci of 10")
+	println(fib(10))
+}
+

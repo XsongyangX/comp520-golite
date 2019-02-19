@@ -3,10 +3,6 @@
 
 package main
 
-func main() {
-	spinningBar()
-}
-
 func spinningBar() {
 
 	var i = 0
@@ -27,4 +23,8 @@ func spinningBar() {
 			break
 		}
 	}
+}
+
+func main() {
+	spinningBar()
 }
