@@ -2,7 +2,9 @@
 
 /* Imports */
 %{
-	
+	#include <stdio.h>
+	#include <stdlib.h>
+
 	// TODO
 	
 	// Scanner line number
