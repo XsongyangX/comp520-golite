@@ -43,6 +43,9 @@ enum ExpressionKind{emptyExp, //NULL
                     lshiftExp, //.<<.
                     rshiftExp, //.>>.
                     rangeExp, //[.:.]
+                    indexExp, //[.]  e.g. arrays
+                    elementExp, //for arrays and slices
+                    invocExp, //x.y
                     appendExp, //built-in
                     lenExp, //built-in
                     capExp, //built-in
@@ -65,21 +68,18 @@ enum StatementKind{ emptyS, //NULL
                     continueS,
                     declS
                     };
-enum SymbolType{    intType,
-                    floatType,
-                    runeType,
-                    strType
-                    };
+
 enum GroupingType{  nilType; //just a type, e.g. int, string, T
                     arrayType,
                     sliceType,
-                    ptrType
+                    ptrType,
+                    structType
                     };
-enum DeclarationType{longDecl, shortDecl};
+enum DeclarationType{typeDecl, varDecl, structDecl};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
 struct TYPE{
-    enum SymbolType;
+    char* SymbolType;
     enum GroupingType;
 };
 struct EXP{
@@ -97,15 +97,18 @@ struct EXP{
 };
 
 struct DECLARATION{//compound declarations should be broken down into individual declarations
+    enum DeclarationType d;
     type t;
     char *identifier;
-    char *declType;
-    Exp *right;
+    union {
+        Exp *right;
+        struct{ Decl *dbody, Fctn *fbody} body;
+    }val;
     Decl *next;
 };
 struct SHORT_DECL{//Struct for function declaration parameters for space efficiency
     Exp *identifier;
-    char *declType;
+    type t;
     SDecl *next;
 }
 struct FUNCTION{//parameters are referred to as a list of declarations where the 'right' field will be nil
@@ -114,7 +117,7 @@ struct FUNCTION{//parameters are referred to as a list of declarations where the
     char *identifier;
     int paramCount;
     SDecl *params;
-    char *returnType;
+    type returnt;
     Stmt *body;
 };
 struct STATEMENT{
@@ -122,7 +125,7 @@ struct STATEMENT{
     int lineno;
     symTable *localSym;
     union{
-        struct{char *identifier; Exp *value;} assignment;
+        struct{Exp *identifier; Exp *value;} assignment;
         struct{Exp *condition; Decl *optDecl; Stmt *body; Stmt *elif;} conditional;//IF(,ELIF,ELSE) and FOR
         struct{Exp *value; int hasNewLine;} iostmt;//PRINT
         Decl *declaration;
@@ -172,17 +175,21 @@ Exp makeExp_xor(Exp *e1, Exp *e2);
 Exp makeExp_lshift(Exp *e1, Exp *e2);
 Exp makeExp_rshift(Exp *e1, Exp *e2);
 Exp makeExp_range(Exp *e1, Exp *e2);
-Exp makeExp_appendExp(Exp *e1. Exp *e2);
+Exp makeExp_index(Exp *e2);
+Exp makeExp_element(Exp *e1, Exp *e2);
+Exp makeExp_invoc(Exp *e1. Exp *e2);
+Exp makeExp_append(Exp *e1. Exp *e2);
 Exp makeExp_len(Exp *e1);
 Exp makeExp_cap(Exp *e1);
 Exp makeExp_func(char *identifier, int size, SDecl *args);
 
-Decl makeDECL(char *identifier, char *declType, Exp *rhs);
-Decl makeDECL(char *identifier, char *declType);
-Decl makeDECL(char *identifier,  Exp *rhs);
-SDecl makeSDecl(Exp *e, char* declType)
+Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs);
+Decl makeDECL(int isVar, char *identifier, char *declType, int gtype);
+Decl makeDECL(int isVar, char *identifier, int gtype,  Exp *rhs);
+Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody);
+SDecl makeSDecl(Exp *e, char* declType, int gtype)
 
-Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, Stmt *body);
+Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, Stmt *body);
 
 Stmt makeSTMT_assmt(int lineno, char *identifier, Exp *val);
 Stmt makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
@@ -198,6 +205,7 @@ Stmt makeSTMT_block(int lineno, Stmt *body);
 Stmt makeSTMT_print(int lineno, Exp *expression, int hasNewLine);
 Stmt makeSTMT_break(int lineno);
 Stmt makeSTMT_continue(int lineno);
+Stmt makeSTMT_return(int lineno, Exp *expression);
 
 
 Prog makePROG(char* package, Decl *declList, Fctn *fnList);

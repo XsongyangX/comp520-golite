@@ -243,7 +243,32 @@ Exp makeExp_range(Exp *e1, Exp *e2)
     e-.val.binary.rhs = e2;
     return e;
 }
-Exp makeExp_appendExp(Exp *e1. Exp *e2)
+Exp makeExp_index(Exp *e2)
+{
+    Exp *e = malloc(sizeof(Exp));
+    e->kind = indexExp;
+    e->val.binary.lhs = NULL;
+    e-.val.binary.rhs = e2;
+    return e;
+}
+Exp makeExp_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be a range or and index exp
+{
+    Exp *e = malloc(sizeof(Exp));
+    e->kind = elementExp;
+    e->val.binary.lhs = e1;
+    e-.val.binary.rhs = e2;
+    return e;
+
+}
+Exp makeExp_invoc(Exp *e1. Exp *e2)
+{
+    Exp *e = malloc(sizeof(Exp));
+    e->kind = invocExp;
+    e->val.binary.lhs = e1;
+    e-.val.binary.rhs = e2;
+    return e;
+}
+Exp makeExp_append(Exp *e1. Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = appendExp;
@@ -283,44 +308,67 @@ Exp makeExp_func(char *identifier, int size, SDecl *args)
     return e;
 }
 
-Decl makeDECL(char *identifier, char *declType, Exp *rhs)
+Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs)
 {
     Decl *d = malloc(sizeof(Decl));
+    d->d = isVar;
     d->identifier = identifier;
-    d->declType = declType;
-    d->right = rhs;
+    d->t = malloc(sizeof(type));
+    d->t.SymbolType = declType;
+    t->t.GroupingType = gtype;
+    d->val.right = rhs;
     d->next = NULL;
     return d;
 }
-Decl makeDECL(char *identifier, char *declType)
+Decl makeDECL(int isVar, char *identifier, char *declType, int gtype)
 {
     Decl *d = malloc(sizeof(Decl));
+    d->d = isVar;
     d->identifier = identifier;
-    d->declType = declType;
-    d->right = NULL;
+    d->t = malloc(sizeof(type));
+    d->t.SymbolType = declType;
+    t->t.GroupingType = gtype;
+    d->val.right = NULL;
     d->next = NULL;
     return d;
 }
-Decl makeDECL(char *identifier,  Exp *rhs)
+Decl makeDECL(int isVar, char *identifier, int gtype,  Exp *rhs)
 {
     Decl *d = malloc(sizeof(Decl));
+    d->d = isVar;
     d->identifier = identifier;
-    d->declType = NULL;
-    d->right = rhs;
+    d->t = malloc(sizeof(type));
+    d->t.SymbolType = NULL;
+    t->t.GroupingType = gtype;
+    d->val.right = rhs;
     d->next = NULL;
     return d;
 }
-
-SDecl makeSDecl(Exp *e, char* declType)
+Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody)
+{
+    Decl *d = malloc(sizeof(Decl));
+    d->d = isVar;
+    d->identifier = identifier;
+    d->t = malloc(sizeof(type));
+    d->t.SymbolType = NULL;
+    t->t.GroupingType = structType;
+    d->val.body.dbody = body;
+    d->val.body.fbody = fbody;
+    d->next = NULL;
+    return d;
+}
+SDecl makeSDecl(Exp *e, char* declType, int gtype)
 {
     SDecl *sd = malloc(sizeof(SDecl));
     sd->identifier = e;
-    sd->declType = declType;
+    d->t = malloc(sizeof(type));
+    d->t.SymbolType = declType;
+    t->t.GroupingType = gtype;
     sd->next = NULL;
     return sd;
 }
 
-Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, Stmt *body)
+Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, Stmt *body)
 {
     Fctn *f = malloc(sizeof(Fctn));
     f->lineno = lineno;
@@ -328,11 +376,13 @@ Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *retur
     f->paramCount = size;
     f->params = params;
     f->body = body;
-    f->returnType = returnType;
+    d->t = malloc(sizeof(type));
+    d->t.SymbolType = declType;
+    t->t.GroupingType = gtype;
     return f;
 }
 
-Stmt makeSTMT_assmt(int lineno, char *identifier, Exp *val)
+Stmt makeSTMT_assmt(int lineno, Exp *identifier, Exp *val)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -475,6 +525,15 @@ Stmt makeSTMT_continue(int lineno)
     s->lineno = lineno;
     s->kind = continueS;
     s->next = NULL;
+    return s;
+}
+Stmt makeSTMT_return(int lineno, Exp *expression)
+{
+    Stmt *s = malloc(sizeof(Stmt));
+    s->lineno = lineno;
+    s->kind = returnS;
+    s->next = NULL;
+    s->val.expression = expression;
     return s;
 }
 
