@@ -187,7 +187,7 @@ Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs);
 Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype);
 Decl makeDECL_notype(int isVar, char *identifier, int gtype,  Exp *rhs);
 Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody);
-SDecl makeSDecl(Exp *e, char* declType, int gtype)
+SDecl makeSDecl(Exp *e, char* declType, int gtype);
 
 Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, Stmt *body);
 
