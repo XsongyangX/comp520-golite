@@ -1,5 +1,6 @@
+#include <stdlib.h>
 #include "tree.h"
-#include "string.h"
+
 
 
 Exp makeEXP_empty()
@@ -260,7 +261,7 @@ Exp makeExp_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be 
     return e;
 
 }
-Exp makeExp_invoc(Exp *e1. Exp *e2)
+Exp makeExp_invoc(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = invocExp;
@@ -268,7 +269,7 @@ Exp makeExp_invoc(Exp *e1. Exp *e2)
     e-.val.binary.rhs = e2;
     return e;
 }
-Exp makeExp_append(Exp *e1. Exp *e2)
+Exp makeExp_append(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = appendExp;
@@ -320,7 +321,7 @@ Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs)
     d->next = NULL;
     return d;
 }
-Decl makeDECL(int isVar, char *identifier, char *declType, int gtype)
+Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype)
 {
     Decl *d = malloc(sizeof(Decl));
     d->d = isVar;
@@ -332,7 +333,7 @@ Decl makeDECL(int isVar, char *identifier, char *declType, int gtype)
     d->next = NULL;
     return d;
 }
-Decl makeDECL(int isVar, char *identifier, int gtype,  Exp *rhs)
+Decl makeDECL_notype(int isVar, char *identifier, int gtype,  Exp *rhs)
 {
     Decl *d = malloc(sizeof(Decl));
     d->d = isVar;

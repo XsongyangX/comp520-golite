@@ -69,7 +69,7 @@ enum StatementKind{ emptyS, //NULL
                     declS
                     };
 
-enum GroupingType{  nilType; //just a type, e.g. int, string, T
+enum GroupingType{  nilType, //just a type, e.g. int, string, T
                     arrayType,
                     sliceType,
                     ptrType,
@@ -92,7 +92,7 @@ struct EXP{
         int intLiteral;
         float floatLiteral;
         Fctn *fn;
-        struct{EXP *lhs; EXP *rhs;} binary;
+        struct{Exp *lhs; Exp *rhs;} binary;
     }val;
 };
 
@@ -102,7 +102,7 @@ struct DECLARATION{//compound declarations should be broken down into individual
     char *identifier;
     union {
         Exp *right;
-        struct{ Decl *dbody, Fctn *fbody} body;
+        struct{ Decl *dbody; Fctn *fbody;} body;
     }val;
     Decl *next;
 };
@@ -110,7 +110,7 @@ struct SHORT_DECL{//Struct for function declaration parameters for space efficie
     Exp *identifier;
     type t;
     SDecl *next;
-}
+};
 struct FUNCTION{//parameters are referred to as a list of declarations where the 'right' field will be nil
     int lineno;
     symTable *localSym;
@@ -132,9 +132,9 @@ struct STATEMENT{
         Stmt *body;
         Exp *expression;//used for return stmts and expr stmts
         struct{Exp *condition; Stmt *cases;} switchBody;
-        struct{Exp *condition, Stmt *body; Stmt *next;} caseBody;//null condition represents default
+        struct{Exp *condition; Stmt *body; Stmt *next;} caseBody;//null condition represents default
     } val;
-    STATEMENT *next;
+    Stmt *next;
 };
 struct PROGRAM{
     char *package;
@@ -144,11 +144,11 @@ struct PROGRAM{
 
 
 
-Exp makeEXP_empty();
-Exp makeEXP_int(int literal);
-Exp makeEXP_float(float literal);
-Exp makeEXP_str(char *literal);
-Exp makeEXP_bool(int literal);
+Exp makeExp_empty();
+Exp makeExp_int(int literal);
+Exp makeExp_float(float literal);
+Exp makeExp_str(char *literal);
+Exp makeExp_bool(int literal);
 Exp makeExp_plus(Exp *e1, Exp *e2);
 Exp makeExp_minus(Exp *e1, Exp *e2);
 Exp makeExp_times(Exp *e1, Exp *e2);
@@ -177,15 +177,15 @@ Exp makeExp_rshift(Exp *e1, Exp *e2);
 Exp makeExp_range(Exp *e1, Exp *e2);
 Exp makeExp_index(Exp *e2);
 Exp makeExp_element(Exp *e1, Exp *e2);
-Exp makeExp_invoc(Exp *e1. Exp *e2);
-Exp makeExp_append(Exp *e1. Exp *e2);
+Exp makeExp_invoc(Exp *e1, Exp *e2);
+Exp makeExp_append(Exp *e1, Exp *e2);
 Exp makeExp_len(Exp *e1);
 Exp makeExp_cap(Exp *e1);
 Exp makeExp_func(char *identifier, int size, SDecl *args);
 
 Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs);
-Decl makeDECL(int isVar, char *identifier, char *declType, int gtype);
-Decl makeDECL(int isVar, char *identifier, int gtype,  Exp *rhs);
+Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype);
+Decl makeDECL_notype(int isVar, char *identifier, int gtype,  Exp *rhs);
 Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody);
 SDecl makeSDecl(Exp *e, char* declType, int gtype)
 
@@ -200,7 +200,7 @@ Stmt makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *a
 Stmt makeSTMT_decl(int lineno, Decl *declaration);
 Stmt makeSTMT_exp(int lineno, Exp *expression);
 Stmt makeSTMT_switch(int lineno, Exp *condition, Stmt *cases);
-Stmt makeSTMT_case(int lineno, Exp *condition, Stmt *body. Stmt *next);
+Stmt makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next);
 Stmt makeSTMT_block(int lineno, Stmt *body);
 Stmt makeSTMT_print(int lineno, Exp *expression, int hasNewLine);
 Stmt makeSTMT_break(int lineno);
