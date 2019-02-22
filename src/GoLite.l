@@ -181,7 +181,14 @@ PUNCTUATION [?<>+-=,^$|&]
 
 }
 
-
+[a-zA-Z_][a-zA-Z_0-9]*{//IDENTIFIERS
+    yylval.identifier = strdup(yytext);
+    if(isToken){
+        fprintf(stdout, "tIDENTIFIER(%s)\n", yytext);
+    }
+    requiresIns = 1; 
+    return tIDENTIFIER;
+}
 
 . {
     fprintf(stderr, "Error: (line %d) unexpected character '%s'\n", yylineno, yytext);
