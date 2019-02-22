@@ -80,7 +80,7 @@ enum DeclarationType{typeDecl, varDecl, structDecl};
  data structure, but represent something else*/
 struct TYPE{
     char* SymbolType;
-    enum GroupingType;
+    enum GroupingType gType;
 };
 struct EXP{
     enum ExpressionKind kind;

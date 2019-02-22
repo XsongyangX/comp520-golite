@@ -316,7 +316,7 @@ Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs)
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.GroupingType = gtype;
+    t->t.gType = gtype;
     d->val.right = rhs;
     d->next = NULL;
     return d;
@@ -328,7 +328,7 @@ Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype)
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.GroupingType = gtype;
+    t->t.gType = gtype;
     d->val.right = NULL;
     d->next = NULL;
     return d;
@@ -340,7 +340,7 @@ Decl makeDECL_notype(int isVar, char *identifier, int gtype,  Exp *rhs)
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = NULL;
-    t->t.GroupingType = gtype;
+    t->t.gType = gtype;
     d->val.right = rhs;
     d->next = NULL;
     return d;
@@ -352,7 +352,7 @@ Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody)
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = NULL;
-    t->t.GroupingType = structType;
+    t->t.gType = structType;
     d->val.body.dbody = body;
     d->val.body.fbody = fbody;
     d->next = NULL;
@@ -364,7 +364,7 @@ SDecl makeSDecl(Exp *e, char* declType, int gtype)
     sd->identifier = e;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.GroupingType = gtype;
+    t->t.gType = gtype;
     sd->next = NULL;
     return sd;
 }
@@ -379,7 +379,7 @@ Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *retur
     f->body = body;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.GroupingType = gtype;
+    t->t.gType = gtype;
     return f;
 }
 
