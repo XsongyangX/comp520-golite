@@ -4,6 +4,7 @@ Main file of the GoLite compiler
 
 #include <stdio.h>
 #include <string.h>
+#include "tree.h"
 
 void yyparse();
 int yylex();
