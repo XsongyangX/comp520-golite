@@ -152,7 +152,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 
-[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' {//RUNE (CHAR)
+'[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' {//RUNE (CHAR)
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRUNEVAL(%s)\n", yytext);
