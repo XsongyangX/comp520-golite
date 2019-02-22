@@ -28,6 +28,6 @@ fi
 #
 # You MUST replace the following command with the command for invoking your compiler
 
-
+chmod +x ./src/minic
 filename="${2%.*}"
 ./src/minic "$1" "$filename" < "$2"

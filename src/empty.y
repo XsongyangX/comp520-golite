@@ -70,6 +70,9 @@
 %token tCOLONASSIGN
 // ellipse
 %token tDOTS
+// identifier
+%token tIDENTIFIER
+
 
 // syntax
 %token tLEFTPAREN tRIGHTPAREN tLEFTBRACE tRIGHTBRACE tLEFTBRACKET tRIGHTBRACKET

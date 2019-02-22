@@ -21,7 +21,7 @@ scan: emptyParser.o
 	gcc -o minic main.c y.tab.c lex.yy.c y.tab.h -lfl
 
 emptyParser.o:
-	bison --yacc -d empty.y
+	bison --yacc -d --verbose empty.y
 	flex GoLite.l
 	
 clean:
