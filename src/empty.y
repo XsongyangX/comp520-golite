@@ -83,17 +83,17 @@
 // Literals
 
 // int
-%token <intval> tINTDECVAL 
+%token <intval> tINTDECVAL tINTLITERAL  
 %token <strval> tINTOCTVAL tINTHEXVAL
 
 // float
-%token <floatval> tFLOATVAL
+%token <floatval> tFLOATVAL tFLOATLITERAL
 
 // rune
-%token <identifier> tRUNEVAL
+%token <identifier> tRUNEVAL tRUNELITERAL
 
 // string
-%token <identifier> tSTRINGVAL tRAWSTRINGVAL
+%token <identifier> tSTRINGVAL tRAWSTRINGVAL tSTRINGLITERAL tRAWSTRINGLITERAL
 
 // unused in scanner (if any)
 
