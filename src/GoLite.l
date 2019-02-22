@@ -153,7 +153,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 '[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' {//RUNE (CHAR)
-    yylval.identifier = strdup(yytext);
+    yylval.strval = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRUNELITERAL(%s)\n", yytext);
     }
@@ -163,7 +163,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 \"([ a-zA-Z0-9~@#%\*/'_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\" {//STRING
-    yylval.identifier = strdup(yytext);
+    yylval.strval = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tSTRINGLITERAL(%s)\n", yytext);
     }
@@ -172,7 +172,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 `([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*` {//RAW STRING
-    yylval.identifier = strdup(yytext);
+    yylval.strval = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tRAWSTRINGLITERAL(%s)\n", yytext);
     }
@@ -181,7 +181,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 }
 
-[a-zA-Z_][a-zA-Z_0-9]*{//IDENTIFIERS
+[a-zA-Z_][a-zA-Z_0-9]* {//IDENTIFIERS
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tIDENTIFIER(%s)\n", yytext);
