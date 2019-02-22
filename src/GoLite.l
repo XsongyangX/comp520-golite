@@ -110,26 +110,26 @@ PUNCTUATION [?<>+-=,^$|&]
 	//DECIMAL VALUE
     yylval.intval = atoi(yytext);
     if(isToken){
-        fprintf(stdout, "tINTDECVAL(%s)\n", yytext);
+        fprintf(stdout, "tINTLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tINTDECVAL;
+    return tINTLITERAL;
 }
 0[0-7]* {//OCTAL VALUE
-    yylval.strval = strdup(yytext);
+    yylval.intval = (int)strtol(yytext, NULL, 8);
     if(isToken){
-        fprintf(stdout, "tINTOCTVAL(%s)\n", yytext);
+        fprintf(stdout, "tINTLITERAL(%s = %d)\n", yytext, (int)strtol(yytext, NULL, 8));
     }
     requiresIns = 1; 
-    return tINTOCTVAL;
+    return tINTLITERAL;
 }
 0(x|X)[0-9a-f]* {//HEXADECIMAL VALUE
-    yylval.strval = strdup(yytext);
+    yylval.intval = (int)strtol(yytext, NULL, 0);
     if(isToken){
-        fprintf(stdout, "tINTHEXVAL(%s)\n", yytext);
+        fprintf(stdout, "tINTLITERAL(%s = %d)\n", yytext, (int)strtol(yytext, NULL, 0));
     }
     requiresIns = 1; 
-    return tINTHEXVAL;
+    return tINTLITERAL;
 }
 
 
@@ -137,47 +137,47 @@ PUNCTUATION [?<>+-=,^$|&]
 	//LEFT of period
     yylval.floatval = atof(yytext);
     if(isToken){
-        fprintf(stdout, "tFLOATVAL(%s)\n", yytext);
+        fprintf(stdout, "tFLOATLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tFLOATVAL;
+    return tFLOATLITERAL;
 }
 ([1-9][0-9]*)*.[0-9][0-9]* {//RIGHT of period
     yylval.floatval = atof(yytext);
     if(isToken){
-        fprintf(stdout, "tFLOATVAL(%s)\n", yytext);
+        fprintf(stdout, "tFLOATLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tFLOATVAL;
+    return tFLOATLITERAL;
 }
 
 
 '[ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\')' {//RUNE (CHAR)
     yylval.identifier = strdup(yytext);
     if(isToken){
-        fprintf(stdout, "tRUNEVAL(%s)\n", yytext);
+        fprintf(stdout, "tRUNELITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tRUNEVAL;
+    return tRUNELITERAL;
 }
 
 
 \"([ a-zA-Z0-9~@#%\*/'_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\" {//STRING
     yylval.identifier = strdup(yytext);
     if(isToken){
-        fprintf(stdout, "tSTRINGVAL(%s)\n", yytext);
+        fprintf(stdout, "tSTRINGLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tSTRINGVAL;
+    return tSTRINGLITERAL;
 }
 
 `([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*` {//RAW STRING
     yylval.identifier = strdup(yytext);
     if(isToken){
-        fprintf(stdout, "tRAWSTRINGVAL(%s)\n", yytext);
+        fprintf(stdout, "tRAWSTRINGLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tRAWSTRINGVAL;
+    return tRAWSTRINGLITERAL;
 
 }
 
