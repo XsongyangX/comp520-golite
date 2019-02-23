@@ -52,21 +52,21 @@ void prettyFctnDecl(SDecl *sd, int printComma)
 }
 
 //prints a type
-void prettyType(type t)
+void prettyType(type *t)
 {
-    switch(t.gType){
+    switch(t->gType){
         case arrayType:
-            printf("[%d]%s", t.size, t.SymbolType);
+            printf("[%d]%s", t->size, t->SymbolType);
             break;
         case sliceType:
-            printf("[]%s", t.SymbolType);
+            printf("[]%s", t->SymbolType);
             break;
         case ptrType:
-            printf("*%s", t.SymbolType);
+            printf("*%s", t->SymbolType);
             break;
         case structType:
         default:
-            printf("%s", t.SymbolType);
+            printf("%s", t->SymbolType);
     }
 }
 
@@ -85,14 +85,14 @@ void prettyDecl(Decl *d, int t)
             break;
         case varDecl:
             printf("var %s ", d->identifier);
-            if(strlen(d->t.SymbolType) != 0)
+            if(strlen(d->t->SymbolType) != 0)
             {
                 prettyType(d->t);
             }
-            if(d->val.exp != NULL && d->val.exp->kind != emptyExp)
+            if(d->val.right != NULL && d->val.right->kind != emptyExp)
             {
                 printf(" := ");
-                prettyExp(d->val.exp);
+                prettyExp(d->val.right);
             }
             break;
         case structDecl:
@@ -119,19 +119,19 @@ void prettySDecl(Decl *d)
     printf("; ");
 
 }
-void prettySDeclId(Decl d)
+void prettySDeclId(Decl *d)
 {
     if(d->next != NULL){
         prettySDeclId(d->next);
     }
     printf("%s, ", d->identifier);
 }
-void prettySDeclVal(Decl d)
+void prettySDeclVal(Decl *d)
 {
     if(d->next != NULL){
         prettySDeclId(d->next);
     }
-    prettyExp(s->val.right);
+    prettyExp(d->val.right);
     printf(", ");
 }
 
@@ -223,7 +223,7 @@ void prettyIf(Stmt *s, int t)
     printf("if ");
     if(s->val.conditional.optDecl != NULL)
     {
-        prettyDecl(s->val.conditional.optDecl, t);
+        prettySDecl(s->val.conditional.optDecl);
         printf("; ");
     }
     prettyExp(s->val.conditional.condition);
@@ -240,7 +240,7 @@ void prettyElif(Stmt *s,int t)
     printf("else if ");
     if(s->val.conditional.optDecl != NULL)//TODO: can we even declare things here???
     {
-        prettySDecl(s->val.conditional.optDecl, t);
+        prettySDecl(s->val.conditional.optDecl);
         printf("; ");
     }
     prettyExp(s->val.conditional.condition);
@@ -265,7 +265,7 @@ void prettyElse(Stmt *s,int t)
 void prettyFor(Stmt *s, int t)
 {
     prettyTabs(t);
-    printf("for ")
+    printf("for ");
     if(s->val.conditional.optDecl != NULL){
         prettySDecl(s->val.conditional.optDecl);//print loop var
     }
@@ -274,7 +274,7 @@ void prettyFor(Stmt *s, int t)
     {prettyExp(s->val.conditional.condition);}//print loop condition
     printf("; ");
     if(s->val.conditional.elif != NULL)
-    {prettyStmt(s->val.conditional.elif);}//elif should be an expression stmt, typically an increment
+    {prettyStmt(s->val.conditional.elif, t);}//elif should be an expression stmt, typically an increment
     printf("{\n");
     prettyStmt(s->val.conditional.body, t+1);
     prettyTabs(t);
@@ -285,7 +285,7 @@ void prettyFor(Stmt *s, int t)
 void prettyWhile(Stmt *s, int t)
 {
     prettyTabs(t);
-    printf("for ")
+    printf("for ");
     if(s->val.conditional.optDecl != NULL){
         prettySDecl(s->val.conditional.optDecl);//print loop var
     }
@@ -349,7 +349,7 @@ void prettySwitch(Stmt *s, int t)
     printf("}\n");
 }
 //prints a list of case statements
-void prettyCase(Stmt s*, int t)
+void prettyCase(Stmt *s, int t)
 {
     if(s->next != NULL)
     {
@@ -518,9 +518,6 @@ void prettyExp(Exp *e)
             prettyExp(e->val.binary.rhs);
             printf(")");
             break;
-        case idExp:
-            printf("%s", e->val.identifier);
-            break;
         case bitAndExp:
             printf("(");
             prettyExp(e->val.binary.lhs);
@@ -608,7 +605,7 @@ void prettyStmtFn(Stmt *s)
 {
     if(s->next != NULL)
     {
-        prettySDeclFn(sd->next);
+        prettySDeclFn(s->next);
         printf(", ");//separate arguments
     }
     prettyExp(s->val.expression);
