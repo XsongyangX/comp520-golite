@@ -26,80 +26,80 @@ PUNCTUATION [?<>+-=,^$|&]
 "\n" {if(requiresIns){ requiresIns = 0;if(isToken){printf("tSEMICOLON\n");} return tSEMICOLON;}}
 
 "+" { // OPERATORS
-	if(isToken){printf("tPLUS\n");} return '+';}
-"-" {if(isToken){printf("tMINUS\n");} return '-';}
-"*" {if(isToken){printf("tTIMES\n");} return '*';}
-"/" {if(isToken){printf("tDIV\n");} return '/';}
-"%" {if(isToken){printf("tMODULO\n");} return '%';}
-"&" {if(isToken){printf("tAMPERSAND\n");} return '&';}
-"|" {if(isToken){printf("tVERTBAR\n");} return '|';}
-"^" {if(isToken){printf("tPOWER\n");} return '^';}
-"<<" {if(isToken){printf("tLEFTSHIFT\n");} return tLEFTSHIFT;}
-">>" {if(isToken){printf("tRIGHTSHIFT\n");} return tRIGHTSHIFT;}
-"&^" {if(isToken){printf("tAMPPOWER\n");} return tAMPPOWER;}
-"+=" {if(isToken){printf("tPLUSASSIGN\n");} return tPLUSASSIGN;}
-"-=" {if(isToken){printf("tMINUSASSIGN\n");} return tMINUSASSIGN;}
-"*=" {if(isToken){printf("tTIMESASSIGN\n");} return tTIMESASSIGN;}
-"/=" {if(isToken){printf("tDIVASSIGN\n");} return tDIVASSIGN;}
-"%=" {if(isToken){printf("tMODASSIGN\n");} return tMODASSIGN;}
-"&=" {if(isToken){printf("tAMPASSIGN\n");} return tAMPASSIGN;}
-"^=" {if(isToken){printf("tPOWASSIGN\n");} return tPOWASSIGN;}
-"<<=" {if(isToken){printf("tLSHIFTASSIGN\n");} return tLSHIFTASSIGN;}
-">>=" {if(isToken){printf("tRSHIFTASSIGN\n");} return tRSHIFTASSIGN;}
-"&^=" {if(isToken){printf("tAMPPOWASSIGN\n");} return tAMPPOWASSIGN;}
-"&&" {if(isToken){printf("tAND\n");} return tAND;}
-"||" {if(isToken){printf("tOR\n");} return tOR;}
-"<-" {if(isToken){printf("tLESSMINUS\n");} return tLESSMINUS;}
+	if(isToken){printf("tPLUS\n");} requiresIns = 0;return '+';}
+"-" {if(isToken){printf("tMINUS\n");} requiresIns = 0;return '-';}
+"*" {if(isToken){printf("tTIMES\n");} requiresIns = 0;return '*';}
+"/" {if(isToken){printf("tDIV\n");} requiresIns = 0;return '/';}
+"%" {if(isToken){printf("tMODULO\n");} requiresIns = 0;return '%';}
+"&" {if(isToken){printf("tAMPERSAND\n");} requiresIns = 0;return '&';}
+"|" {if(isToken){printf("tVERTBAR\n");} requiresIns = 0;return '|';}
+"^" {if(isToken){printf("tPOWER\n");} requiresIns = 0;return '^';}
+"<<" {if(isToken){printf("tLEFTSHIFT\n");} requiresIns = 0;return tLEFTSHIFT;}
+">>" {if(isToken){printf("tRIGHTSHIFT\n");} requiresIns = 0;return tRIGHTSHIFT;}
+"&^" {if(isToken){printf("tAMPPOWER\n");} requiresIns = 0;return tAMPPOWER;}
+"+=" {if(isToken){printf("tPLUSASSIGN\n");} requiresIns = 0;return tPLUSASSIGN;}
+"-=" {if(isToken){printf("tMINUSASSIGN\n");} requiresIns = 0;return tMINUSASSIGN;}
+"*=" {if(isToken){printf("tTIMESASSIGN\n");} requiresIns = 0;return tTIMESASSIGN;}
+"/=" {if(isToken){printf("tDIVASSIGN\n");} requiresIns = 0;return tDIVASSIGN;}
+"%=" {if(isToken){printf("tMODASSIGN\n");} requiresIns = 0;return tMODASSIGN;}
+"&=" {if(isToken){printf("tAMPASSIGN\n");} requiresIns = 0;return tAMPASSIGN;}
+"^=" {if(isToken){printf("tPOWASSIGN\n");} requiresIns = 0;return tPOWASSIGN;}
+"<<=" {if(isToken){printf("tLSHIFTASSIGN\n");} requiresIns = 0;return tLSHIFTASSIGN;}
+">>=" {if(isToken){printf("tRSHIFTASSIGN\n");} requiresIns = 0;return tRSHIFTASSIGN;}
+"&^=" {if(isToken){printf("tAMPPOWASSIGN\n");} requiresIns = 0;return tAMPPOWASSIGN;}
+"&&" {if(isToken){printf("tAND\n");} requiresIns = 0;return tAND;}
+"||" {if(isToken){printf("tOR\n");} requiresIns = 0;return tOR;}
+"<-" {if(isToken){printf("tLESSMINUS\n");} requiresIns = 0;return tLESSMINUS;}
 "++" {if(isToken){printf("tINCREMENT\n");} requiresIns = 1; return tINCREMENT;}
 "--" {if(isToken){printf("tDECREMENT\n");} requiresIns = 1; return tDECREMENT;}
-"==" {if(isToken){printf("tEQUALS\n");} return tEQUALS;} 
-"<" {if(isToken){printf("tLESS\n");} return '<';}
-">" {if(isToken){printf("tGREATER\n");} return '>';}
-"=" {if(isToken){printf("tASSIGN\n");} return '=';}
-"!" {if(isToken){printf("tBANG\n");} return '!';} 
-"!=" {if(isToken){printf("tNOTEQUALS\n");} return tNOTEQUALS;} 
-"<=" {if(isToken){printf("tLESSEQUALS\n");} return tLESSEQUALS;} 
-">=" {if(isToken){printf("tGREATEREQUALS\n");} return tGREATEREQUALS;} 
-":=" {if(isToken){printf("tCOLONASSIGN\n");} return tCOLONASSIGN;} 
-"..." {if(isToken){printf("tDOTS\n");} return tDOTS;} 
-"(" {if(isToken){printf("tLEFTPAREN\n");} return '(';}
+"==" {if(isToken){printf("tEQUALS\n");} requiresIns = 0;return tEQUALS;} 
+"<" {if(isToken){printf("tLESS\n");} requiresIns = 0;return '<';}
+">" {if(isToken){printf("tGREATER\n");} requiresIns = 0;return '>';}
+"=" {if(isToken){printf("tASSIGN\n");} requiresIns = 0;return '=';}
+"!" {if(isToken){printf("tBANG\n");} requiresIns = 0;return '!';} 
+"!=" {if(isToken){printf("tNOTEQUALS\n");} requiresIns = 0;return tNOTEQUALS;} 
+"<=" {if(isToken){printf("tLESSEQUALS\n");} requiresIns = 0;return tLESSEQUALS;} 
+">=" {if(isToken){printf("tGREATEREQUALS\n");} requiresIns = 0;return tGREATEREQUALS;} 
+":=" {if(isToken){printf("tCOLONASSIGN\n");} requiresIns = 0;return tCOLONASSIGN;} 
+"..." {if(isToken){printf("tDOTS\n");} requiresIns = 0;return tDOTS;} 
+"(" {if(isToken){printf("tLEFTPAREN\n");} requiresIns = 0;return '(';}
 ")" {if(isToken){printf("tRIGHTPAREN\n");} requiresIns = 1; return ')';}
-"{" {if(isToken){printf("tLEFTBRACE\n");} return '{';}
+"{" {if(isToken){printf("tLEFTBRACE\n");} requiresIns = 0;return '{';}
 "}" {if(isToken){printf("tRIGHTBRACE\n");} requiresIns = 1; return '}';}
-"[" {if(isToken){printf("tLEFTBRACKET\n");} return '[';}
+"[" {if(isToken){printf("tLEFTBRACKET\n");} requiresIns = 0;return '[';}
 "]" {if(isToken){printf("tRIGHTBRACKET\n");} requiresIns = 1; return ']';}
-":" {if(isToken){printf("tCOLON\n");} return ':';} 
+":" {if(isToken){printf("tCOLON\n");} requiresIns = 0;return ':';} 
 ";" {if(isToken){printf("tSEMICOLON\n");} requiresIns = 0; return ';';} //remove marker for semi-colon insertion
-"," {if(isToken){printf("tCOMMA\n");} return ',';} 
-"." {if(isToken){printf("tPERIOD\n");} return '.';} 
+"," {if(isToken){printf("tCOMMA\n");} requiresIns = 0;return ',';} 
+"." {if(isToken){printf("tPERIOD\n");} requiresIns = 0;return '.';} 
 
 
 "break" { // KEYWORDS
 	if(isToken){printf("tBREAK\n");} requiresIns = 1; return tBREAK;}
-"case" {if(isToken){printf("tCASE\n");} return tCASE;}
-"chan" {if(isToken){printf("tCHAN\n");} return tCHAN;}
-"const" {if(isToken){printf("tCONST\n");} return tCONST;}
+"case" {if(isToken){printf("tCASE\n");} requiresIns = 0;return tCASE;}
+"chan" {if(isToken){printf("tCHAN\n");} requiresIns = 0;return tCHAN;}
+"const" {if(isToken){printf("tCONST\n");} requiresIns = 0;return tCONST;}
 "continue" {if(isToken){printf("tCONTINUE\n");} requiresIns = 1; return tCONTINUE;}
-"default" {if(isToken){printf("tDEFAULT\n");} return tDEFAULT;}
-"defer" {if(isToken){printf("tDEFER\n");} return tDEFER;}
-"else" {if(isToken){printf("tELSE\n");} return tELSE;}
+"default" {if(isToken){printf("tDEFAULT\n");} requiresIns = 0;return tDEFAULT;}
+"defer" {if(isToken){printf("tDEFER\n");} requiresIns = 0;return tDEFER;}
+"else" {if(isToken){printf("tELSE\n");} requiresIns = 0;return tELSE;}
 "fallthrough" {if(isToken){printf("tFALLTHROUGH\n");} requiresIns = 1; return tFALLTHROUGH;}
-"for" {if(isToken){printf("tFOR\n");} return tFOR;}
-"func" {if(isToken){printf("tFUNC\n");} return tFUNC;}
-"go" {if(isToken){printf("tGO\n");} return tGO;}
-"goto" {if(isToken){printf("tGOTO\n");} return tGOTO;}
-"if" {if(isToken){printf("tIF\n");} return tIF;}
-"import" {if(isToken){printf("tIMPORT\n");} return tIMPORT;}
-"interface" {if(isToken){printf("tINTERFACE\n");} return tINTERFACE;}
-"map" {if(isToken){printf("tMAP\n");} return tMAP;}
-"package" {if(isToken){printf("tPACKAGE\n");} return tPACKAGE;}
-"range" {if(isToken){printf("tRANGE\n");} return tRANGE;}
+"for" {if(isToken){printf("tFOR\n");} requiresIns = 0;return tFOR;}
+"func" {if(isToken){printf("tFUNC\n");} requiresIns = 0;return tFUNC;}
+"go" {if(isToken){printf("tGO\n");} requiresIns = 0;return tGO;}
+"goto" {if(isToken){printf("tGOTO\n");} requiresIns = 0;return tGOTO;}
+"if" {if(isToken){printf("tIF\n");} requiresIns = 0;return tIF;}
+"import" {if(isToken){printf("tIMPORT\n");} requiresIns = 0;return tIMPORT;}
+"interface" {if(isToken){printf("tINTERFACE\n");} requiresIns = 0;return tINTERFACE;}
+"map" {if(isToken){printf("tMAP\n");} requiresIns = 0;return tMAP;}
+"package" {if(isToken){printf("tPACKAGE\n");} requiresIns = 0;return tPACKAGE;}
+"range" {if(isToken){printf("tRANGE\n");} requiresIns = 0;return tRANGE;}
 "return" {if(isToken){printf("tRETURN\n");} requiresIns = 1; return tRETURN;}
-"select" {if(isToken){printf("tSELECT\n");} return tSELECT;}
-"struct" {if(isToken){printf("tSTRUCT\n");} return tSTRUCT;}
-"switch" {if(isToken){printf("tSWITCH\n");} return tSWITCH;}
-"type" {if(isToken){printf("tTYPE\n");} return tTYPE;}
-"var" {if(isToken){printf("tVAR\n");} return tVAR;}
+"select" {if(isToken){printf("tSELECT\n");} requiresIns = 0;return tSELECT;}
+"struct" {if(isToken){printf("tSTRUCT\n");} requiresIns = 0;return tSTRUCT;}
+"switch" {if(isToken){printf("tSWITCH\n");} requiresIns = 0;return tSWITCH;}
+"type" {if(isToken){printf("tTYPE\n");} requiresIns = 0;return tTYPE;}
+"var" {if(isToken){printf("tVAR\n");} requiresIns = 0;return tVAR;}
 
 
 "//"[^\n]* {/*line comments*/}
