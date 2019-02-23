@@ -23,7 +23,7 @@ PUNCTUATION [?<>+-=,^$|&]
 %x IN_COMMENT
 %%
 [ \t\r]+ 
-"\n" {if(requiresIns){ requiresIns = 0; return tSEMICOLON;}}
+"\n" {if(requiresIns){ requiresIns = 0;if(isToken){printf("tSEMICOLON\n");} return tSEMICOLON;}}
 
 "+" { // OPERATORS
 	if(isToken){printf("tPLUS\n");} return '+';}
@@ -142,7 +142,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 
-[1-9][0-9]*"."[0-9]* { // FLOAT
+(0"."[0-9]*)|([1-9][0-9]*"."[0-9]*) { // FLOAT
 	//LEFT of period
     yylval.floatval = atof(yytext);
     if(isToken){
