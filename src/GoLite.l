@@ -20,6 +20,7 @@ int requiresIns = 0;
 /* Helper */
 PUNCTUATION [?<>+-=,^$|&]
 
+%x IN_COMMENT
 %%
 [ \t\r]+ 
 "\n" {if(requiresIns){ requiresIns = 0; return tSEMICOLON;}}
@@ -101,9 +102,17 @@ PUNCTUATION [?<>+-=,^$|&]
 "var" {if(isToken){printf("tVAR\n");} return tVAR;}
 
 
-("//".*) {/*line comments*/}
+"//"[^\n]* {/*line comments*/}
 	
-("/*".*"*/") {/*block comments*/}
+<INITIAL>{
+"/*" BEGIN(IN_COMMENT);
+}
+<IN_COMMENT>{
+"*/"	BEGIN(INITIAL);
+[^*\n]+
+"*"
+\n	yylineno++;
+}
 
 
 0|([1-9][0-9]*) { // INT
@@ -133,7 +142,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 
-[1-9][0-9]*.[0-9]* { // FLOAT
+[1-9][0-9]*"."[0-9]* { // FLOAT
 	//LEFT of period
     yylval.floatval = atof(yytext);
     if(isToken){
@@ -142,7 +151,7 @@ PUNCTUATION [?<>+-=,^$|&]
     requiresIns = 1; 
     return tFLOATLITERAL;
 }
-([1-9][0-9]*)*.[0-9][0-9]* {//RIGHT of period
+([1-9][0-9]*)*"."[0-9][0-9]* {//RIGHT of period
     yylval.floatval = atof(yytext);
     if(isToken){
         fprintf(stdout, "tFLOATLITERAL(%s)\n", yytext);
