@@ -293,7 +293,7 @@ Exp makeExp_cap(Exp *e1)
     e-.val.binary.rhs = e1;
     return e;
 }
-Exp makeExp_func(char *identifier, int size, SDecl *args)
+Exp makeExp_func(char *identifier, int size, Stmt *args)
 {//format of args(params) subject to change
     Exp *e = malloc(sizeof(Exp));
     e->kind = funcExp;
@@ -301,46 +301,50 @@ Exp makeExp_func(char *identifier, int size, SDecl *args)
     Fctn *tmpf = malloc(sizeof(Fctn));
     tpmf->identifier = identifier;
     tmpf->paramCount = size;
-    //setup the linked list of parameters
-    tmpf->params = args;
-    tmpf->body = NULL;
+    //setup the linked list of arguments
+    tmpf->body = args;
+    tmpf->params = NULL;
     tmpf->returnType = NULL;
+    tmpf->next = NULL;
     e->val.fn = tmpf;
     return e;
 }
 
-Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs)
+Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, Exp *rhs)
 {
     Decl *d = malloc(sizeof(Decl));
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.gType = gtype;
+    d->t.gType = gtype;
+    d->t.size = arraysize;
     d->val.right = rhs;
     d->next = NULL;
     return d;
 }
-Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype)
+Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize)
 {
     Decl *d = malloc(sizeof(Decl));
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.gType = gtype;
+    d->t.gType = gtype;
+    d->t.size = arraysize;
     d->val.right = NULL;
     d->next = NULL;
     return d;
 }
-Decl makeDECL_notype(int isVar, char *identifier, int gtype,  Exp *rhs)
+Decl makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  Exp *rhs)
 {
     Decl *d = malloc(sizeof(Decl));
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = NULL;
-    t->t.gType = gtype;
+    d->t.gType = gtype;
+    d->t.size = arraysize;
     d->val.right = rhs;
     d->next = NULL;
     return d;
@@ -352,24 +356,25 @@ Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody)
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = NULL;
-    t->t.gType = structType;
+    d->t.gType = structType;
     d->val.body.dbody = body;
     d->val.body.fbody = fbody;
     d->next = NULL;
     return d;
 }
-SDecl makeSDecl(Exp *e, char* declType, int gtype)
+SDecl makeSDecl(Exp *e, char* declType, int gtype, int arraysize)
 {
     SDecl *sd = malloc(sizeof(SDecl));
     sd->identifier = e;
     d->t = malloc(sizeof(type));
     d->t.SymbolType = declType;
-    t->t.gType = gtype;
+    d->t.gType = gtype;
+    d->t.size = arraysize;
     sd->next = NULL;
     return sd;
 }
 
-Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, Stmt *body)
+Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, int arraysize, Stmt *body)
 {
     Fctn *f = malloc(sizeof(Fctn));
     f->lineno = lineno;
@@ -377,9 +382,11 @@ Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *retur
     f->paramCount = size;
     f->params = params;
     f->body = body;
-    d->t = malloc(sizeof(type));
-    d->t.SymbolType = declType;
-    t->t.gType = gtype;
+    f->returnt = malloc(sizeof(type));
+    f->returnt.SymbolType = declType;
+    f->returnt.gType = gtype;
+    f->returnt.size = arraysize;
+    f->next = NULL;
     return f;
 }
 
@@ -472,13 +479,14 @@ Stmt makeSTMT_exp(int lineno, Exp *expression)
     s->val.expression = expression;
     return s;
 }
-Stmt makeSTMT_switch(int lineno, Exp *condition, Stmt *cases)
+Stmt makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = switchS;
     s->next = NULL;
     s->val.switchBody.condition = condition;
+    s->val.switchBody.optDecl = optDecl;
     s->val.switchBody.cases = cases;
     return s;
 }

@@ -80,6 +80,7 @@ enum DeclarationType{typeDecl, varDecl, structDecl};
  data structure, but represent something else*/
 struct TYPE{
     char* SymbolType;
+    int size
     enum GroupingType gType;
 };
 struct EXP{
@@ -119,6 +120,7 @@ struct FUNCTION{//parameters are referred to as a list of declarations where the
     SDecl *params;
     type returnt;
     Stmt *body;
+    Fctn *next;
 };
 struct STATEMENT{
     enum StatementKind kind;
@@ -131,7 +133,7 @@ struct STATEMENT{
         Decl *declaration;
         Stmt *body;
         Exp *expression;//used for return stmts and expr stmts
-        struct{Exp *condition; Stmt *cases;} switchBody;
+        struct{Exp *condition; Decl *optDecl; Stmt *cases;} switchBody;
         struct{Exp *condition; Stmt *body; Stmt *next;} caseBody;//null condition represents default
     } val;
     Stmt *next;
@@ -183,13 +185,13 @@ Exp makeExp_len(Exp *e1);
 Exp makeExp_cap(Exp *e1);
 Exp makeExp_func(char *identifier, int size, SDecl *args);
 
-Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, Exp *rhs);
-Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype);
-Decl makeDECL_notype(int isVar, char *identifier, int gtype,  Exp *rhs);
+Decl makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, Exp *rhs);
+Decl makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize);
+Decl makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  Exp *rhs);
 Decl makeDECL_struct( char *identifier, Decl *body, Fctn *fbody);
-SDecl makeSDecl(Exp *e, char* declType, int gtype);
+SDecl makeSDecl(Exp *e, char* declType, int gtype, int arraysize);
 
-Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, Stmt *body);
+Fctn makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, int arraysize, Stmt *body);
 
 Stmt makeSTMT_assmt(int lineno, char *identifier, Exp *val);
 Stmt makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
@@ -199,7 +201,7 @@ Stmt makeSTMT_while(int lineno, Exp *condition, Stmt *body);
 Stmt makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action);
 Stmt makeSTMT_decl(int lineno, Decl *declaration);
 Stmt makeSTMT_exp(int lineno, Exp *expression);
-Stmt makeSTMT_switch(int lineno, Exp *condition, Stmt *cases);
+Stmt makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases);
 Stmt makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next);
 Stmt makeSTMT_block(int lineno, Stmt *body);
 Stmt makeSTMT_print(int lineno, Exp *expression, int hasNewLine);
