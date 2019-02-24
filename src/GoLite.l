@@ -8,6 +8,71 @@
 #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
 extern int isToken;
 int requiresIns = 0;
+
+void rawStringHelper(char *tmp, char *s, int len)
+{
+	tmp[0] = '"';
+	int offset = 0;
+	for(int i = 1; i < len; i++){
+		switch(s[i]){
+			case '\\':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				offset++;
+				break;
+			case '\0':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '0';
+				offset++;
+				break;
+			case '\n':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = 'n';
+				offset++;
+				break;
+			case '\'':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\'';
+				offset++;
+				break;
+			case '\"':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '"';
+				offset++;
+				break;
+			case '\r':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = 'r';
+				offset++;
+				break;
+			case '\t':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = 't';
+				offset++;
+				break;
+			case '\b':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = 'b';
+				offset++;
+				break;
+			case '\f':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = 'f';
+				offset++;
+				break;
+			case '\v':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = 'v';
+				offset++;
+				break;
+			default:
+				tmp[i+offset] = s[i];
+				break;
+		}
+	}
+	tmp[len+offset] = '"';
+	tmp[len+offset+1] = '\0';
+}
 %}
 
 /* Scanner options, line number generation */
@@ -181,7 +246,8 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 `([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*` {//RAW STRING
-    yylval.strval = strdup(yytext);
+    yylval.strval = malloc(sizeof(char)*yyleng*2);
+    rawStringHelper(yylval.strval, yytext, yyleng);
     if(isToken){
         fprintf(stdout, "tRAWSTRINGLITERAL(%s)\n", yytext);
     }
