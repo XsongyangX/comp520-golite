@@ -595,13 +595,13 @@ void prettyExp(Exp *e)
             break;
         case funcExp:
             printf("%s(", e->val.fn->identifier);
-            prettyStmtFn(e->val.fn->body);
+            prettySDeclFn(e->val.fn->body);
             printf(")");
             break;
     }
 }
 //helper for function case in prettyExp
-void prettyStmtFn(Stmt *s)
+void prettySDeclFn(SDecl *s)
 {
     if(s->next != NULL)
     {

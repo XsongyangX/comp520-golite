@@ -134,7 +134,7 @@ struct STATEMENT{
         Stmt *body;
         Exp *expression;//used for return stmts and expr stmts
         struct{Exp *condition; Decl *optDecl; Stmt *cases;} switchBody;
-        struct{Exp *condition; Stmt *body; Stmt *next;} caseBody;//null condition represents default
+        struct{Exp *condition; Stmt *body;} caseBody;//null condition represents default
     } val;
     Stmt *next;
 };

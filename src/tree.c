@@ -293,7 +293,7 @@ Exp *makeExp_cap(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_func(char *identifier, int size, Stmt *args)
+Exp *makeExp_func(char *identifier, int size, SDecl *args)
 {//format of args(params) subject to change
     Exp *e = malloc(sizeof(Exp));
     e->kind = funcExp;
@@ -302,8 +302,8 @@ Exp *makeExp_func(char *identifier, int size, Stmt *args)
     tmpf->identifier = identifier;
     tmpf->paramCount = size;
     //setup the linked list of arguments
-    tmpf->body = args;
-    tmpf->params = NULL;
+    tmpf->body = NULL;
+    tmpf->params = args;
     tmpf->returnt = NULL;
     tmpf->next = NULL;
     e->val.fn = tmpf;
@@ -498,7 +498,7 @@ Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next)
     s->next = NULL;
     s->val.caseBody.condition = condition;
     s->val.caseBody.body = body;
-    s->val.caseBody.next = next;
+    s->next = next;
     return s;
 }
 Stmt *makeSTMT_block(int lineno, Stmt *body)
