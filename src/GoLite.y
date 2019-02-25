@@ -87,7 +87,7 @@ void yyerror(const char *s) {
 %token tCASE
 %token tDEFAULT
 %token tRETURN
-%token UMINUS
+%token UNARY
 
 /* Precedence directives resolve grammar ambiguities by breaking ties between shift/reduce
  * operations. Tokens are grouped into precendence levels, with lower precedence coming first
@@ -98,15 +98,13 @@ void yyerror(const char *s) {
 
 
 
-%left '&'
-%left '|'
+%left tOR
+%left tAND
 %left tEQ tNEQ 
 %left tGEQ tLEQ '>' '<'
 %left '+' '-'
 %left '*' '/'
-%left UMINUS
-%precedence dBlock sBlock
-%precedence toPrgrm
+%left UNARY
 
 /* Start token (by default if this is missing it takes the first production */
 %start prgrm
@@ -127,10 +125,10 @@ prgrm           : tPACKAGE tIDENTIFIER stmts
 
 /* Expressions of all kinds. Expands to trm for precedence reasons. Other predecence
 is to be solved using directives. */
-exp             : '+' exp
-                | '-' exp
-                | '!' exp
-                | '^' exp
+exp             : '+' exp %prec UNARY
+                | '-' exp %prec UNARY
+                | '!' exp %prec UNARY
+                | '^' exp %prec UNARY
                 | exp '<' exp
                 | exp '>' exp
                 | exp tEQ exp
@@ -169,6 +167,7 @@ ftr             : '(' exp ')'
                 | tBOOLLITERAL
                 | tRUNELITERAL
                 | tSTRINGLITERAL
+                | tRAWSTRINGLITERAL
                 | funccall
                 ;
 
@@ -249,6 +248,10 @@ type            : tINT
                 | '[' tINTLITERAL ']' tSTRING
                 ;
 
+
+stmts           : stmts stmt
+                | stmt
+                ;
 
 /* Defines the kinds of statements that can be used in any context 
 A potential issue is having returnstmt in here. Should you be able to return from anywhere?*/
