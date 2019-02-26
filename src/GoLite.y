@@ -87,6 +87,10 @@ void yyerror(const char *s) {
 %token tCASE
 %token tDEFAULT
 %token tRETURN
+%token tCOLONASSIGN
+%token tAND
+%token tOR
+%token tPACKAGE
 %token UNARY
 
 /* Precedence directives resolve grammar ambiguities by breaking ties between shift/reduce
@@ -188,6 +192,7 @@ dec             : tVAR idents type ';'
 /* an arbitrily long list of expressions, separated by commas */
 exps            : exps ',' exp
                 | exp
+                ;
 
 /* an arbitrily long list of identifiers, separated by commas */
 idents          : idents ',' tIDENTIFIER
@@ -309,17 +314,19 @@ switchbody      : switchbody tCASE exps ':' stmts
 forstmt         : tFOR '{' stmts '}'
                 | tFOR exp '{' stmts '}'
                 | tFOR simplestmt exp simplestmt '{' stmts '}'
+                ;
 
 /* Defines return statements */
 returnstmt      : tRETURN ';'
                 | tRETURN exp ';'
+                ;
 
 /* Defines the kind of valid assignment expressions.
 Again, we need to account for an equal number of idents and exps on either side.
 We also need to account for the operand-equals construction. */
 asnexps         : tIDENTIFIER ',' asnexps ',' exp
                 | tIDENTIFIER '=' exp
-                | tIDENTIFIER ':=' exp
+                | tIDENTIFIER tCOLONASSIGN exp
                 | tIDENTIFIER '+' '=' exp
                 | tIDENTIFIER '-' '=' exp
                 | tIDENTIFIER '*' '=' exp
@@ -331,6 +338,7 @@ asnexps         : tIDENTIFIER ',' asnexps ',' exp
                 | tIDENTIFIER tANDNOT '=' exp
                 | tIDENTIFIER tLSHIFT '=' exp
                 | tIDENTIFIER tRSHIFT '=' exp
+                ;
 
 
 
