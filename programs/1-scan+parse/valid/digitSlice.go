@@ -3,9 +3,9 @@ with all the digits of that number*/
 package main
 
 func intToSlice(int num){
-	numSlice = []rune;
+	var numSlice []rune;
 	for num>0 {
-		append(numSlice, rune(num%10));
+		numSlice = append(numSlice, rune(num%10));
 		num /= 10;
 	}
 	return numSlice
