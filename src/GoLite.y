@@ -171,6 +171,13 @@ ftr             : '(' exp ')'
                 | funccall
                 ;
 
+/*function calls*/
+funccall        : tIDENTIFIER '(' idents ')' ';'
+                | tAPPEND '(' exp ',' exp ')' ';'
+                | tLEN '(' exp ')' ';'
+                | tCAP '(' exp ')' ';'
+                ;
+
 /* variable declarations */
 dec             : tVAR idents type ';'
                 | tVAR decexps ';'
