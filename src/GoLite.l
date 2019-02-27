@@ -176,7 +176,7 @@ PUNCTUATION [?<>+-=,^$|&]
 <IN_COMMENT>"*"+[^*/\n]* {}
 <IN_COMMENT>\n {}
 <IN_COMMENT>"*"+"/" {BEGIN(INITIAL);}
-
+<IN_COMMENT><<EOF>> {fprintf(stderr, "Error: unexpected end of file before end of comment.");}
 
 0|([1-9][0-9]*) { // INT
 	//DECIMAL VALUE
