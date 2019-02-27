@@ -134,8 +134,8 @@ prgrm           : tPACKAGE tIDENTIFIER stmts
 is to be solved using directives. */
 exp             : '+' exp %prec UNARY {$$ = makeExp_pos($2);}
                 | '-' exp %prec UNARY {$$ = makeExp_neg($2);}
-                | '!' exp %prec UNARY {$$ = makeExp_neg($2);} FIX
-                | '^' exp %prec UNARY {$$ = makeExp_neg($2);} FIX
+                | '!' exp %prec UNARY {$$ = makeExp_not($2);} 
+                | '^' exp %prec UNARY {$$ = makeExp_uxor($2);}
                 | exp '<' exp {$$ = makeExp_lt($1, $3);}
                 | exp '>' exp {$$ = makeExp_gt($1, $3);}
                 | exp tEQ exp {$$ = makeExp_eq($1, $3);}
@@ -172,23 +172,23 @@ ftr             : '(' exp ')' {$$ = $2;}
                 | tINTLITERAL {$$ = makeEXP_int($1);}
                 | tFLOATLITERAL {$$ = makeEXP_float($1);}
                 | tBOOLLITERAL {$$ = makeEXP_bool($1);}
-                | tRUNELITERAL /* This doesn't have a constructor in the AST */
+                | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
-                | tRAWSTRINGLITERAL {$$ = makeEXP_str($1);}
-                | tIDENTIFIER '(' idents ')' ';' {$$ = makeExp_func($1, );} FIX
+                | tIDENTIFIER '(' idents ')' ';' {$$ = makeExp_func($1, 0, $3);}
                 ;
 
 
 /* variable declarations */
 dec             : tVAR idents type ';' {$$ = makeDECL_norhs();}
-                | tVAR decexps ';' 
-                | tVAR '(' decdistributed ')'
+                | tVAR idents type '=' exps ';'
+                | tVAR idents '=' exps ';' {$$ = makeSTMT_multiassmt(yylineno, )}
+                | tVAR '(' decdistributed ')' {$$ = $3;}
                 | typedec ';' {$$ = $1;}
                 ;
 
 /* an arbitrily long list of expressions, separated by commas */
-exps            : exps ',' exp
-                | exp
+exps            : exps ',' exp {$$ = makeSDecl($1, NULL, niltype, 0); $$->next = $3;}
+                | exp {$$ = makeSDecl($1, NULL, niltype, 0);}
                 ;
 
 /* an arbitrily long list of identifiers, separated by commas */
@@ -197,22 +197,16 @@ idents          : idents ',' tIDENTIFIER
                 ;
 
 /* a block of lists of identifiers. Used in the distributed var () type statements. */
-blockidents     : blockidents idents
-
-/* A list of comma-separated identifiers and an equally long list of
-comma-separated expressions with an equals and possibly a type in the middle.
-This kind of structure is required to ensure that the number of idents
-and exps is the same, but it might be hard to put into the AST... */ 
-decexps         : tIDENTIFIER ',' decexps ',' exp
-                | tIDENTIFIER '=' exp
-                | tIDENTIFIER type '=' exp
+blockidents     : blockidents idents type
                 ;
 
 /* A block of things put into a distributed var () statement */
 decdistributed  : decdistributed idents type
-                | decdistributed decexps
+                | decdistributed idents type '=' exps
+                | decdistributed idents '=' exps
                 | idents type
-                | decexps
+                | idents type '=' exps
+                | idents '=' exps
                 ;
 
 /* Used for declaring user-defined types */
@@ -229,11 +223,12 @@ typedistributed : typedistributed tIDENTIFIER type
                 ;
 
 /* function definitions */
-funcdef         : tFUNC tIDENTIFIER '(' typelist ')' '{' stmts returnstmt '}'
+funcdef         : tFUNC tIDENTIFIER '(' typelist ')' type '{' stmts '}' 
+                    {$$ = makeFCTN(yylineno, $2, 0, $4, $6, NULL, 0, $8);}
                 ;
 
 /* Defines the syntax for types in function headers */
-typelist        : typelist ',' tIDENTIFIER type
+typelist        : typelist ',' tIDENTIFIER type 
                 | typelist ',' idents type
                 | tIDENTIFIER type
                 | idents type
@@ -277,19 +272,23 @@ stmt            : simplestmt {$$ = $1;}
 
 /* A subset of statements that can be used in certain extra contexts,
 such as before the conditional expressions of if statements */
-simplestmt      : tIDENTIFIER '(' idents ')' ';' {$$ = makeExp_func($1, NULL, $3);} 
-                | tIDENTIFIER tDOUBLEMINUS ';' {$$ = makeSTMT_assmt(yylineno, $1,)}
-                | tIDENTIFIER tDOUBLEPLUS ';'
+simplestmt      : tIDENTIFIER '(' idents ')' ';' {$$ = makeExp_func($1, 0, $3);} 
+                | tIDENTIFIER tDOUBLEMINUS ';' {ident = makeExp_id($1); one = makeEXP_int(1); 
+                    identMinus = makeExp_sub(ident, one);  $$ = makeSTMT_assmt(yylineno, $1, identMinus);}
+                | tIDENTIFIER tDOUBLEPLUS ';' {ident = makeExp_id($1); one = makeEXP_int(1); 
+                    identPlus = makeExp_plus(ident, one);  $$ = makeSTMT_assmt(yylineno, $1, identPlus);}
                 | asnexps ';'
                 |
                 ;
 
 /* Defines all kinds of if statement, with or without a simplestmt before the conditional */
-ifstmt          : tIF exp '{' stmts '}'
-                | tIF simplestmt exp '{' stmts '}'
-                | tIF exp '{' stmts '}' tELSE '{' stmts '}'
-                | tIF simplestmt exp '{' stmts '}' tELSE '{' stmts '}'
-                | tIF exp '{' stmts '}' tELSE ifstmt
+ifstmt          : tIF exp '{' stmts '}' {$$ = makeSTMT_if(yylineno, $2, NULL, $4, NULL);}
+                | tIF simplestmt exp '{' stmts '}' {$$ = makeSTMT_if(yylineno, $3, $2, $5, NULL);}
+                | tIF exp '{' stmts '}' tELSE '{' stmts '}' {elseStat = makeSTMT_else(yylineno, $8); 
+                    $$ = makeSTMT_if(yylineno, $2, NULL, $4, elseStat);}
+                | tIF simplestmt exp '{' stmts '}' tELSE '{' stmts '}' {elseStat = makeSTMT_else(yylineno, $10); 
+                    $$ = makeSTMT_if(yylineno, $3, $2, $5, elseStat);}
+                | tIF exp '{' stmts '}' tELSE ifstmt {$$ = makeSTMT_if(yylineno, $3, $2, $5, elseStat);}
                 | tIF simplestmt exp '{' stmts '}' tELSE ifstmt
                 ;
 
@@ -324,14 +323,14 @@ We also need to account for the operand-equals construction. */
 asnexps         : tIDENTIFIER ',' asnexps ',' exp
                 | tIDENTIFIER '=' exp
                 | tIDENTIFIER tCOLONASSIGN exp
-                | tIDENTIFIER '+' '=' exp
-                | tIDENTIFIER '-' '=' exp
-                | tIDENTIFIER '*' '=' exp
-                | tIDENTIFIER '/' '=' exp
-                | tIDENTIFIER '%' '=' exp
-                | tIDENTIFIER '&' '=' exp
-                | tIDENTIFIER '|' '=' exp
-                | tIDENTIFIER '^' '=' exp
+                | tIDENTIFIER tPLUSASSIGN exp
+                | tIDENTIFIER tMINUSASSIGN exp
+                | tIDENTIFIER tTIMESASSIGN exp
+                | tIDENTIFIER tDIVASSIGN exp
+                | tIDENTIFIER tMODASSIGN exp
+                | tIDENTIFIER tANDASSIGN exp
+                | tIDENTIFIER tORASSIGN exp
+                | tIDENTIFIER tXORASSIGN exp
                 | tIDENTIFIER tANDNOT '=' exp
                 | tIDENTIFIER tLSHIFT '=' exp
                 | tIDENTIFIER tRSHIFT '=' exp
