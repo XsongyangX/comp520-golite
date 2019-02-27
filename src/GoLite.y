@@ -55,6 +55,7 @@ void yyerror(const char *s) {
 %token tINTLITERAL
 %token tFLOATLITERAL
 %token tSTRINGLITERAL
+%token tRAWSTRINGLITERAL
 %token tBOOLLITERAL
 %token tRUNELITERAL
 %token tIDENTIFIER
@@ -185,7 +186,7 @@ funccall        : tIDENTIFIER '(' idents ')' ';'
 /* variable declarations */
 dec             : tVAR idents type ';'
                 | tVAR decexps ';'
-                | tVAR '(' decdistrubted ')'
+                | tVAR '(' decdistributed ')'
                 | typedec ';'
                 ;
 
