@@ -21,3 +21,5 @@ Assignment description: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone1.
 Specification: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone1_Specifications.pdf
 
 Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone1_Rubric.pdf
+
+Report Google doc: https://docs.google.com/document/d/1vYhJTqpWyOOF-wvh8Kg6RB_f8D3YG6cP70nl1RN3q2s/edit?usp=sharing
