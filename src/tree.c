@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "tree.h"
-
+#include <stdio.h>
 
 
 Exp *makeEXP_empty()
@@ -293,6 +293,22 @@ Exp *makeExp_cap(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
+Exp *makeExp_not(Exp *e1)
+{
+    Exp *e = malloc(sizeof(Exp));
+    e->kind = notExp;
+    e->val.binary.lhs = NULL;
+    e->val.binary.rhs = e1;
+    return e;
+}
+Exp *makeExp_uXOR(Exp *e1)
+{
+    Exp *e = malloc(sizeof(Exp));
+    e->kind = uxorExp;
+    e->val.binary.lhs = NULL;
+    e->val.binary.rhs = e1;
+    return e;
+}
 Exp *makeExp_func(char *identifier, int size, SDecl *args)
 {//format of args(params) subject to change
     Exp *e = malloc(sizeof(Exp));
@@ -390,104 +406,125 @@ Fctn *makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *retu
     return f;
 }
 
-Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val)
+Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = assignS;
-    s->next = NULL;
     s->val.assignment.identifier = identifier;
     s->val.assignment.value = val;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif)
+Stmt *makeSTMT_multiassmt(int lineno, int depth, SDecl *lhs, SDecl *rhs, Stmt *next)
+{
+    if(lhs->next == NULL && rhs->next == NULL)
+    {
+        return makeSTMT_assmt(lineno, lhs->identifier, rhs->identifier, next);
+    }
+    else if(lhs->next != NULL && rhs->next == NULL)
+    {
+        fprintf(stderr, "Error: (line %d) too few assignments. %d to the left, %d to the right.\n", lineno, depth+1, depth);
+    }
+    else if(lhs->next == NULL && rhs->next != NULL)
+    {
+        fprintf(stderr, "Error: (line %d) too few identifiers. %d to the left, %d to the right.\n", lineno, depth, depth+1);
+    }
+    else
+    {
+        next = makeSTMT_multiassmt(lineno, depth+1, lhs->next, rhs->next, next);
+        return makeSTMT_assmt(lineno, lhs->identifier, rhs->identifier, next);
+    }
+    
+}
+Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = ifS;
-    s->next = NULL;
     s->val.conditional.body = body;
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = optDecl;
     s->val.conditional.elif = elif;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_elif(int lineno, Exp *condition, Stmt *body, Stmt *elif)
+Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = elifS;
-    s->next = NULL;
     s->val.conditional.body = body;
     s->val.conditional.condition = condition;
-    s->val.conditional.optDecl = NULL;
+    s->val.conditional.optDecl = optDecl;
     s->val.conditional.elif = elif;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_else(int lineno, Exp *condition, Stmt *body)
+Stmt *makeSTMT_else(int lineno, Stmt *body, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = elseS;
-    s->next = NULL;
     s->val.conditional.body = body;
-    s->val.conditional.condition = condition;
+    s->val.conditional.condition = NULL;
     s->val.conditional.optDecl = NULL;
     s->val.conditional.elif = NULL;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body)//empty expression for inf loop
+Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body, Stmt *next)//empty expression for inf loop
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = whileS;
-    s->next = NULL;
     s->val.conditional.body = body;
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = NULL;
     s->val.conditional.elif = NULL;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action)
+Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = forS;
-    s->next = NULL;
     action->next = body;
     s->val.conditional.body = action;
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = NULL;
     s->val.conditional.elif = NULL;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_decl(int lineno, Decl *declaration)
+Stmt *makeSTMT_decl(int lineno, Decl *declaration, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = declS;
-    s->next = NULL;
     s->val.declaration = declaration;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_exp(int lineno, Exp *expression)
+Stmt *makeSTMT_exp(int lineno, Exp *expression, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = exprS;
-    s->next = NULL;
     s->val.expression = expression;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases)
+Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = switchS;
-    s->next = NULL;
     s->val.switchBody.condition = condition;
     s->val.switchBody.optDecl = optDecl;
     s->val.switchBody.cases = cases;
+    s->next = next;
     return s;
 }
 Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next)
@@ -495,53 +532,52 @@ Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next)
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = caseS;
-    s->next = NULL;
     s->val.caseBody.condition = condition;
     s->val.caseBody.body = body;
     s->next = next;
     return s;
 }
-Stmt *makeSTMT_block(int lineno, Stmt *body)
+Stmt *makeSTMT_block(int lineno, Stmt *body, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = blockS;
-    s->next = NULL;
     s->val.body = body;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine)
+Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = printS;
-    s->next = NULL;
     s->val.iostmt.value = expression;
     s->val.iostmt.hasNewLine = hasNewLine;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_break(int lineno)
+Stmt *makeSTMT_break(int lineno, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = breakS;
-    s->next = NULL;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_continue(int lineno)
+Stmt *makeSTMT_continue(int lineno, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = continueS;
-    s->next = NULL;
+    s->next = next;
     return s;
 }
-Stmt *makeSTMT_return(int lineno, Exp *expression)
+Stmt *makeSTMT_return(int lineno, Exp *expression, Stmt *next)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = returnS;
-    s->next = NULL;
+    s->next = next;
     s->val.expression = expression;
     return s;
 }
@@ -554,3 +590,5 @@ Prog *makePROG(char* package, Decl *declList, Fctn *fnList)
     p->fnList = fnList;
     return p;
 }
+
+

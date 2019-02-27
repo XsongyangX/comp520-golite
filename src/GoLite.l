@@ -169,15 +169,12 @@ PUNCTUATION [?<>+-=,^$|&]
 
 "//"[^\n]* {/*line comments*/}
 	
-<INITIAL>{
-"/*" BEGIN(IN_COMMENT);
-}
-<IN_COMMENT>{
-"*/"	BEGIN(INITIAL);
-[^*\n]+
-"*"
-\n	yylineno++;
-}
+"/*" {BEGIN(IN_COMMENT);}
+
+<IN_COMMENT>[^*\n]* {}
+<IN_COMMENT>"*"+[^*/\n]* {}
+<IN_COMMENT>\n {}
+<IN_COMMENT>"*"+"/" {BEGIN(INITIAL);}
 
 
 0|([1-9][0-9]*) { // INT
@@ -252,7 +249,7 @@ PUNCTUATION [?<>+-=,^$|&]
         fprintf(stdout, "tRAWSTRINGLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tRAWSTRINGLITERAL;
+    return tSTRINGLITERAL;
 
 }
 
