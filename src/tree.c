@@ -660,6 +660,9 @@ Decl *makeDECL_blocknorhs(int lineno, Exp *ids, type *t){
     }
 }
 
+/*Called for block declarations, but with a right hand side. Does basically the same thing
+As makeDECL_blocknorhs(), but each dec actually assigns too.
+Throws an error if there is an unequal number of ids and exps on either side.*/
 Decl *makeDECL_block(int lineno, Exp *ids, type *t, Exp *exps){
     Decl *d = malloc(sizeof(Decl));
     if(ids->next == NULL && exps->next == NULL){
@@ -678,7 +681,7 @@ Decl *makeDECL_block(int lineno, Exp *ids, type *t, Exp *exps){
         exit(1);
     }
 }
-
+/*A similar function to block declarations, but for STMTs*/
 Stmt *makeSTMT_blockassign(int lineno, Exp *ids, Exp *exps){
     Stmt *s = malloc(sizeof(Stmt));
     if(ids->next == NULL && exps->next == NULL){
@@ -697,6 +700,12 @@ Stmt *makeSTMT_blockassign(int lineno, Exp *ids, Exp *exps){
     }
 }
 
+/*Simple functions to get to the bottom of subtrees.
+Made to address a problem with block declarations.
+e.g. For block type norhsdeclarations, a linked list of exps (idents) and a type 
+Must be converted to a linked list of decs, each with one ident and one type.
+The problem is the bottom of this new subtree must be pointed to the next dec.
+This requires going to the bottom in the parser at another point*/
 Stmt *findBottomSTMT(Stmt *s){
     if(s->next == NULL){
         return s;
