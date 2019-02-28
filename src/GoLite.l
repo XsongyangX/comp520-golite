@@ -171,12 +171,9 @@ PUNCTUATION [?<>+-=,^$|&]
 "//"[^\n]* {/*line comments*/}
 	
 "/*" {BEGIN(IN_COMMENT);}
-
-<IN_COMMENT>[^*\n]* {}
-<IN_COMMENT>"*"+[^*/\n]* {}
-<IN_COMMENT>\n {}
-<IN_COMMENT>"*"+"/" {BEGIN(INITIAL);}
-<IN_COMMENT><<EOF>> {fprintf(stderr, "Error: unexpected end of file before end of comment.");}
+<IN_COMMENT>"*/" {BEGIN(INITIAL);}
+<IN_COMMENT><<EOF>> {fprintf(stderr, "Error: (line %d) unclosed block comment\n", yylineno); exit(1);}
+<IN_COMMENT>.|\n {}
 
 0|([1-9][0-9]*) { // INT
 	//DECIMAL VALUE
