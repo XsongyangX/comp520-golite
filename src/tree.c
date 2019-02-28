@@ -37,7 +37,7 @@ Exp *makeEXP_bool(int literal)
     e->val.intLiteral = literal;
     return e;
 }
-Exp *makeExp_plus(Exp *e1, Exp *e2)
+Exp *makeEXP_plus(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = plusExp;
@@ -45,7 +45,7 @@ Exp *makeExp_plus(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_minus(Exp *e1, Exp *e2)
+Exp *makeEXP_minus(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = minusExp;
@@ -53,7 +53,7 @@ Exp *makeExp_minus(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_times(Exp *e1, Exp *e2)
+Exp *makeEXP_times(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = timesExp;
@@ -61,7 +61,7 @@ Exp *makeExp_times(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_div(Exp *e1, Exp *e2)
+Exp *makeEXP_div(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = divExp;
@@ -69,7 +69,7 @@ Exp *makeExp_div(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_mod(Exp *e1, Exp *e2)
+Exp *makeEXP_mod(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = modExp;
@@ -77,7 +77,7 @@ Exp *makeExp_mod(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_pos(Exp *e1)
+Exp *makeEXP_pos(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = posExp;
@@ -85,7 +85,7 @@ Exp *makeExp_pos(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_neg(Exp *e1)
+Exp *makeEXP_neg(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = negExp;
@@ -93,7 +93,7 @@ Exp *makeExp_neg(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_ptr(Exp *e1)
+Exp *makeEXP_ptr(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = ptrExp;
@@ -101,7 +101,7 @@ Exp *makeExp_ptr(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_addr(Exp *e1)
+Exp *makeEXP_addr(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = addrExp;
@@ -109,7 +109,7 @@ Exp *makeExp_addr(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_par(Exp *e1)
+Exp *makeEXP_par(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = parExp;
@@ -117,7 +117,7 @@ Exp *makeExp_par(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_eq(Exp *e1, Exp *e2)
+Exp *makeEXP_eq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = eqExp;
@@ -125,7 +125,7 @@ Exp *makeExp_eq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_neq(Exp *e1, Exp *e2)
+Exp *makeEXP_neq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = neqExp;
@@ -133,7 +133,7 @@ Exp *makeExp_neq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_geq(Exp *e1, Exp *e2)
+Exp *makeEXP_geq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = geqExp;
@@ -141,7 +141,7 @@ Exp *makeExp_geq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_leq(Exp *e1, Exp *e2)
+Exp *makeEXP_leq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = leqExp;
@@ -149,7 +149,7 @@ Exp *makeExp_leq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_gt(Exp *e1, Exp *e2)
+Exp *makeEXP_gt(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = gtExp;
@@ -157,7 +157,7 @@ Exp *makeExp_gt(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_lt(Exp *e1, Exp *e2)
+Exp *makeEXP_lt(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = ltExp;
@@ -165,7 +165,7 @@ Exp *makeExp_lt(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_or(Exp *e1, Exp *e2)
+Exp *makeEXP_or(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = orExp;
@@ -173,7 +173,7 @@ Exp *makeExp_or(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_and(Exp *e1, Exp *e2)
+Exp *makeEXP_and(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = andExp;
@@ -181,7 +181,7 @@ Exp *makeExp_and(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_andnot(Exp *e1, Exp *e2)
+Exp *makeEXP_andnot(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = andnotExp;
@@ -189,14 +189,14 @@ Exp *makeExp_andnot(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_id(char *identifier)
+Exp *makeEXP_id(char *identifier)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = idExp;
     e->val.identifier = identifier;
     return e;
 }
-Exp *makeExp_band(Exp *e1, Exp *e2)
+Exp *makeEXP_band(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = bitAndExp;
@@ -204,7 +204,7 @@ Exp *makeExp_band(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_bor(Exp *e1, Exp *e2)
+Exp *makeEXP_bor(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = bitOrExp;
@@ -212,7 +212,7 @@ Exp *makeExp_bor(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_xor(Exp *e1, Exp *e2)
+Exp *makeEXP_xor(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = xorExp;
@@ -220,7 +220,7 @@ Exp *makeExp_xor(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_lshift(Exp *e1, Exp *e2)
+Exp *makeEXP_lshift(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = lshiftExp;
@@ -228,7 +228,7 @@ Exp *makeExp_lshift(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_rshift(Exp *e1, Exp *e2)
+Exp *makeEXP_rshift(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = rshiftExp;
@@ -236,7 +236,7 @@ Exp *makeExp_rshift(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_range(Exp *e1, Exp *e2)
+Exp *makeEXP_range(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = rangeExp;
@@ -244,7 +244,7 @@ Exp *makeExp_range(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_index(Exp *e2)
+Exp *makeEXP_index(Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = indexExp;
@@ -252,7 +252,7 @@ Exp *makeExp_index(Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be a range or and index exp
+Exp *makeEXP_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be a range or and index exp
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = elementExp;
@@ -261,7 +261,7 @@ Exp *makeExp_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be
     return e;
 
 }
-Exp *makeExp_invoc(Exp *e1, Exp *e2)
+Exp *makeEXP_invoc(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = invocExp;
@@ -269,7 +269,7 @@ Exp *makeExp_invoc(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_append(Exp *e1, Exp *e2)
+Exp *makeEXP_append(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = appendExp;
@@ -277,7 +277,7 @@ Exp *makeExp_append(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_len(Exp *e1)
+Exp *makeEXP_len(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = lenExp;
@@ -285,7 +285,7 @@ Exp *makeExp_len(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_cap(Exp *e1)
+Exp *makeEXP_cap(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = capExp;
@@ -293,7 +293,7 @@ Exp *makeExp_cap(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_not(Exp *e1)
+Exp *makeEXP_not(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = notExp;
@@ -301,7 +301,7 @@ Exp *makeExp_not(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_uXOR(Exp *e1)
+Exp *makeEXP_uXOR(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = uxorExp;
@@ -309,7 +309,7 @@ Exp *makeExp_uXOR(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_func(char *identifier, int size, SDecl *args)
+Exp *makeEXP_func(char *identifier, int size, SDecl *args)
 {//format of args(params) subject to change
     Exp *e = malloc(sizeof(Exp));
     e->kind = funcExp;
@@ -589,6 +589,130 @@ Prog *makePROG(char* package, Decl *declList, Fctn *fnList)
     p->declList = declList;
     p->fnList = fnList;
     return p;
+}
+
+/*Stuff written by Greg starts here */
+
+
+Type *makeTYPE(GroupingType gtype, int size, char *name, type *arg){
+    type *t = malloc(sizeof(type));
+    t->SymbolType = identifier;
+    t->gType = gType;
+    t->name = name;
+    t->val->arg = arg;
+    return t; 
+}
+
+Type *makeTYPE_struct(int size, char *name, Decl *args){
+    type *t = malloc(sizeof(type));
+    t->SymbolType = identifier;
+    t->gType = structType;
+    t->name = name;
+    t->val->args = args;
+    return t; 
+}
+
+/* A constructor for a block of identifiers
+Used e.g. in multiple assignments, or in function headers */
+Exp *makeEXP_idblock(char *identifier, Exp *next){
+    Exp *e = malloc(sizeof(Exp));
+    e->type = NULL;
+    e->kind = idblockExp;
+    e->val->idblock->next = next;
+    e->val->idblock->identifier = identifier;
+}
+
+Exp *makeEXP_expblock(Exp *e, Exp *next){
+    Exp *e = malloc(sizeof(Exp));
+    e->type = NULL;
+    e->kind = expblockExp;
+    e->val->expblock->next = next;
+    e->val->expblock->value = e;
+}
+
+Decl *makeDECL_type(type typeNode){
+    Decl *d = malloc(sizeof(Decl));
+    d->d = typeDecl;
+    d->t = typeNode
+    d->val.right = NULL;
+    d->next = NULL;
+    return d;
+}
+
+/*Called upon reaching the end of a block norhs_assignment, e.g. var a, b, c int
+Takes the linked list of identifiers and makes each of them into a declaration statement,
+propogating the type to all statements*/
+Decl *makeDECL_blocknorhs(int lineno, Exp *ids, type *t){
+    Decl *d = malloc(sizeof(Decl));
+    // If there is no next id, create a dec for the last id 
+    if(ids->next == NULL){
+        d = makeDECL_norhs(typeDecl, ids->val->idblock->identifier, varDecl, nilType, NULL);
+        return d;
+    }
+    //If there is a next id, recurse onto that id. 
+    //Then create a dec for this level and a pointer this dec to the subtree 
+    else{
+        Decl *nextD = malloc(sizeof(Decl));
+        nextD = makeDECL_blocknorhs(lineno, ids->next, t);
+        d = makeDECL_norhs(typeDecl, ids->val->idblock->identifier, varDecl, nilType, NULL);
+        d->next = nextD;
+        return d;
+    }
+}
+
+Decl *makeDECL_block(int lineno, Exp *ids, type *t, Exp *exps){
+    Decl *d = malloc(sizeof(Decl));
+    if(ids->next == NULL && exps->next == NULL){
+        d = makeDecl(typeDecl, ids->val->idblock->identifier, varDecl, nilType, NULL, exps->val->expblock->value);
+        return d;
+    }
+    else if(ids->next != NULL && exps->next != NULL){
+        Decl *nextD = malloc(sizeof(Decl));
+        nextD = makeDECL_block(lineno, ids->next, t, exps->next);
+        d = makeDecl(typeDecl, ids->val->idblock->identifier, varDecl, nilType, NULL, exps->val->expblock->value);
+        d->next = nextD;
+        return d;
+    }
+    else{
+        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        exit(1);
+    }
+}
+
+Stmt *makeSTMT_blockassign(int lineno, Exp *ids, Exp *exps){
+    Stmt *s = malloc(sizeof(Stmt));
+    if(ids->next == NULL && exps->next == NULL){
+        s = makeSTMT_assmt(lineno, ids->val->idblock->identifier, exps->val->expblock->value, NULL);
+        return s;
+    }
+    else if(ids->next != NULL && exps->next != NULL){
+        Stmt *nextS = malloc(sizeof(Stmt));
+        nextD = makeSTMT_blockassign(lineno, ids->next, exps->next);
+        s = makeSTMT_assmt(lineno, ids->val->idblock->identifier, exps->val->expblock->value, nextD);
+        return s;
+    }
+    else{
+        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        exit(1);
+    }
+}
+
+Stmt *findBottomSTMT(Stmt *s){
+    if(s->next == NULL){
+        return s;
+    }
+    else{
+        return findBottomSTMT(s->next);
+    }
+}
+
+Decl *findBottomDECL(Decl *d){
+    if(d->next == NULL){
+        return d;
+    }
+    else{
+        return findBottomDECL(d->next);
+    }
 }
 
 
