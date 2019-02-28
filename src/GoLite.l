@@ -171,12 +171,10 @@ PUNCTUATION [?<>+-=,^$|&]
 "//"[^\n]* {/*line comments*/}
 	
 "/*" {BEGIN(IN_COMMENT);}
-
-<IN_COMMENT>[^*\n]* {}
-<IN_COMMENT>"*"+[^*/\n]* {}
-<IN_COMMENT>\n {}
-<IN_COMMENT>"*"+"/" {BEGIN(INITIAL);}
-
+<IN_COMMENT>"*/" {BEGIN(INITIAL);}
+<IN_COMMENT><<EOF>> {fprintf(stderr, "Error: (line %d) unclosed block comment\n", yylineno); exit(1);}
+<IN_COMMENT>\n {if (requiresIns) {if(isToken) printf("tSEMICOLON\n");} return tSEMICOLON;}
+<IN_COMMENT>. {}
 
 0|([1-9][0-9]*) { // INT
 	//DECIMAL VALUE
