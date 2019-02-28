@@ -82,10 +82,14 @@ enum GroupingType{  nilType,
 enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
+
+
 /*By convention, simple values have size 1.
 Slices start with size 0.
 Name is NULL unless the type is user-defined, in which case it reflects
-the user-specificed name of the type.*/
+the user-specificed name of the type.
+If the type is just a rename of another type, the val is one arg with a pointer to that type.
+If the type is a struct, the val is a linked list of Exps representing the members of the struct.*/
 struct TYPE{
     int size;
     char *name;
