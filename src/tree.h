@@ -72,25 +72,14 @@ enum StatementKind{ emptyS, //NULL
                     declS
                     };
 
-enum GroupingType{  intType;
-                    floatType;
-                    boolType;
-                    runeType;
-                    strType;
-                    intArrayType;
-                    floatArrayType;
-                    boolArrayType;
-                    runeArrayType;
-                    strArrayType;
-                    intSliceType;
-                    floatSliceType;
-                    boolSliceType;
-                    runeSliceType;
-                    strSliceType;
-                    structType;
-                    userType;
+enum GroupingType{  nilType,
+                    baseType,
+                    arrayType,
+                    sliceType,
+                    structType,
+                    userType,
                     };
-enum DeclarationType{typeDecl, varDecl, structDecl};
+enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
 /*By convention, simple values have size 1.
@@ -128,7 +117,8 @@ struct DECLARATION{//compound declarations should be broken down into individual
     char *identifier;
     union {
         Exp *right;
-        struct{ Decl *dbody; Fctn *fbody;} body;
+        Fctn *f;
+        Decl *body;
     }val;
     Decl *next;
 };
@@ -142,7 +132,7 @@ struct FUNCTION{//parameters are referred to as a list of declarations where the
     symTable *localSym;
     char *identifier;
     int paramCount;
-    SDecl *params;
+    Decl *params;
     type *returnt;
     Stmt *body;
     Fctn *next;
@@ -209,45 +199,44 @@ Exp *makeEXP_append(Exp *e1, Exp *e2);
 Exp *makeEXP_len(Exp *e1);
 Exp *makeEXP_cap(Exp *e1);
 Exp *makeEXP_uXOR(Exp *e1);
-Exp *makeEXP_func(char *identifier, int size, SDecl *args);
+Exp *makeEXP_func(char *identifier, int size, Decl *args);
 Exp *makeEXP_expblock(Exp *e, Exp *next);
 Exp *makeEXP_idblock(char *identifier, Exp *next);
 
 Decl *makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, Exp *rhs);
 Decl *makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize);
 Decl *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  Exp *rhs);
-Decl *makeDECL_struct( char *identifier, Decl *body, Fctn *fbody);
+Decl *makeDECL_struct( char *identifier, Decl *body);
 SDecl *makeSDecl(Exp *e, char* declType, int gtype, int arraysize);
 Decl *makeDECL_block(int lineno, Exp *ids, type *t, Exp *exps);
 Decl *makeDECL_blocknorhs(int lineno, Exp *ids, type *t);
-Decl *makeDECL_type(type typeNode);
+Decl *makeDECL_type(char *identifier, type *typeNode);
 
-Fctn *makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, int arraysize, Stmt *body);
+Fctn *makeFCTN(int lineno, char *identifier, int size, Decl *params, type *returnType, Stmt *body);
 
-Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val, Stmt *next);
-Stmt *makeSTMT_multiassmt(int lineno, int depth, SDecl *lhs, SDecl *rhs, Stmt *next);
-Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next);
-Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next);
-Stmt *makeSTMT_else(int lineno, Stmt *body, Stmt *next);
-Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body, Stmt *next);
-Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action, Stmt *next);
-Stmt *makeSTMT_decl(int lineno, Decl *declaration, Stmt *next);
-Stmt *makeSTMT_exp(int lineno, Exp *expression, Stmt *next);
-Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases, Stmt *next);
-Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next);
-Stmt *makeSTMT_block(int lineno, Stmt *body, Stmt *next);
-Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine, Stmt *next);
-Stmt *makeSTMT_break(int lineno, Stmt *next);
-Stmt *makeSTMT_continue(int lineno, Stmt *next);
-Stmt *makeSTMT_return(int lineno, Exp *expression, Stmt *next);
+Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val);
+Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
+Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
+Stmt *makeSTMT_else(int lineno, Stmt *body);
+Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body);
+Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action);
+Stmt *makeSTMT_decl(int lineno, Decl *declaration);
+Stmt *makeSTMT_exp(int lineno, Exp *expression);
+Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases);
+Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body);
+Stmt *makeSTMT_block(int lineno, Stmt *body);
+Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine);
+Stmt *makeSTMT_break(int lineno);
+Stmt *makeSTMT_continue(int lineno);
+Stmt *makeSTMT_return(int lineno, Exp *expression);
 Stmt *makeSTMT_blockassign(int lineno, Exp *ids, Exp *exps);
 
-Type *makeTYPE(GroupingType gtype, int size, char *name, type *arg);
-Type *makeTYPE_struct(int size, char *name, Decl *args);
+type *makeTYPE(int gtype, int size, char *name, type *arg);
+//type *makeTYPE_struct(int size, char *name, Decl *args);
 
 
 
-Prog *makePROG(char* package, Decl *declList, Fctn *fnList);
+Prog *makePROG(char* package, Decl *declList);
 
 Decl *findBottomDECL(Decl *d);
 Stmt *findBottomSTMT(Stmt *s);
