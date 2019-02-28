@@ -42,6 +42,13 @@ void yyerror(const char *s) {
     float floatval;
     char *strval;
     int boolval;
+    char runeval;
+    type typeval;
+    Exp expval;
+    Stmt stmtval;
+    Decl decval;
+    Prog progval;
+    Fctn funcval;
 }
 
 /* Token directives define the token types to be returned by the scanner (excluding character
@@ -54,13 +61,13 @@ void yyerror(const char *s) {
 %token tSTRING
 %token tBOOL
 %token tRUNE
-%token tINTLITERAL
-%token tFLOATLITERAL
-%token tSTRINGLITERAL
-%token tRAWSTRINGLITERAL
-%token tBOOLLITERAL
-%token tRUNELITERAL
-%token tIDENTIFIER
+%token <intval> tINTLITERAL
+%token <floatval> tFLOATLITERAL
+%token <strval> tSTRINGLITERAL
+%token <strval> tRAWSTRINGLITERAL
+%token <boolval> tBOOLLITERAL
+%token <runeval> tRUNELITERAL
+%token <identifier> tIDENTIFIER
 %token tTYPE
 %token tSTRUCT
 %token tFUNC
@@ -127,169 +134,196 @@ void yyerror(const char *s) {
 %% 
 
 /* Represents the entire program. Makes sure there is only one package dec */
-prgrm           : tPACKAGE tIDENTIFIER stmts
+prgrm           : tPACKAGE tIDENTIFIER {$$ = makePROG($2, NULL, NULL);}
+                | tPACKAGE tIDENTIFIER funcdefs decs {$$ = makePROG($2, $4, $3)}
+                | tPACKAGE tIDENTIFIER decs {$$ = makePROG($2, $3, NULL)}
+                | tPACKAGE tIDENTIFIER funcdefs {$$ = makePROG($2, NULL, $3)}
                 ;
 
 /* Expressions of all kinds. Expands to trm for precedence reasons. Other predecence
 is to be solved using directives. */
-exp             : '+' exp %prec UNARY {$$ = makeExp_pos($2);}
-                | '-' exp %prec UNARY {$$ = makeExp_neg($2);}
-                | '!' exp %prec UNARY {$$ = makeExp_not($2);} 
-                | '^' exp %prec UNARY {$$ = makeExp_uxor($2);}
-                | exp '<' exp {$$ = makeExp_lt($1, $3);}
-                | exp '>' exp {$$ = makeExp_gt($1, $3);}
-                | exp tEQ exp {$$ = makeExp_eq($1, $3);}
-                | exp tNEQ exp {$$ = makeExp_neq($1, $3);}
-                | exp tGEQ exp {$$ = makeExp_geq($1, $3);}
-                | exp tLEQ exp {$$ = makeExp_leq($1, $3);}
-                | exp tAND exp {$$ = makeExp_and($1, $3);}
-                | exp tOR exp  {$$ = makeExp_or($1, $3);}
-                | exp '+' trm  {$$ = makeExp_plus($1, $3);}
-                | exp '-' trm  {$$ = makeExp_minus($1, $3);}
-                | exp '|' trm  {$$ = makeExp_bor($1, $3);}
-                | exp '^' trm  {$$ = makeExp_xor($1, $3);}
-                | tAPPEND '(' exp ',' exp ')' {$$ = makeExp_append($3, $5);}
-                | tLEN '(' exp ')' {$$ = makeExp_len($3);}
-                | tCAP '(' exp ')' {$$ = makeExp_cap($3);}
+exp             : '+' exp %prec UNARY {$$ = makeEXP_pos($2);}
+                | '-' exp %prec UNARY {$$ = makeEXP_neg($2);}
+                | '!' exp %prec UNARY {$$ = makeEXP_not($2);} 
+                | '^' exp %prec UNARY {$$ = makeEXP_uxor($2);}
+                | exp '<' exp {$$ = makeEXP_lt($1, $3);}
+                | exp '>' exp {$$ = makeEXP_gt($1, $3);}
+                | exp tEQ exp {$$ = makeEXP_eq($1, $3);}
+                | exp tNEQ exp {$$ = makeEXP_neq($1, $3);}
+                | exp tGEQ exp {$$ = makeEXP_geq($1, $3);}
+                | exp tLEQ exp {$$ = makeEXP_leq($1, $3);}
+                | exp tAND exp {$$ = makeEXP_and($1, $3);}
+                | exp tOR exp  {$$ = makeEXP_or($1, $3);}
+                | exp '+' trm  {$$ = makeEXP_plus($1, $3);}
+                | exp '-' trm  {$$ = makeEXP_minus($1, $3);}
+                | exp '|' trm  {$$ = makeEXP_bor($1, $3);}
+                | exp '^' trm  {$$ = makeEXP_xor($1, $3);}
+                | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
+                | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
+                | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
                 | trm {$$ = $1;}
                 ;
 
 /* Expansion of exp for precedence. Expands to ftr */
-trm             : trm '*' ftr {$$ = makeExp_times($1, $3);}
-                | trm '/' ftr {$$ = makeExp_div($1, $3);}
-                | trm '%' ftr {$$ = makeExp_mod($1, $3);}
-                | trm tLSHIFT ftr {$$ = makeExp_lshift($1, $3);}
-                | trm tRSHIFT ftr {$$ = makeExp_rshift($1, $3);}
-                | trm '&' ftr {$$ = makeExp_band($1, $3);}
-                | trm tANDNOT ftr {$$ = makeExp_andnot($1, $3);}
+trm             : trm '*' ftr {$$ = makeEXP_times($1, $3);}
+                | trm '/' ftr {$$ = makeEXP_div($1, $3);}
+                | trm '%' ftr {$$ = makeEXP_mod($1, $3);}
+                | trm tLSHIFT ftr {$$ = makeEXP_lshift($1, $3);}
+                | trm tRSHIFT ftr {$$ = makeEXP_rshift($1, $3);}
+                | trm '&' ftr {$$ = makeEXP_band($1, $3);}
+                | trm tANDNOT ftr {$$ = makeEXP_andnot($1, $3);}
                 | ftr {$$ = $1;}
                 ;
 
 /* The final expansion of exp. Can expand back to exp with parentheses. Also handles literals
  and function calls. */
 ftr             : '(' exp ')' {$$ = $2;}
-                | tIDENTIFIER {$$ = makeExp_id($1);}
+                | tIDENTIFIER {$$ = makeEXP_id($1);}
                 | tINTLITERAL {$$ = makeEXP_int($1);}
                 | tFLOATLITERAL {$$ = makeEXP_float($1);}
                 | tBOOLLITERAL {$$ = makeEXP_bool($1);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
-                | tIDENTIFIER '(' idents ')' ';' {$$ = makeExp_func($1, 0, $3);}
+                | tIDENTIFIER '(' idents ')' ';' {$$ = makeEXP_func($1, 0, $3);}
+                | structaccess '.' tIDENTIFIER  {Exp id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
                 ;
 
+structaccess    : structaccess '.' tIDENTIFIER {Exp id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
+                | tIDENTIFIER {$$ = makeEXP_id($1);}
+                ;
+
+/* an arbitrily long list of expressions, separated by commas */
+exps            : exps ',' exp {$$ = makeEXP_idblock($3, $1);}
+                | exp {$$ = makeEXP_idblock($1, NULL);}
+                ;
+
+/* an arbitrily long list of identifiers, separated by commas */
+idents          : idents ',' tIDENTIFIER {$$ = makeEXP_idblock($3, $1);}
+                | tIDENTIFIER {$$ = makeEXP_idblock($1, NULL);}
+                ;
+
+/* a block of lists of identifiers. Used in the distributed var () type statements. */
+blockidents     : blockidents idents type {$$ = makeDecl_blocknorhs(yylineno, $2, $3); findBottomDECL($$)->next = $1;}
+                | idents type {$$ = makeDecl_blocknorhs(yylineno, $1, $2);}
+                ;
 
 /* variable declarations */
-dec             : tVAR idents type ';' {$$ = makeDECL_norhs();}
-                | tVAR idents type '=' exps ';'
-                | tVAR idents '=' exps ';' {$$ = makeSTMT_multiassmt(yylineno, )}
+dec             : tVAR idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3);}
+                | tVAR idents type '=' exps ';' {$$ = makeDECL_block(yylineno, $2, $3, $5);}
+                | tVAR idents '=' exps ';' {$$ = makeDECL_block(yylineno, $2, NULL, $4)}
                 | tVAR '(' decdistributed ')' {$$ = $3;}
                 | typedec ';' {$$ = $1;}
                 ;
 
-/* an arbitrily long list of expressions, separated by commas */
-exps            : exps ',' exp {$$ = makeSDecl($1, NULL, niltype, 0); $$->next = $3;}
-                | exp {$$ = makeSDecl($1, NULL, niltype, 0);}
-                ;
-
-/* an arbitrily long list of identifiers, separated by commas */
-idents          : idents ',' tIDENTIFIER
-                | tIDENTIFIER
-                ;
-
-/* a block of lists of identifiers. Used in the distributed var () type statements. */
-blockidents     : blockidents idents type
+decs            : decs dec {$$ = $2; Decl bottom = findBottomDecl($2); bottom->next = $1;}
+                | dec {$$ = $1;}
                 ;
 
 /* A block of things put into a distributed var () statement */
-decdistributed  : decdistributed idents type
-                | decdistributed idents type '=' exps
-                | decdistributed idents '=' exps
-                | idents type
-                | idents type '=' exps
-                | idents '=' exps
+decdistributed  : decdistributed idents type {$$ = makeDecl_blocknorhs(yylineno, $2, $3); findBottomDecl($$)->next = $1;}
+                | decdistributed idents type '=' exps {$$ = makeDECL_block(yylineno, $2, $3, $5); 
+                    findBottomDecl($$)->next = $1;}
+                | decdistributed idents '=' exps {$$ = makeDECL_block(yylineno, $2, NULL, $4); 
+                    findBottomDecl($$)->next = $1;}
+                | idents type {$$ = makeDecl_blocknorhs(yylineno, $1, $2);}
+                | idents type '=' exps {$$ = makeDECL_block(yylineno, $1, $2, $4);}
+                | idents '=' exps {$$ = makeDECL_block(yylineno, $1, NULL, $3);}
                 ;
 
 /* Used for declaring user-defined types */
-typedec         : tTYPE tIDENTIFIER type
-                | tTYPE tIDENTIFIER tSTRUCT '{' blockidents '}'
-                | tTYPE '(' typedistributed ')'
+typedec         : tTYPE tIDENTIFIER type {type newType = makeTYPE(userType, 0, $2, $3); 
+                    $$ = makeDECL_type(newType);}
+                | tTYPE tIDENTIFIER tSTRUCT '{' blockidents '}' {type newType = makeTYPE_struct(0, $2, $5); 
+                    $$ = makeDECL_type(newType);}
+                | tTYPE '(' typedistributed ')' {$$ = $3;}
                 ;
 
 /* Used for declaring user defined types with the distributed type () syntax */
-typedistributed : typedistributed tIDENTIFIER type
-                | typedistributed tIDENTIFIER tSTRUCT '{' blockidents '}'
-                | tIDENTIFIER type
-                | tIDENTIFIER tSTRUCT '{' blockidents '}'
+typedistributed : typedistributed tIDENTIFIER type {type newType = makeTYPE(userType, 0, $2, $3); 
+                    $$ = makeDECL_type(newType); $$->next = $1;}
+                | typedistributed tIDENTIFIER tSTRUCT '{' blockidents '}' 
+                    {type newType = makeTYPE_struct(0, $2, $5); 
+                    $$ = makeDECL_type(newType); $$->next = $1;}
+                | tIDENTIFIER type {type newType = makeTYPE(userType, 0, $1, $2); 
+                    $$ = makeDECL_type(newType);}
+                | tIDENTIFIER tSTRUCT '{' blockidents '}'  {type newType = makeTYPE_struct(0, $1, $4); 
+                    $$ = makeDECL_type(newType);}
                 ;
 
 /* function definitions */
 funcdef         : tFUNC tIDENTIFIER '(' typelist ')' type '{' stmts '}' 
                     {$$ = makeFCTN(yylineno, $2, 0, $4, $6, NULL, 0, $8);}
+                | tFUNC tIDENTIFIER '(' ')' type '{' stmts '}' 
+                    {$$ = makeFCTN(yylineno, $2, 0, NULL, $5, NULL, 0, $7);}
+                ;
+
+funcdefs        : funcdefs funcdef {$$ = $2; $2->next = $1;}
+                | funcdef {$$ = $1;}
                 ;
 
 /* Defines the syntax for types in function headers */
-typelist        : typelist ',' tIDENTIFIER type 
-                | typelist ',' idents type
-                | tIDENTIFIER type
-                | idents type
+typelist        : typelist ',' idents type {$$ = makeDECL_blocknorhs(yylineno, $3, $4); $$->next = $1;}
+                | idents type {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
                 ;
 
-/* Defines the various kinds of types that can be used. Should structs be in here...? */
-type            : tINT
-                | tFLOAT
-                | tBOOL
-                | tRUNE
-                | tSTRING
-                | '[' ']' tINT
-                | '[' ']' tFLOAT
-                | '[' ']' tBOOL
-                | '[' ']' tRUNE
-                | '[' ']' tSTRING
-                | '[' tINTLITERAL ']' tINT
-                | '[' tINTLITERAL ']' tFLOAT
-                | '[' tINTLITERAL ']' tBOOL
-                | '[' tINTLITERAL ']' tRUNE
-                | '[' tINTLITERAL ']' tSTRING
+/* Defines the various kinds of types that can be used.*/
+type            : tINT {$$ = makeTYPE(intType, 1, NULL);}
+                | tFLOAT {$$ = makeTYPE(floatType, 1, NULL);}
+                | tBOOL {$$ = makeTYPE(boolType, 1, NULL);}
+                | tRUNE {$$ = makeTYPE(runeType, 1, NULL);}
+                | tSTRING {$$ = makeTYPE(stringType, 1, NULL);}
+                | '[' ']' tINT {$$ = makeTYPE(intSliceType, 0, NULL);}
+                | '[' ']' tFLOAT {$$ = makeTYPE(floatSliceType, 0, NULL);}
+                | '[' ']' tBOOL {$$ = makeTYPE(boolSliceType, 0, NULL);}
+                | '[' ']' tRUNE {$$ = makeTYPE(runeSliceType, 0, NULL);}
+                | '[' ']' tSTRING {$$ = makeTYPE(stringSliceType, 0, NULL);}
+                | '[' tINTLITERAL ']' tINT {$$ = makeTYPE(intArrayType, $2, NULL);}
+                | '[' tINTLITERAL ']' tFLOAT {$$ = makeTYPE(floatArrayType, $2, NULL);}
+                | '[' tINTLITERAL ']' tBOOL {$$ = makeTYPE(boolArrayType, $2, NULL);}
+                | '[' tINTLITERAL ']' tRUNE {$$ = makeTYPE(runeArrayType, $2, NULL);}
+                | '[' tINTLITERAL ']' tSTRING {$$ = makeTYPE(strArrayType, $2, NULL);}
+                | tIDENTIFIER {$$ = makeTYPE(userType, 0, $1);}
                 ;
 
 /* A block of statements */
-stmts           : stmts stmt {$$ = makeSTMT_block(yylineno, $2);}
+stmts           : stmts stmt {$$ = $2; Stmt last = findBottomSTMT($2); last->next = $1;}
                 | stmt {$$ = $1;}
                 ;
 
 /* Defines the kinds of statements that can be used in any context 
 A potential issue is having returnstmt in here. Should you be able to return from anywhere?*/
 stmt            : simplestmt {$$ = $1;}
-                | tPRINT '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
-                | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
-                | tBREAK ';' {$$ = makeSTMT_break(yylineno);}
-                | tCONTINUE ';' {$$ = makeSTMT_break(continue);}
+                | tPRINT '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0, NULL);}
+                | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1, NULL);}
+                | tBREAK ';' {$$ = makeSTMT_break(yylineno, NULL);}
+                | tCONTINUE ';' {$$ = makeSTMT_continue(yylineno, NULL);}
                 | ifstmt {$$ = $1;}
                 | switchstmt {$$ = $1;}
                 | forstmt {$$ = $1;}
                 | returnstmt {$$ = $1;}
+                | dec {$$ = makeSTMT_decl(yylineno, $1, NULL);}
                 ;
 
 /* A subset of statements that can be used in certain extra contexts,
 such as before the conditional expressions of if statements */
-simplestmt      : tIDENTIFIER '(' idents ')' ';' {$$ = makeExp_func($1, 0, $3);} 
-                | tIDENTIFIER tDOUBLEMINUS ';' {ident = makeExp_id($1); one = makeEXP_int(1); 
-                    identMinus = makeExp_sub(ident, one);  $$ = makeSTMT_assmt(yylineno, $1, identMinus);}
-                | tIDENTIFIER tDOUBLEPLUS ';' {ident = makeExp_id($1); one = makeEXP_int(1); 
-                    identPlus = makeExp_plus(ident, one);  $$ = makeSTMT_assmt(yylineno, $1, identPlus);}
-                | asnexps ';'
-                |
+simplestmt      : tIDENTIFIER '(' idents ')' ';' {$$ = makeEXP_func($1, 0, $3);} 
+                | tIDENTIFIER tDOUBLEMINUS ';' {Exp ident = makeEXP_id($1); Exp one = makeEXP_int(1); 
+                    Exp identMinus = makeEXP_sub(ident, one);  $$ = makeSTMT_assmt(yylineno, $1, identMinus, NULL);}
+                | tIDENTIFIER tDOUBLEPLUS ';' {Exp ident = makeEXP_id($1); Exp one = makeEXP_int(1); 
+                    Exp identPlus = makeEXP_plus(ident, one);  $$ = makeSTMT_assmt(yylineno, $1, identPlus, NULL);}
+                | asnexps ';' {$$ = $1;}
                 ;
 
 /* Defines all kinds of if statement, with or without a simplestmt before the conditional */
 ifstmt          : tIF exp '{' stmts '}' {$$ = makeSTMT_if(yylineno, $2, NULL, $4, NULL);}
                 | tIF simplestmt exp '{' stmts '}' {$$ = makeSTMT_if(yylineno, $3, $2, $5, NULL);}
-                | tIF exp '{' stmts '}' tELSE '{' stmts '}' {elseStat = makeSTMT_else(yylineno, $8); 
-                    $$ = makeSTMT_if(yylineno, $2, NULL, $4, elseStat);}
-                | tIF simplestmt exp '{' stmts '}' tELSE '{' stmts '}' {elseStat = makeSTMT_else(yylineno, $10); 
-                    $$ = makeSTMT_if(yylineno, $3, $2, $5, elseStat);}
-                | tIF exp '{' stmts '}' tELSE ifstmt {$$ = makeSTMT_if(yylineno, $3, $2, $5, elseStat);}
-                | tIF simplestmt exp '{' stmts '}' tELSE ifstmt
+                | tIF exp '{' stmts '}' tELSE '{' stmts '}' {Stmt elseStmt = makeSTMT_else(yylineno, $8); 
+                    $$ = makeSTMT_if(yylineno, $2, NULL, $4, elseStmt);}
+                | tIF simplestmt exp '{' stmts '}' tELSE '{' stmts '}' {Stmt elseStmt = makeSTMT_else(yylineno, $10); 
+                    $$ = makeSTMT_if(yylineno, $3, $2, $5, elseStmt);}
+                | tIF exp '{' stmts '}' tELSE ifstmt {Stmt elseStmt = makeSTMT_else(yylineno, $10);
+                    $$ = makeSTMT_if(yylineno, $3, $2, $5, elseStmt);}
+                | tIF simplestmt exp '{' stmts '}' tELSE ifstmt {$$ = makeSTMT_elif(yylineno, $3, $2, $5, $8, NULL);}
                 ;
 
 /* Defines switch statements */
@@ -320,20 +354,30 @@ returnstmt      : tRETURN ';' {$$ = makeSTMT_return(yylineno, NULL);}
 /* Defines the kind of valid assignment expressions.
 Again, we need to account for an equal number of idents and exps on either side.
 We also need to account for the operand-equals construction. */
-asnexps         : tIDENTIFIER ',' asnexps ',' exp
-                | tIDENTIFIER '=' exp
-                | tIDENTIFIER tCOLONASSIGN exp
-                | tIDENTIFIER tPLUSASSIGN exp
-                | tIDENTIFIER tMINUSASSIGN exp
-                | tIDENTIFIER tTIMESASSIGN exp
-                | tIDENTIFIER tDIVASSIGN exp
-                | tIDENTIFIER tMODASSIGN exp
-                | tIDENTIFIER tANDASSIGN exp
-                | tIDENTIFIER tORASSIGN exp
-                | tIDENTIFIER tXORASSIGN exp
-                | tIDENTIFIER tANDNOT '=' exp
-                | tIDENTIFIER tLSHIFT '=' exp
-                | tIDENTIFIER tRSHIFT '=' exp
+asnexps         : idents '=' exps {$$ = makeSTMT_blockassign(yylineno, $1, $3);}
+                | tIDENTIFIER tCOLONASSIGN exp {ident = makeEXP_id($1); $$ = makeSTMT_assmt(yylineno, $1, $3);}
+                | tIDENTIFIER tPLUSASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_plus(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tMINUSASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_sub(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tTIMESASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_times(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tDIVASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_div(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tMODASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_mod(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tAMPASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_and(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tORASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_or(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tPOWASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_xor(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tAMPPOWASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_andnot(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tLSHIFTASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_lshift(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
+                | tIDENTIFIER tRSHIFTASSIGN exp {ident = makeEXP_id($1); 
+                    newExp = makeEXP_rshift(ident, $3);  $$ = makeSTMT_assmt(yylineno, $1, newExp);}
                 ;
 
 
