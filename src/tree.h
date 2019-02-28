@@ -49,6 +49,7 @@ enum ExpressionKind{emptyExp, //NULL
                     appendExp, //built-in
                     lenExp, //built-in
                     capExp, //built-in
+		    uxorExp,
                     funcExp //function call
                     };
 enum StatementKind{ emptyS, //NULL
@@ -183,7 +184,8 @@ Exp *makeExp_invoc(Exp *e1, Exp *e2);
 Exp *makeExp_append(Exp *e1, Exp *e2);
 Exp *makeExp_len(Exp *e1);
 Exp *makeExp_cap(Exp *e1);
-Exp *makeExp_func(char *identifier, int size, Stmt *args);
+Exp *makeExp_uXOR(Exp *e1);
+Exp *makeExp_func(char *identifier, int size, SDecl *args);
 
 Decl *makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, Exp *rhs);
 Decl *makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize);
@@ -193,21 +195,22 @@ SDecl *makeSDecl(Exp *e, char* declType, int gtype, int arraysize);
 
 Fctn *makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, int arraysize, Stmt *body);
 
-Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val);
-Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
-Stmt *makeSTMT_elif(int lineno, Exp *condition, Stmt *body, Stmt *elif);
-Stmt *makeSTMT_else(int lineno, Exp *condition, Stmt *body);
-Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body);
-Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action);
-Stmt *makeSTMT_decl(int lineno, Decl *declaration);
-Stmt *makeSTMT_exp(int lineno, Exp *expression);
-Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases);
+Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val, Stmt *next);
+Stmt *makeSTMT_multiassmt(int lineno, int depth, SDecl *lhs, SDecl *rhs, Stmt *next);
+Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next);
+Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next);
+Stmt *makeSTMT_else(int lineno, Stmt *body, Stmt *next);
+Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body, Stmt *next);
+Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action, Stmt *next);
+Stmt *makeSTMT_decl(int lineno, Decl *declaration, Stmt *next);
+Stmt *makeSTMT_exp(int lineno, Exp *expression, Stmt *next);
+Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases, Stmt *next);
 Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next);
-Stmt *makeSTMT_block(int lineno, Stmt *body);
-Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine);
-Stmt *makeSTMT_break(int lineno);
-Stmt *makeSTMT_continue(int lineno);
-Stmt *makeSTMT_return(int lineno, Exp *expression);
+Stmt *makeSTMT_block(int lineno, Stmt *body, Stmt *next);
+Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine, Stmt *next);
+Stmt *makeSTMT_break(int lineno, Stmt *next);
+Stmt *makeSTMT_continue(int lineno, Stmt *next);
+Stmt *makeSTMT_return(int lineno, Exp *expression, Stmt *next);
 
 
 Prog *makePROG(char* package, Decl *declList, Fctn *fnList);

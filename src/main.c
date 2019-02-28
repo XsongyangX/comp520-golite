@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 		while (yylex()) {}
 		return 0;
 	}
-	/*
+	
 	else if ( 0 == strcmp(argv[1], "parse"))
 	{
 		isToken = 0;
@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 		printf("OK\n");
 		return 0;
 	}
+	/*
 	else if ( 0 == strcmp(argv[1], "pretty"))
 	{
 		isToken = 0;

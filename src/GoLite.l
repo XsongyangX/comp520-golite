@@ -112,6 +112,7 @@ PUNCTUATION [?<>+-=,^$|&]
 "<<=" {if(isToken){printf("tLSHIFTASSIGN\n");} requiresIns = 0;return tLSHIFTASSIGN;}
 ">>=" {if(isToken){printf("tRSHIFTASSIGN\n");} requiresIns = 0;return tRSHIFTASSIGN;}
 "&^=" {if(isToken){printf("tAMPPOWASSIGN\n");} requiresIns = 0;return tAMPPOWASSIGN;}
+"|=" {if(isToken){printf("tBARASSIGN\n");} requiresIns = 0;return tBARASSIGN;}
 "&&" {if(isToken){printf("tAND\n");} requiresIns = 0;return tAND;}
 "||" {if(isToken){printf("tOR\n");} requiresIns = 0;return tOR;}
 "<-" {if(isToken){printf("tLESSMINUS\n");} requiresIns = 0;return tLESSMINUS;}
@@ -169,16 +170,11 @@ PUNCTUATION [?<>+-=,^$|&]
 
 "//"[^\n]* {/*line comments*/}
 	
-<INITIAL>{
-"/*" BEGIN(IN_COMMENT);
-}
-<IN_COMMENT>{
-"*/"	BEGIN(INITIAL);
-[^*\n]+
-"*"
-\n	yylineno++;
-}
-
+"/*" {BEGIN(IN_COMMENT);}
+<IN_COMMENT>"*/" {BEGIN(INITIAL);}
+<IN_COMMENT><<EOF>> {fprintf(stderr, "Error: (line %d) unclosed block comment\n", yylineno); exit(1);}
+<IN_COMMENT>\n {if (requiresIns) {if(isToken) printf("tSEMICOLON\n");} return tSEMICOLON;}
+<IN_COMMENT>. {}
 
 0|([1-9][0-9]*) { // INT
 	//DECIMAL VALUE
@@ -252,7 +248,7 @@ PUNCTUATION [?<>+-=,^$|&]
         fprintf(stdout, "tRAWSTRINGLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tRAWSTRINGLITERAL;
+    return tSTRINGLITERAL;
 
 }
 
