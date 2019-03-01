@@ -316,6 +316,7 @@ stmt            : simplestmt {$$ = $1;}
                 | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
                 | tBREAK ';' {$$ = makeSTMT_break(yylineno);}
                 | tCONTINUE ';' {$$ = makeSTMT_continue(yylineno);}
+                | '{' stmts '}' ';' {$$ = makeSTMT_block(yylineno, $2);}
                 | ifstmt {$$ = $1;}
                 | switchstmt {$$ = $1;}
                 | forstmt {$$ = $1;}
