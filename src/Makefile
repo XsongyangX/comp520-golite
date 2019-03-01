@@ -1,5 +1,11 @@
-all: lex.yy.o main.o y.tab.o
+all: lex.yy.o main.o y.tab.o tree.o pretty.o
 	gcc -o minic lex.yy.o main.o y.tab.o -lfl
+
+tree.o:
+	gcc -c tree.c tree.h
+
+pretty.o:
+	gcc -c pretty.c pretty.h
 
 y.tab.o: y.tab.c
 	gcc -c y.tab.c y.tab.h
