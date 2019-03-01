@@ -162,6 +162,13 @@ void yyerror(const char *s) {
 /* Generate detailed error messages */
 %error-verbose
 
+
+/* For making the AST constructor work */
+%code requires
+{
+	#include "tree.h"
+}
+
 /* The second section of a bison file contains the productions. Note that rules with the
  * same LHS may be joined together and separated with a pipe.
  */

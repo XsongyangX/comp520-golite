@@ -17,7 +17,7 @@ main.o:
 	gcc -c main.c 
 
 lex.yy.o: lex.yy.c y.tab.c
-	gcc -c lex.yy.c -lfl
+	gcc -c lex.yy.c 
 
 lex.yy.c:
 	flex GoLite.l
