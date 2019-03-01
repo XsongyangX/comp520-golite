@@ -29,7 +29,12 @@ scan: emptyParser.o
 emptyParser.o:
 	bison --yacc -d --verbose empty.y
 	flex GoLite.l
-	
+
+cleanScan:
+	rm y.tab.*
+	rm lex.yy.c
+	rm minic
+
 clean:
 	rm lex.yy.c
 	rm y.tab.*
