@@ -94,7 +94,7 @@ PUNCTUATION [?<>+-=,^$|&]
 		requiresIns = 0;
 		if(isToken)	printf("tSEMICOLON\n");
 		
-		return tSEMICOLON;
+		return ';';
 	}
 }
 
@@ -185,7 +185,7 @@ PUNCTUATION [?<>+-=,^$|&]
 	if (requiresIns) {
 		if(isToken) printf("tSEMICOLON\n");
 		requiresIns = 0;
-		return tSEMICOLON;
+		return ';';
 	}
 }
 <IN_COMMENT>. 
@@ -237,7 +237,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 '([ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\'))' {//RUNE (CHAR)
-    yylval.strval = strdup(yytext);
+    yylval.runeval = strdup(yytext)[0];
     if(isToken){
         fprintf(stdout, "tRUNELITERAL(%s)\n", yytext);
     }

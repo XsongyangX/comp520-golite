@@ -11,7 +11,7 @@ void prettyTabs(int n)
     }
 }
 //prints a program
-void prettyProg(Prog *my_prog)
+void prettyProg(PROGRAM *my_prog)
 {
     if(strlen(my_prog->package) != 0)
     {
@@ -38,40 +38,40 @@ void prettyFctn(Fctn *fn, int t)
 }
 
 //prints a list of function arguments
-void prettyFctnDecl(SDecl *sd, int printComma)
-{
-    if(sd->next != NULL)
-    {
-        prettyFctnDecl(sd->next,1);
-    }
-    printf("%s ", sd->identifier);
-    prettyType(sd->t);
+// void prettyFctnDecl(SDECLARATION *sd, int printComma)
+// {
+//     if(sd->next != NULL)
+//     {
+//         prettyFctnDecl(sd->next,1);
+//     }
+//     printf("%s ", sd->identifier);
+//     prettyType(sd->t);
     
-    if(printComma)
-        printf(", ");
-}
+//     if(printComma)
+//         printf(", ");
+// }
 
 //prints a type
 void prettyType(type *t)
 {
     switch(t->gType){
         case arrayType:
-            printf("[%d]%s", t->size, t->SymbolType);
+            printf("[%d]%s", t->size, t->name);
             break;
         case sliceType:
-            printf("[]%s", t->SymbolType);
+            printf("[]%s", t->name);
             break;
         case ptrType:
-            printf("*%s", t->SymbolType);
+            printf("*%s", t->name);
             break;
         case structType:
         default:
-            printf("%s", t->SymbolType);
+            printf("%s", t->name);
     }
 }
 
 //prints a list of Declarations
-void prettyDecl(Decl *d, int t)
+void prettyDecl(DECLARATION *d, int t)
 {
     if(d->next != NULL)
     {
@@ -85,7 +85,7 @@ void prettyDecl(Decl *d, int t)
             break;
         case varDecl:
             printf("var %s ", d->identifier);
-            if(strlen(d->t->SymbolType) != 0)
+            if(strlen(d->t->name) != 0)
             {
                 prettyType(d->t);
             }
@@ -106,7 +106,7 @@ void prettyDecl(Decl *d, int t)
 }
 
 //prints a short declaration e.g. in conditionals
-void prettySDecl(Decl *d)
+void prettySDecl(DECLARATION *d)
 {
     if(d->next != NULL){
         prettySDeclId(d->next);
@@ -119,14 +119,14 @@ void prettySDecl(Decl *d)
     printf("; ");
 
 }
-void prettySDeclId(Decl *d)
+void prettySDeclId(DECLARATION *d)
 {
     if(d->next != NULL){
         prettySDeclId(d->next);
     }
     printf("%s, ", d->identifier);
 }
-void prettySDeclVal(Decl *d)
+void prettySDeclVal(DECLARATION *d)
 {
     if(d->next != NULL){
         prettySDeclId(d->next);
@@ -136,7 +136,7 @@ void prettySDeclVal(Decl *d)
 }
 
 //prints a list of statements
-void prettyStmt(Stmt *s, int t)
+void prettyStmt(STATEMENT *s, int t)
 {
     if(s->next != NULL)
     {
@@ -197,7 +197,7 @@ void prettyStmt(Stmt *s, int t)
 }
 
 //prints an assign statement
-void prettyAssign(Stmt *s, int t)
+void prettyAssign(STATEMENT *s, int t)
 {
     prettyTabs(t);
     prettyExp(s->val.assignment.identifier);
@@ -207,7 +207,7 @@ void prettyAssign(Stmt *s, int t)
 }
 
 //prints a block statement
-void prettyBlock(Stmt *s, int t)
+void prettyBlock(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("{\n");
@@ -217,7 +217,7 @@ void prettyBlock(Stmt *s, int t)
 }
 
 //prints an if statement
-void prettyIf(Stmt *s, int t)
+void prettyIf(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("if ");
@@ -234,7 +234,7 @@ void prettyIf(Stmt *s, int t)
     if(s->val.conditional.elif != NULL)
         prettyStmt(s->val.conditional.elif, t);
 }
-void prettyElif(Stmt *s,int t)
+void prettyElif(STATEMENT *s,int t)
 {
     prettyTabs(t);
     printf("else if ");
@@ -251,7 +251,7 @@ void prettyElif(Stmt *s,int t)
     if(s->val.conditional.elif != NULL)
         prettyStmt(s->val.conditional.elif, t);
 }
-void prettyElse(Stmt *s,int t)
+void prettyElse(STATEMENT *s,int t)
 {
     prettyTabs(t);
     printf("else");
@@ -262,7 +262,7 @@ void prettyElse(Stmt *s,int t)
 }
 
 //prints a std for loop
-void prettyFor(Stmt *s, int t)
+void prettyFor(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("for ");
@@ -282,7 +282,7 @@ void prettyFor(Stmt *s, int t)
 }
 
 //prints a "while" loop
-void prettyWhile(Stmt *s, int t)
+void prettyWhile(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("for ");
@@ -297,7 +297,7 @@ void prettyWhile(Stmt *s, int t)
     printf("}\n");
 }
 
-void prettyPrintHelper(Exp *e)
+void prettyPrintHelper(EXP *e)
 {
     if(e->val.expblock.next != NULL)
     {
@@ -307,7 +307,7 @@ void prettyPrintHelper(Exp *e)
     
 }
 //prints a print stmt
-void prettyPrint(Stmt *s, int t)
+void prettyPrint(STATEMENT *s, int t)
 {
     prettyTabs(t);
     if(s->val.iostmt.hasNewLine)
@@ -324,7 +324,7 @@ void prettyPrint(Stmt *s, int t)
 
 
 //prints return stmts
-void prettyReturn(Stmt *s, int t)
+void prettyReturn(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("return ");
@@ -342,7 +342,7 @@ void prettyContinue(int t)
     printf("continue\n");
 }
 //prints a switch statement
-void prettySwitch(Stmt *s, int t)
+void prettySwitch(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("switch ");
@@ -360,7 +360,7 @@ void prettySwitch(Stmt *s, int t)
     printf("}\n");
 }
 //prints a list of case statements
-void prettyCase(Stmt *s, int t)
+void prettyCase(STATEMENT *s, int t)
 {
     if(s->next != NULL)
     {
@@ -380,7 +380,7 @@ void prettyCase(Stmt *s, int t)
 }
 
 //prints expressions
-void prettyExp(Exp *e)
+void prettyExp(EXP *e)
 {
     switch(e->kind){
         case emptyExp:
@@ -617,7 +617,7 @@ void prettyExp(Exp *e)
     }
 }
 //helper for function case in prettyExp
-void prettySDeclFn(Decl *s)
+void prettySDeclFn(DECLARATION *s)
 {
     if(s->next != NULL)
     {
