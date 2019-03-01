@@ -88,7 +88,14 @@ PUNCTUATION [?<>+-=,^$|&]
 %x IN_COMMENT
 %%
 [ \t\r]+ 
-"\n" {if(requiresIns){ requiresIns = 0;if(isToken){printf("tSEMICOLON\n");} return tSEMICOLON;}}
+"\n" {
+	if(requiresIns){
+		requiresIns = 0;
+		if(isToken)	printf("tSEMICOLON\n");
+		
+		return tSEMICOLON;
+	}
+}
 
 "+" { // OPERATORS
 	if(isToken){printf("tPLUS\n");} requiresIns = 0;return '+';}
@@ -135,7 +142,7 @@ PUNCTUATION [?<>+-=,^$|&]
 "[" {if(isToken){printf("tLEFTBRACKET\n");} requiresIns = 0;return '[';}
 "]" {if(isToken){printf("tRIGHTBRACKET\n");} requiresIns = 1; return ']';}
 ":" {if(isToken){printf("tCOLON\n");} requiresIns = 0;return ':';} 
-";" {if(isToken){printf("tSEMICOLON\n");} requiresIns = 0; return ';';} //remove marker for semi-colon insertion
+";" {if(isToken){printf("tSEMICOLON\n");} requiresIns = 0; return ';';} 
 "," {if(isToken){printf("tCOMMA\n");} requiresIns = 0;return ',';} 
 "." {if(isToken){printf("tPERIOD\n");} requiresIns = 0;return '.';} 
 
@@ -173,8 +180,14 @@ PUNCTUATION [?<>+-=,^$|&]
 "/*" {BEGIN(IN_COMMENT);}
 <IN_COMMENT>"*/" {BEGIN(INITIAL);}
 <IN_COMMENT><<EOF>> {fprintf(stderr, "Error: (line %d) unclosed block comment\n", yylineno); exit(1);}
-<IN_COMMENT>\n {if (requiresIns) {if(isToken) printf("tSEMICOLON\n");} return tSEMICOLON;}
-<IN_COMMENT>. {}
+<IN_COMMENT>\n {
+	if (requiresIns) {
+		if(isToken) printf("tSEMICOLON\n");
+		requiresIns = 0;
+		return tSEMICOLON;
+	}
+}
+<IN_COMMENT>. 
 
 0|([1-9][0-9]*) { // INT
 	//DECIMAL VALUE
