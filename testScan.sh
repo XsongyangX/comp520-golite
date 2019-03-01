@@ -4,7 +4,7 @@
 # add tokens, if you want to print the tokens
 
 # build the scanner
-make clean -C ./src
+make cleanScan -C ./src
 make scan -C ./src
 
 # run the scanner
