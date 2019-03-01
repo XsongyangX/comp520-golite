@@ -88,6 +88,7 @@ PUNCTUATION [?<>+-=,^$|&]
 %x IN_COMMENT
 %%
 [ \t\r]+ 
+
 "\n" {
 	if(requiresIns){
 		requiresIns = 0;
@@ -108,31 +109,31 @@ PUNCTUATION [?<>+-=,^$|&]
 "^" {if(isToken){printf("tPOWER\n");} requiresIns = 0;return '^';}
 "<<" {if(isToken){printf("tLEFTSHIFT\n");} requiresIns = 0;return tLEFTSHIFT;}
 ">>" {if(isToken){printf("tRIGHTSHIFT\n");} requiresIns = 0;return tRIGHTSHIFT;}
-"&^" {if(isToken){printf("tAMPPOWER\n");} requiresIns = 0;return tAMPPOWER;}
+"&^" {if(isToken){printf("tANDNOT\n");} requiresIns = 0;return tANDNOT;}
 "+=" {if(isToken){printf("tPLUSASSIGN\n");} requiresIns = 0;return tPLUSASSIGN;}
 "-=" {if(isToken){printf("tMINUSASSIGN\n");} requiresIns = 0;return tMINUSASSIGN;}
 "*=" {if(isToken){printf("tTIMESASSIGN\n");} requiresIns = 0;return tTIMESASSIGN;}
 "/=" {if(isToken){printf("tDIVASSIGN\n");} requiresIns = 0;return tDIVASSIGN;}
 "%=" {if(isToken){printf("tMODASSIGN\n");} requiresIns = 0;return tMODASSIGN;}
-"&=" {if(isToken){printf("tAMPASSIGN\n");} requiresIns = 0;return tAMPASSIGN;}
+"&=" {if(isToken){printf("tAMPASSIGN\n");} requiresIns = 0;return tANDASSIGN;}
 "^=" {if(isToken){printf("tPOWASSIGN\n");} requiresIns = 0;return tPOWASSIGN;}
 "<<=" {if(isToken){printf("tLSHIFTASSIGN\n");} requiresIns = 0;return tLSHIFTASSIGN;}
 ">>=" {if(isToken){printf("tRSHIFTASSIGN\n");} requiresIns = 0;return tRSHIFTASSIGN;}
 "&^=" {if(isToken){printf("tAMPPOWASSIGN\n");} requiresIns = 0;return tAMPPOWASSIGN;}
-"|=" {if(isToken){printf("tBARASSIGN\n");} requiresIns = 0;return tBARASSIGN;}
+"|=" {if(isToken){printf("tBARASSIGN\n");} requiresIns = 0;return tORASSIGN;}
 "&&" {if(isToken){printf("tAND\n");} requiresIns = 0;return tAND;}
 "||" {if(isToken){printf("tOR\n");} requiresIns = 0;return tOR;}
 "<-" {if(isToken){printf("tLESSMINUS\n");} requiresIns = 0;return tLESSMINUS;}
 "++" {if(isToken){printf("tINCREMENT\n");} requiresIns = 1; return tINCREMENT;}
 "--" {if(isToken){printf("tDECREMENT\n");} requiresIns = 1; return tDECREMENT;}
-"==" {if(isToken){printf("tEQUALS\n");} requiresIns = 0;return tEQUALS;} 
+"==" {if(isToken){printf("tEQ\n");} requiresIns = 0;return tEQ;} 
 "<" {if(isToken){printf("tLESS\n");} requiresIns = 0;return '<';}
 ">" {if(isToken){printf("tGREATER\n");} requiresIns = 0;return '>';}
 "=" {if(isToken){printf("tASSIGN\n");} requiresIns = 0;return '=';}
 "!" {if(isToken){printf("tBANG\n");} requiresIns = 0;return '!';} 
-"!=" {if(isToken){printf("tNOTEQUALS\n");} requiresIns = 0;return tNOTEQUALS;} 
-"<=" {if(isToken){printf("tLESSEQUALS\n");} requiresIns = 0;return tLESSEQUALS;} 
-">=" {if(isToken){printf("tGREATEREQUALS\n");} requiresIns = 0;return tGREATEREQUALS;} 
+"!=" {if(isToken){printf("tNEQ\n");} requiresIns = 0;return tNEQ;} 
+"<=" {if(isToken){printf("tLEQ\n");} requiresIns = 0;return tLEQ;} 
+">=" {if(isToken){printf("tGEQ\n");} requiresIns = 0;return tGEQ;} 
 ":=" {if(isToken){printf("tCOLONASSIGN\n");} requiresIns = 0;return tCOLONASSIGN;} 
 "..." {if(isToken){printf("tDOTS\n");} requiresIns = 0;return tDOTS;} 
 "(" {if(isToken){printf("tLEFTPAREN\n");} requiresIns = 0;return '(';}

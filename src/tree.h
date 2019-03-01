@@ -36,7 +36,9 @@ enum ExpressionKind{emptyExp, //NULL
                     orExp,//.||.
                     andExp, //.&&.
                     andnotExp, //.&^.
-                    idExp, 
+                    idExp,
+                    idblockExp, //Blocks of identifiers
+                    explblockExp, //Blocks of expressions 
                     bitAndExp, //.&.
                     bitOrExp, //.|.
                     xorExp, //.^.
@@ -49,7 +51,7 @@ enum ExpressionKind{emptyExp, //NULL
                     appendExp, //built-in
                     lenExp, //built-in
                     capExp, //built-in
-		    uxorExp,
+		            uxorExp,
                     funcExp //function call
                     };
 enum StatementKind{ emptyS, //NULL
@@ -70,19 +72,32 @@ enum StatementKind{ emptyS, //NULL
                     declS
                     };
 
-enum GroupingType{  nilType, //just a type, e.g. int, string, T
+enum GroupingType{  nilType,
+                    baseType,
                     arrayType,
                     sliceType,
-                    ptrType,
-                    structType
+                    structType,
+                    userType,
                     };
-enum DeclarationType{typeDecl, varDecl, structDecl};
+enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
+
+
+/*By convention, simple values have size 1.
+Slices start with size 0.
+Name is NULL unless the type is user-defined, in which case it reflects
+the user-specificed name of the type.
+If the type is just a rename of another type, the val is one arg with a pointer to that type.
+If the type is a struct, the val is a linked list of Exps representing the members of the struct.*/
 struct TYPE{
-    char* SymbolType;
     int size;
+    char *name;
     enum GroupingType gType;
+    union {
+        type *arg;
+        Exp *args;
+    }val;
 };
 struct EXP{
     enum ExpressionKind kind;
@@ -95,6 +110,8 @@ struct EXP{
         float floatLiteral;
         Fctn *fn;
         struct{Exp *lhs; Exp *rhs;} binary;
+        struct{Exp *next; char *identifier;} idblock;
+        struct{Exp *next; Exp *value;} expblock; 
     }val;
 };
 
@@ -104,7 +121,8 @@ struct DECLARATION{//compound declarations should be broken down into individual
     char *identifier;
     union {
         Exp *right;
-        struct{ Decl *dbody; Fctn *fbody;} body;
+        Fctn *f;
+        Decl *body;
     }val;
     Decl *next;
 };
@@ -118,7 +136,7 @@ struct FUNCTION{//parameters are referred to as a list of declarations where the
     symTable *localSym;
     char *identifier;
     int paramCount;
-    SDecl *params;
+    Decl *params;
     type *returnt;
     Stmt *body;
     Fctn *next;
@@ -147,73 +165,85 @@ struct PROGRAM{
 
 
 
-Exp *makeExp_empty();
-Exp *makeExp_int(int literal);
-Exp *makeExp_float(float literal);
-Exp *makeExp_str(char *literal);
-Exp *makeExp_bool(int literal);
-Exp *makeExp_plus(Exp *e1, Exp *e2);
-Exp *makeExp_minus(Exp *e1, Exp *e2);
-Exp *makeExp_times(Exp *e1, Exp *e2);
-Exp *makeExp_div(Exp *e1, Exp *e2);
-Exp *makeExp_mod(Exp *e1, Exp *e2);
-Exp *makeExp_pos(Exp *e1);
-Exp *makeExp_neg(Exp *e1);
-Exp *makeExp_ptr(Exp *e1);
-Exp *makeExp_addr(Exp *e1);
-Exp *makeExp_par(Exp *e1);
-Exp *makeExp_eq(Exp *e1, Exp *e2);
-Exp *makeExp_neq(Exp *e1, Exp *e2);
-Exp *makeExp_geq(Exp *e1, Exp *e2);
-Exp *makeExp_leq(Exp *e1, Exp *e2);
-Exp *makeExp_gt(Exp *e1, Exp *e2);
-Exp *makeExp_lt(Exp *e1, Exp *e2);
-Exp *makeExp_or(Exp *e1, Exp *e2);
-Exp *makeExp_and(Exp *e1, Exp *e2);
-Exp *makeExp_andnot(Exp *e1, Exp *e2);
-Exp *makeExp_id(char *identifier);
-Exp *makeExp_band(Exp *e1, Exp *e2);
-Exp *makeExp_bor(Exp *e1, Exp *e2);
-Exp *makeExp_xor(Exp *e1, Exp *e2);
-Exp *makeExp_lshift(Exp *e1, Exp *e2);
-Exp *makeExp_rshift(Exp *e1, Exp *e2);
-Exp *makeExp_range(Exp *e1, Exp *e2);
-Exp *makeExp_index(Exp *e2);
-Exp *makeExp_element(Exp *e1, Exp *e2);
-Exp *makeExp_invoc(Exp *e1, Exp *e2);
-Exp *makeExp_append(Exp *e1, Exp *e2);
-Exp *makeExp_len(Exp *e1);
-Exp *makeExp_cap(Exp *e1);
-Exp *makeExp_uXOR(Exp *e1);
-Exp *makeExp_func(char *identifier, int size, SDecl *args);
+Exp *makeEXP_empty();
+Exp *makeEXP_int(int literal);
+Exp *makeEXP_float(float literal);
+Exp *makeEXP_str(char *literal);
+Exp *makeEXP_bool(int literal);
+Exp *makeEXP_plus(Exp *e1, Exp *e2);
+Exp *makeEXP_minus(Exp *e1, Exp *e2);
+Exp *makeEXP_times(Exp *e1, Exp *e2);
+Exp *makeEXP_div(Exp *e1, Exp *e2);
+Exp *makeEXP_mod(Exp *e1, Exp *e2);
+Exp *makeEXP_pos(Exp *e1);
+Exp *makeEXP_neg(Exp *e1);
+Exp *makeEXP_ptr(Exp *e1);
+Exp *makeEXP_addr(Exp *e1);
+Exp *makeEXP_par(Exp *e1);
+Exp *makeEXP_eq(Exp *e1, Exp *e2);
+Exp *makeEXP_neq(Exp *e1, Exp *e2);
+Exp *makeEXP_geq(Exp *e1, Exp *e2);
+Exp *makeEXP_leq(Exp *e1, Exp *e2);
+Exp *makeEXP_gt(Exp *e1, Exp *e2);
+Exp *makeEXP_lt(Exp *e1, Exp *e2);
+Exp *makeEXP_or(Exp *e1, Exp *e2);
+Exp *makeEXP_and(Exp *e1, Exp *e2);
+Exp *makeEXP_andnot(Exp *e1, Exp *e2);
+Exp *makeEXP_id(char *identifier);
+Exp *makeEXP_band(Exp *e1, Exp *e2);
+Exp *makeEXP_bor(Exp *e1, Exp *e2);
+Exp *makeEXP_xor(Exp *e1, Exp *e2);
+Exp *makeEXP_lshift(Exp *e1, Exp *e2);
+Exp *makeEXP_rshift(Exp *e1, Exp *e2);
+Exp *makeEXP_range(Exp *e1, Exp *e2);
+Exp *makeEXP_index(Exp *e2);
+Exp *makeEXP_element(Exp *e1, Exp *e2);
+Exp *makeEXP_invoc(Exp *e1, Exp *e2);
+Exp *makeEXP_append(Exp *e1, Exp *e2);
+Exp *makeEXP_len(Exp *e1);
+Exp *makeEXP_cap(Exp *e1);
+Exp *makeEXP_uXOR(Exp *e1);
+Exp *makeEXP_func(char *identifier, int size, Decl *args);
+Exp *makeEXP_expblock(Exp *e, Exp *next);
+Exp *makeEXP_idblock(char *identifier, Exp *next);
 
 Decl *makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, Exp *rhs);
 Decl *makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize);
 Decl *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  Exp *rhs);
-Decl *makeDECL_struct( char *identifier, Decl *body, Fctn *fbody);
+Decl *makeDECL_struct( char *identifier, Decl *body);
 SDecl *makeSDecl(Exp *e, char* declType, int gtype, int arraysize);
+Decl *makeDECL_block(int lineno, Exp *ids, type *t, Exp *exps);
+Decl *makeDECL_blocknorhs(int lineno, Exp *ids, type *t);
+Decl *makeDECL_type(char *identifier, type *typeNode);
 
-Fctn *makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, int arraysize, Stmt *body);
+Fctn *makeFCTN(int lineno, char *identifier, int size, Decl *params, type *returnType, Stmt *body);
 
-Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val, Stmt *next);
-Stmt *makeSTMT_multiassmt(int lineno, int depth, SDecl *lhs, SDecl *rhs, Stmt *next);
-Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next);
-Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next);
-Stmt *makeSTMT_else(int lineno, Stmt *body, Stmt *next);
-Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body, Stmt *next);
-Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action, Stmt *next);
-Stmt *makeSTMT_decl(int lineno, Decl *declaration, Stmt *next);
-Stmt *makeSTMT_exp(int lineno, Exp *expression, Stmt *next);
-Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases, Stmt *next);
-Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next);
-Stmt *makeSTMT_block(int lineno, Stmt *body, Stmt *next);
-Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine, Stmt *next);
-Stmt *makeSTMT_break(int lineno, Stmt *next);
-Stmt *makeSTMT_continue(int lineno, Stmt *next);
-Stmt *makeSTMT_return(int lineno, Exp *expression, Stmt *next);
+Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val);
+Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
+Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif);
+Stmt *makeSTMT_else(int lineno, Stmt *body);
+Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body);
+Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action);
+Stmt *makeSTMT_decl(int lineno, Decl *declaration);
+Stmt *makeSTMT_exp(int lineno, Exp *expression);
+Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases);
+Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body);
+Stmt *makeSTMT_block(int lineno, Stmt *body);
+Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine);
+Stmt *makeSTMT_break(int lineno);
+Stmt *makeSTMT_continue(int lineno);
+Stmt *makeSTMT_return(int lineno, Exp *expression);
+Stmt *makeSTMT_blockassign(int lineno, Exp *ids, Exp *exps);
+
+type *makeTYPE(int gtype, int size, char *name, type *arg);
+//type *makeTYPE_struct(int size, char *name, Decl *args);
 
 
-Prog *makePROG(char* package, Decl *declList, Fctn *fnList);
+
+Prog *makePROG(char* package, Decl *declList);
+
+Decl *findBottomDECL(Decl *d);
+Stmt *findBottomSTMT(Stmt *s);
 
 
 

@@ -37,7 +37,7 @@ Exp *makeEXP_bool(int literal)
     e->val.intLiteral = literal;
     return e;
 }
-Exp *makeExp_plus(Exp *e1, Exp *e2)
+Exp *makeEXP_plus(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = plusExp;
@@ -45,7 +45,7 @@ Exp *makeExp_plus(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_minus(Exp *e1, Exp *e2)
+Exp *makeEXP_minus(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = minusExp;
@@ -53,7 +53,7 @@ Exp *makeExp_minus(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_times(Exp *e1, Exp *e2)
+Exp *makeEXP_times(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = timesExp;
@@ -61,7 +61,7 @@ Exp *makeExp_times(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_div(Exp *e1, Exp *e2)
+Exp *makeEXP_div(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = divExp;
@@ -69,7 +69,7 @@ Exp *makeExp_div(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_mod(Exp *e1, Exp *e2)
+Exp *makeEXP_mod(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = modExp;
@@ -77,7 +77,7 @@ Exp *makeExp_mod(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_pos(Exp *e1)
+Exp *makeEXP_pos(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = posExp;
@@ -85,7 +85,7 @@ Exp *makeExp_pos(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_neg(Exp *e1)
+Exp *makeEXP_neg(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = negExp;
@@ -93,7 +93,7 @@ Exp *makeExp_neg(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_ptr(Exp *e1)
+Exp *makeEXP_ptr(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = ptrExp;
@@ -101,7 +101,7 @@ Exp *makeExp_ptr(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_addr(Exp *e1)
+Exp *makeEXP_addr(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = addrExp;
@@ -109,7 +109,7 @@ Exp *makeExp_addr(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_par(Exp *e1)
+Exp *makeEXP_par(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = parExp;
@@ -117,7 +117,7 @@ Exp *makeExp_par(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_eq(Exp *e1, Exp *e2)
+Exp *makeEXP_eq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = eqExp;
@@ -125,7 +125,7 @@ Exp *makeExp_eq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_neq(Exp *e1, Exp *e2)
+Exp *makeEXP_neq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = neqExp;
@@ -133,7 +133,7 @@ Exp *makeExp_neq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_geq(Exp *e1, Exp *e2)
+Exp *makeEXP_geq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = geqExp;
@@ -141,7 +141,7 @@ Exp *makeExp_geq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_leq(Exp *e1, Exp *e2)
+Exp *makeEXP_leq(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = leqExp;
@@ -149,7 +149,7 @@ Exp *makeExp_leq(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_gt(Exp *e1, Exp *e2)
+Exp *makeEXP_gt(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = gtExp;
@@ -157,7 +157,7 @@ Exp *makeExp_gt(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_lt(Exp *e1, Exp *e2)
+Exp *makeEXP_lt(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = ltExp;
@@ -165,7 +165,7 @@ Exp *makeExp_lt(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_or(Exp *e1, Exp *e2)
+Exp *makeEXP_or(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = orExp;
@@ -173,7 +173,7 @@ Exp *makeExp_or(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_and(Exp *e1, Exp *e2)
+Exp *makeEXP_and(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = andExp;
@@ -181,7 +181,7 @@ Exp *makeExp_and(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_andnot(Exp *e1, Exp *e2)
+Exp *makeEXP_andnot(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = andnotExp;
@@ -189,14 +189,14 @@ Exp *makeExp_andnot(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_id(char *identifier)
+Exp *makeEXP_id(char *identifier)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = idExp;
     e->val.identifier = identifier;
     return e;
 }
-Exp *makeExp_band(Exp *e1, Exp *e2)
+Exp *makeEXP_band(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = bitAndExp;
@@ -204,7 +204,7 @@ Exp *makeExp_band(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_bor(Exp *e1, Exp *e2)
+Exp *makeEXP_bor(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = bitOrExp;
@@ -212,7 +212,7 @@ Exp *makeExp_bor(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_xor(Exp *e1, Exp *e2)
+Exp *makeEXP_xor(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = xorExp;
@@ -220,7 +220,7 @@ Exp *makeExp_xor(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_lshift(Exp *e1, Exp *e2)
+Exp *makeEXP_lshift(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = lshiftExp;
@@ -228,7 +228,7 @@ Exp *makeExp_lshift(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_rshift(Exp *e1, Exp *e2)
+Exp *makeEXP_rshift(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = rshiftExp;
@@ -236,7 +236,7 @@ Exp *makeExp_rshift(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_range(Exp *e1, Exp *e2)
+Exp *makeEXP_range(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = rangeExp;
@@ -244,7 +244,7 @@ Exp *makeExp_range(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_index(Exp *e2)
+Exp *makeEXP_index(Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = indexExp;
@@ -252,7 +252,7 @@ Exp *makeExp_index(Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be a range or and index exp
+Exp *makeEXP_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be a range or and index exp
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = elementExp;
@@ -261,7 +261,7 @@ Exp *makeExp_element(Exp *e1, Exp *e2)//e1 should be an identifier, e2 should be
     return e;
 
 }
-Exp *makeExp_invoc(Exp *e1, Exp *e2)
+Exp *makeEXP_invoc(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = invocExp;
@@ -269,7 +269,7 @@ Exp *makeExp_invoc(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_append(Exp *e1, Exp *e2)
+Exp *makeEXP_append(Exp *e1, Exp *e2)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = appendExp;
@@ -277,7 +277,7 @@ Exp *makeExp_append(Exp *e1, Exp *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-Exp *makeExp_len(Exp *e1)
+Exp *makeEXP_len(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = lenExp;
@@ -285,7 +285,7 @@ Exp *makeExp_len(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_cap(Exp *e1)
+Exp *makeEXP_cap(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = capExp;
@@ -293,7 +293,7 @@ Exp *makeExp_cap(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_not(Exp *e1)
+Exp *makeEXP_not(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = notExp;
@@ -301,7 +301,7 @@ Exp *makeExp_not(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_uXOR(Exp *e1)
+Exp *makeEXP_uXOR(Exp *e1)
 {
     Exp *e = malloc(sizeof(Exp));
     e->kind = uxorExp;
@@ -309,7 +309,7 @@ Exp *makeExp_uXOR(Exp *e1)
     e->val.binary.rhs = e1;
     return e;
 }
-Exp *makeExp_func(char *identifier, int size, SDecl *args)
+Exp *makeEXP_func(char *identifier, int size, Decl *args)
 {//format of args(params) subject to change
     Exp *e = malloc(sizeof(Exp));
     e->kind = funcExp;
@@ -332,7 +332,7 @@ Decl *makeDECL(int isVar, char *identifier, char *declType, int gtype, int array
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
-    d->t->SymbolType = declType;
+    d->t->name = declType;
     d->t->gType = gtype;
     d->t->size = arraysize;
     d->val.right = rhs;
@@ -345,7 +345,7 @@ Decl *makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
-    d->t->SymbolType = declType;
+    d->t->name = declType;
     d->t->gType = gtype;
     d->t->size = arraysize;
     d->val.right = NULL;
@@ -358,24 +358,31 @@ Decl *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  Ex
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
-    d->t->SymbolType = NULL;
+    d->t->name = NULL;
     d->t->gType = gtype;
     d->t->size = arraysize;
     d->val.right = rhs;
     d->next = NULL;
     return d;
 }
-Decl *makeDECL_struct( char *identifier, Decl *body, Fctn *fbody)
+Decl *makeDECL_struct( char *identifier, Decl *body)
 {
     Decl *d = malloc(sizeof(Decl));
     d->d = structDecl;
     d->identifier = identifier;
     d->t = malloc(sizeof(type));
-    d->t->SymbolType = NULL;
+    d->t->name = identifier;
     d->t->gType = structType;
-    d->val.body.dbody = body;
-    d->val.body.fbody = fbody;
+    d->val.body = body;
     d->next = NULL;
+    return d;
+}
+Decl *makeDECL_fn(Decl *next, Fctn *f)
+{
+    Decl *d = malloc(sizeof(Decl));
+    d->d = funcDecl;
+    d->val.f = f;
+    d->next = next;
     return d;
 }
 SDecl *makeSDecl(Exp *e, char* declType, int gtype, int arraysize)
@@ -383,14 +390,14 @@ SDecl *makeSDecl(Exp *e, char* declType, int gtype, int arraysize)
     SDecl *sd = malloc(sizeof(SDecl));
     sd->identifier = e;
     sd->t = malloc(sizeof(type));
-    sd->t->SymbolType = declType;
+    sd->t->name = declType;
     sd->t->gType = gtype;
     sd->t->size = arraysize;
     sd->next = NULL;
     return sd;
 }
 
-Fctn *makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *returnType, int gtype, int arraysize, Stmt *body)
+Fctn *makeFCTN(int lineno, char *identifier, int size, Decl *params, type *returnType, Stmt *body)
 {
     Fctn *f = malloc(sizeof(Fctn));
     f->lineno = lineno;
@@ -398,46 +405,22 @@ Fctn *makeFCTN(int lineno, char *identifier, int size, SDecl *params, char *retu
     f->paramCount = size;
     f->params = params;
     f->body = body;
-    f->returnt = malloc(sizeof(type));
-    f->returnt->SymbolType = returnType;
-    f->returnt->gType = gtype;
-    f->returnt->size = arraysize;
+    f->returnt = returnType;
     f->next = NULL;
     return f;
 }
 
-Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val, Stmt *next)
+Stmt *makeSTMT_assmt(int lineno, Exp *identifier, Exp *val)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = assignS;
     s->val.assignment.identifier = identifier;
     s->val.assignment.value = val;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_multiassmt(int lineno, int depth, SDecl *lhs, SDecl *rhs, Stmt *next)
-{
-    if(lhs->next == NULL && rhs->next == NULL)
-    {
-        return makeSTMT_assmt(lineno, lhs->identifier, rhs->identifier, next);
-    }
-    else if(lhs->next != NULL && rhs->next == NULL)
-    {
-        fprintf(stderr, "Error: (line %d) too few assignments. %d to the left, %d to the right.\n", lineno, depth+1, depth);
-    }
-    else if(lhs->next == NULL && rhs->next != NULL)
-    {
-        fprintf(stderr, "Error: (line %d) too few identifiers. %d to the left, %d to the right.\n", lineno, depth, depth+1);
-    }
-    else
-    {
-        next = makeSTMT_multiassmt(lineno, depth+1, lhs->next, rhs->next, next);
-        return makeSTMT_assmt(lineno, lhs->identifier, rhs->identifier, next);
-    }
-    
-}
-Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next)
+Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -446,10 +429,10 @@ Stmt *makeSTMT_if(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *e
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = optDecl;
     s->val.conditional.elif = elif;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif, Stmt *next)
+Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt *elif)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -458,10 +441,10 @@ Stmt *makeSTMT_elif(int lineno, Exp *condition, Decl *optDecl, Stmt *body, Stmt 
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = optDecl;
     s->val.conditional.elif = elif;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_else(int lineno, Stmt *body, Stmt *next)
+Stmt *makeSTMT_else(int lineno, Stmt *body)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -470,10 +453,10 @@ Stmt *makeSTMT_else(int lineno, Stmt *body, Stmt *next)
     s->val.conditional.condition = NULL;
     s->val.conditional.optDecl = NULL;
     s->val.conditional.elif = NULL;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body, Stmt *next)//empty expression for inf loop
+Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body)//empty expression for inf loop
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -482,10 +465,10 @@ Stmt *makeSTMT_while(int lineno, Exp *condition, Stmt *body, Stmt *next)//empty 
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = NULL;
     s->val.conditional.elif = NULL;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action, Stmt *next)
+Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *action)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -495,28 +478,28 @@ Stmt *makeSTMT_for(int lineno, Decl *optDecl, Exp *condition, Stmt *body, Stmt *
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = NULL;
     s->val.conditional.elif = NULL;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_decl(int lineno, Decl *declaration, Stmt *next)
+Stmt *makeSTMT_decl(int lineno, Decl *declaration)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = declS;
     s->val.declaration = declaration;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_exp(int lineno, Exp *expression, Stmt *next)
+Stmt *makeSTMT_exp(int lineno, Exp *expression)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = exprS;
     s->val.expression = expression;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases, Stmt *next)
+Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
@@ -524,71 +507,252 @@ Stmt *makeSTMT_switch(int lineno, Exp *condition, Decl *optDecl, Stmt *cases, St
     s->val.switchBody.condition = condition;
     s->val.switchBody.optDecl = optDecl;
     s->val.switchBody.cases = cases;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body, Stmt *next)
+Stmt *makeSTMT_case(int lineno, Exp *condition, Stmt *body)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = caseS;
     s->val.caseBody.condition = condition;
     s->val.caseBody.body = body;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_block(int lineno, Stmt *body, Stmt *next)
+Stmt *makeSTMT_block(int lineno, Stmt *body)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = blockS;
     s->val.body = body;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine, Stmt *next)
+Stmt *makeSTMT_print(int lineno, Exp *expression, int hasNewLine)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = printS;
     s->val.iostmt.value = expression;
     s->val.iostmt.hasNewLine = hasNewLine;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_break(int lineno, Stmt *next)
+Stmt *makeSTMT_break(int lineno)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = breakS;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_continue(int lineno, Stmt *next)
+Stmt *makeSTMT_continue(int lineno)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = continueS;
-    s->next = next;
+    s->next = NULL;
     return s;
 }
-Stmt *makeSTMT_return(int lineno, Exp *expression, Stmt *next)
+Stmt *makeSTMT_return(int lineno, Exp *expression)
 {
     Stmt *s = malloc(sizeof(Stmt));
     s->lineno = lineno;
     s->kind = returnS;
-    s->next = next;
+    s->next = NULL;
     s->val.expression = expression;
     return s;
 }
 
-Prog *makePROG(char* package, Decl *declList, Fctn *fnList)
+Prog *makePROG(char* package, Decl *declList)
 {
-    Prog *p = malloc(sizeof(Prog));
-    p->package = package;
-    p->declList = declList;
-    p->fnList = fnList;
-    return p;
+    if(declList->next == NULL)
+    {
+        Prog *p = malloc(sizeof(Prog));
+        p->package = package;
+        if(declList != NULL)
+        {
+            if (declList->d == funcDecl)
+            {
+                p->fnList = declList->val.f;
+            }
+            else{
+                p->declList = declList;
+            }
+        }
+        return p;
+    }
+    else{
+        Prog *p = makePROG(package, declList->next);
+        if(declList->d == funcDecl)
+        {
+            Fctn *f = declList->val.f;
+            f->next = p->fnList;
+            p->fnList = f;
+            declList->next = NULL;
+        }
+        else{
+            declList->next = p->declList;
+            p->declList = declList;
+        }
+        return p;
+    }
+    
+}
+
+/*Stuff written by Greg starts here */
+
+
+type *makeTYPE(int gtype, int size, char *name, type *arg){
+    type *t = malloc(sizeof(type));
+    t->size = size;
+    t->gType = gtype;
+    t->name = name;
+    t->val.arg = arg;
+    return t; 
+}
+
+// type *makeTYPE_struct(int size, char *name, Exp *args){
+//     type *t = malloc(sizeof(type));
+//     t->gType = structType;
+//     t->name = name;
+//     t->val.args = args;
+//     return t; 
+// }
+
+/* A constructor for a block of identifiers
+Used e.g. in multiple assignments, or in function headers */
+Exp *makeEXP_idblock(char *identifier, Exp *next){
+    Exp *e = malloc(sizeof(Exp));
+    e->t = NULL;
+    e->kind = idblockExp;
+    e->val.idblock.next = next;
+    e->val.idblock.identifier = identifier;
+}
+
+Exp *makeEXP_expblock(Exp *e1, Exp *next){
+    Exp *e = malloc(sizeof(Exp));
+    e->t = NULL;
+    e->kind = 0;
+    e->val.expblock.next = next;
+    e->val.expblock.value = e1;
+}
+
+Decl *makeDECL_type(char* identifier, type *typeNode){
+    Decl *d = malloc(sizeof(Decl));
+    d->d = typeDecl;
+    d->t = typeNode;
+    d->identifier = identifier;
+    d->val.right = NULL;
+    d->next = NULL;
+    return d;
+}
+
+/*Called upon reaching the end of a block norhs_assignment, e.g. var a, b, c int
+Takes the linked list of identifiers and makes each of them into a declaration statement,
+propogating the type to all statements*/
+Decl *makeDECL_blocknorhs(int lineno, Exp *ids, type *t){
+    Decl *d = malloc(sizeof(Decl));
+    // If there is no next id, create a dec for the last id 
+    if(ids->val.expblock.next == NULL){
+        d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size);
+        return d;
+    }
+    //If there is a next id, recurse onto that id. 
+    //Then create a dec for this level and a pointer this dec to the subtree 
+    else{
+        Decl *nextD = malloc(sizeof(Decl));
+        nextD = makeDECL_blocknorhs(lineno, ids->val.expblock.next, t);
+        d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size);
+        d->next = nextD;
+        return d;
+    }
+
+}
+
+/*Called for block declarations, but with a right hand side. Does basically the same thing
+As makeDECL_blocknorhs(), but each dec actually assigns too.
+Throws an error if there is an unequal number of ids and exps on either side.*/
+Decl *makeDECL_block(int lineno, Exp *ids, type *t, Exp *exps){
+    Decl *d = malloc(sizeof(Decl));
+    if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
+        d = makeDECL(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size, exps->val.expblock.value);
+        return d;
+    }
+    else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
+        Decl *nextD = malloc(sizeof(Decl));
+        nextD = makeDECL_block(lineno, ids->val.expblock.next, t, exps->val.expblock.next);
+        d = makeDECL(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size, exps->val.expblock.value);
+        d->next = nextD;
+        return d;
+    }
+    else{
+        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        exit(1);
+    }
+}
+
+Decl *makeDECL_blocknotype(int lineno, Exp *ids, Exp *exps){
+    Decl *d = malloc(sizeof(Decl));
+    if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
+        d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value);
+        return d;
+    }
+    else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
+        Decl *nextD = malloc(sizeof(Decl));
+        nextD = makeDECL_blocknotype(lineno, ids->val.expblock.next, exps->val.expblock.next);
+        d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value);
+        d->next = nextD;
+        return d;
+    }
+    else{
+        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        exit(1);
+    }
+}
+/*A similar function to block declarations, but for STMTs*/
+Stmt *makeSTMT_blockassign(int lineno, Exp *ids, Exp *exps){
+    Stmt *s = malloc(sizeof(Stmt));
+    if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
+        s = makeSTMT_assmt(lineno, ids->val.expblock.value, exps->val.expblock.value);
+        return s;
+    }
+    else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
+        Stmt *nextS = malloc(sizeof(Stmt));
+        nextS = makeSTMT_blockassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
+        s = makeSTMT_assmt(lineno, ids->val.expblock.value, exps->val.expblock.value);
+        s->next = nextS;
+        return s;
+    }
+    else{
+        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        exit(1);
+    }
+}
+
+/*Simple functions to get to the bottom of subtrees.
+Made to address a problem with block declarations.
+e.g. For block type norhsdeclarations, a linked list of exps (idents) and a type 
+Must be converted to a linked list of decs, each with one ident and one type.
+The problem is the bottom of this new subtree must be pointed to the next dec.
+This requires going to the bottom in the parser at another point*/
+Stmt *findBottomSTMT(Stmt *s){
+    if(s->next == NULL){
+        return s;
+    }
+    else{
+        return findBottomSTMT(s->next);
+    }
+}
+
+Decl *findBottomDECL(Decl *d){
+    if(d->next == NULL){
+        return d;
+    }
+    else{
+        return findBottomDECL(d->next);
+    }
 }
 
 

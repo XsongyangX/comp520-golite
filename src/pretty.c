@@ -297,6 +297,15 @@ void prettyWhile(Stmt *s, int t)
     printf("}\n");
 }
 
+void prettyPrintHelper(Exp *e)
+{
+    if(e->val.expblock.next != NULL)
+    {
+        prettyPrintHelper(e->val.expblock.next);
+    }
+    prettyExp(s->val.iostmt.value->val.expblock.next);
+    
+}
 //prints a print stmt
 void prettyPrint(Stmt *s, int t)
 {
@@ -308,9 +317,11 @@ void prettyPrint(Stmt *s, int t)
     else{
         printf("print(");
     }
-    prettyExp(s->val.iostmt.value);
+    
+    prettyPrintHelper(s->val.iostmt.value);
     printf(")\n");
 }
+
 
 //prints return stmts
 void prettyReturn(Stmt *s, int t)
@@ -452,6 +463,11 @@ void prettyExp(Exp *e)
             break;
         case parExp:
             printf("(");
+            prettyExp(e->val.binary.rhs);
+            printf(")");
+            break;
+        case uxorExp:
+            printf("( ^");
             prettyExp(e->val.binary.rhs);
             printf(")");
             break;
@@ -601,7 +617,7 @@ void prettyExp(Exp *e)
     }
 }
 //helper for function case in prettyExp
-void prettySDeclFn(SDecl *s)
+void prettySDeclFn(Decl *s)
 {
     if(s->next != NULL)
     {
