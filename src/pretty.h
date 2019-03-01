@@ -1,3 +1,6 @@
+#ifndef PRETTY_H
+#def PRETTY_H
+
 #include "tree.h"
 
 void prettyTabs(int n);
@@ -24,3 +27,5 @@ void prettySwitch(STATEMENT *s, int t);
 void prettyCase(STATEMENT *s, int t);
 void prettyExp(EXP *e);
 void prettyStmtFn(STATEMENT *s);
+
+#endif
