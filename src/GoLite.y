@@ -43,12 +43,12 @@ void yyerror(const char *s) {
     char *strval;
     int boolval;
     char runeval;
-    TYPE *typeval;
-    EXP *expval;
-    STATEMENT *stmtval;
-    DECLARATION *decval;
-    PROGRAM *progval;
-    FUNCTION *funcval;
+    type *typeval;
+    Exp *expval;
+    Stmt *stmtval;
+    Decl *decval;
+    Prog *progval;
+    Fctn *funcval;
 }
 
 /* Token directives define the token types to be returned by the scanner (excluding character
