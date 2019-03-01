@@ -4,5 +4,5 @@
 for file in *.go
 do
 	echo $file
-	cat $file | ~cs520/golitec typecheck 
+	cat $file | ~cs520/golitec parse 
 done
