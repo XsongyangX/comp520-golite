@@ -2,7 +2,7 @@
 package main
 
 func main() {
-	var s string = ` `
+	var s string = ``
 	var t string = ` '!"#$%&()*+,-./`
 	t = `0123456789`
 	t = `:;<=>?`
