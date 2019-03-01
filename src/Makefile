@@ -32,6 +32,7 @@ emptyParser.o:
 
 cleanScan:
 	rm y.tab.*
+	rm y.output
 	rm lex.yy.c
 	rm minic
 

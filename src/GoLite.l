@@ -202,7 +202,7 @@ PUNCTUATION [?<>+-=,^$|&]
 0[0-7]* {//OCTAL VALUE
     yylval.intval = (int)strtol(yytext, NULL, 8);
     if(isToken){
-        fprintf(stdout, "tINTLITERAL(%s = %d)\n", yytext, (int)strtol(yytext, NULL, 8));
+        fprintf(stdout, "tINTLITERAL(%s = %ld)\n", yytext, strtol(yytext, NULL, 8));
     }
     requiresIns = 1; 
     return tINTLITERAL;
@@ -210,7 +210,7 @@ PUNCTUATION [?<>+-=,^$|&]
 0(x|X)[0-9a-f]* {//HEXADECIMAL VALUE
     yylval.intval = (int)strtol(yytext, NULL, 0);
     if(isToken){
-        fprintf(stdout, "tINTLITERAL(%s = %d)\n", yytext, (int)strtol(yytext, NULL, 0));
+        fprintf(stdout, "tINTLITERAL(%s = %ld)\n", yytext, strtol(yytext, NULL, 0));
     }
     requiresIns = 1; 
     return tINTLITERAL;
