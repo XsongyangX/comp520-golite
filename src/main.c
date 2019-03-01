@@ -9,7 +9,7 @@ Main file of the GoLite compiler
 void yyparse();
 int yylex();
 int isToken;
-Prog *my_prog;
+PROGRAM *my_prog;
 
 int main(int argc, char** argv)
 {
