@@ -332,6 +332,30 @@ EXP *makeEXP_func(char *identifier, int size, DECLARATION *args)
     e->val.fn = tmpf;
     return e;
 }
+/*inserts a funcExp node into an existing tree*/
+void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
+{
+    EXP *prev;
+    EXP *tmp = identifier;
+    while(identifier->val.binary.rhs != NULL)
+    {
+        prev = tmp;
+        tmp = identifier->val.binary.rhs;
+    }
+    EXP *e = malloc(sizeof(EXP));
+    e->kind = funcExp;
+    //make a dummy function struct to represent the function call
+    FUNCTION *tmpf = malloc(sizeof(FUNCTION));
+    tmpf->identifier = tmp->val.identifier;
+    tmpf->paramCount = size;
+    //setup the linked list of arguments
+    tmpf->body = NULL;
+    tmpf->params = args;
+    tmpf->returnt = NULL;
+    tmpf->next = NULL;
+    e->val.fn = tmpf;
+    prev->val.binary.rhs = e;
+}
 
 DECLARATION *makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, EXP *rhs)
 {
@@ -574,37 +598,10 @@ STATEMENT *makeSTMT_return(int lineno, EXP *expression)
 
 PROGRAM *makePROG(char* package, DECLARATION *declList)
 {
-    if(declList->next == NULL)
-    {
-        PROGRAM *p = malloc(sizeof(Prog));
-        p->package = package;
-        if(declList != NULL)
-        {
-            if (declList->d == funcDecl)
-            {
-                p->fnList = declList->val.f;
-            }
-            else{
-                p->declList = declList;
-            }
-        }
-        return p;
-    }
-    else{
-        PROGRAM *p = makePROG(package, declList->next);
-        if(declList->d == funcDecl)
-        {
-            FUNCTION *f = declList->val.f;
-            f->next = p->fnList;
-            p->fnList = f;
-            declList->next = NULL;
-        }
-        else{
-            declList->next = p->declList;
-            p->declList = declList;
-        }
-        return p;
-    }
+    
+    PROGRAM *p = makePROG(package, declList->next);
+    p->declList = declList;
+     
     
 }
 
@@ -616,7 +613,10 @@ TYPE *makeTYPE(int gtype, int size, char *name, TYPE *arg){
     t->size = size;
     t->gType = gtype;
     t->name = name;
-    t->val.arg = arg;
+    if(arg != NULL){
+        t->val.arg = arg;
+
+    }
     return t; 
 }
 
@@ -661,6 +661,11 @@ Takes the linked list of identifiers and makes each of them into a declaration s
 propogating the TYPE to all statements*/
 DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    if(ids == NULL)
+    {
+        d = NULL;
+        return d;   
+    }
     // If there is no next id, create a dec for the last id 
     if(ids->val.expblock.next == NULL){
         d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size);

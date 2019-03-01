@@ -18,15 +18,10 @@ void prettyProg(PROGRAM *my_prog)
         printf("package %s;\n", my_prog->package);
     }
     prettyDecl(my_prog->declList, 0);
-    prettyFctn(my_prog->fnList, 0);
 }
 //prints a function list
 void prettyFctn(Fctn *fn, int t)
 {
-    if(fn->next != NULL)
-    {
-        prettyFctn(fn->next, t);
-    }
     prettyTabs(t);
     printf("func %s(", fn->identifier);
     prettyFctnDecl(fn->params, 0);
@@ -102,6 +97,8 @@ void prettyDecl(DECLARATION *d, int t)
             prettyTabs(t);
             printf("}\n");
             break;
+        case funcDecl:
+            prettyFctn(d->val.f, t);
     }
 }
 
@@ -111,12 +108,29 @@ void prettySDecl(DECLARATION *d)
     if(d->next != NULL){
         prettySDeclId(d->next);
     }
-    printf("%s := ", d->identifier);
-    if(d->next != NULL){
-        prettySDeclVal(d->next);
+    if(d->d != fakeDecl && d->d != funcDecl)
+    {
+        printf("%s := ", d->identifier);
+        if(d->next != NULL){
+            prettySDeclVal(d->next);
+        }
+        prettyExp(d->val.right);
+        printf("; ");
     }
-    prettyExp(d->val.right);
-    printf("; ");
+    else if(d->d ==fakeDecl)
+    {
+        printf("%s = ", d->identifier);
+        if(d->next != NULL){
+            prettySDeclVal(d->next);
+        }
+        prettyExp(d->val.right);
+        printf("; ");
+    }
+    else{
+        printf("%s", d->val.f->identifier);
+        prettySDeclFn(d->val.f->params);
+        printf(");");
+    }
 
 }
 void prettySDeclId(DECLARATION *d)
@@ -124,6 +138,7 @@ void prettySDeclId(DECLARATION *d)
     if(d->next != NULL){
         prettySDeclId(d->next);
     }
+    
     printf("%s, ", d->identifier);
 }
 void prettySDeclVal(DECLARATION *d)

@@ -80,7 +80,7 @@ enum GroupingType{  nilType,
                     structType,
                     userType,
                     };
-enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl};
+enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl, fakeDecl};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
 
@@ -161,7 +161,6 @@ struct STATEMENT{
 struct PROGRAM{
     char *package;
     DECLARATION *declList;
-    FUNCTION *fnList;
 };
 
 
@@ -206,6 +205,7 @@ EXP *makeEXP_len(EXP *e1);
 EXP *makeEXP_cap(EXP *e1);
 EXP *makeEXP_uxor(EXP *e1);
 EXP *makeEXP_func(char *identifier, int size, DECLARATION *args);
+void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args);
 EXP *makeEXP_expblock(EXP *e, EXP *next);
 EXP *makeEXP_idblock(char *identifier, EXP *next);
 EXP *makeEXP_not(EXP *e1);

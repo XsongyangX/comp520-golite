@@ -60,7 +60,7 @@ void yyerror(const char *s) {
 %type <funcval> funcdef 
 %type <decval> progdefs topdecl dec blockidents decdistributed typelist typedec typedistributed condstmt
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr access exps idents wideridents widmod
+%type <expval> exp trm ftr access exps explist idents wideridents widmod
 %type <typeval> type
 
 %token tINT
@@ -233,11 +233,16 @@ ftr             : '(' exp ')' {$$ = $2;}
                 ;
 
 access          : access '.' tIDENTIFIER {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | access '(' exps ')' {DECLARATION *d = makeDECL_blocknorhs(yylineno, $3, makeTYPE(0,0,"", NULL);EXP *id = makeEXP_func($1, 0, d);}
+                | access '(' explist ')' {  TYPE *t = makeTYPE(0,0," ", NULL); 
+                                            DECLARATION *d = makeDECL_blocknorhs(yylineno, $3, t); 
+                                            makeEXP_func_access($1, 0, d); $$ = $1;}
                 | access '[' exp ']' {$$ = makeEXP_element($1, makeEXP_index($3));}
                 | access '[' exp ':' exp ']' {$$ = makeEXP_element($1, makeEXP_range($3, $5));}
                 | {$$ = NULL;}
                 
+                ;
+explist         : exps {$$ = $1;}
+                | {$$ = NULL;}
                 ;
 
 /* an arbitrily long list of expressions, separated by commas */
@@ -251,24 +256,23 @@ idents          : idents ',' tIDENTIFIER {$$ = makeEXP_idblock($3, $1);}
                 ;
 
 /* a block of lists of identifiers. Used in the distributed var () type statements. */
-blockidents     : blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); (findBottomDECL($$))->next = $1;}
+blockidents     : blockidents idents type ';' {DECLARATION *d = makeDECL_blocknorhs(yylineno, $2, $3); (findBottomDECL(d))->next = $1; $$ = d;}
                 | {$$ = NULL;}
                 ;
 
 /* variable declarations */
 dec             : tVAR idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3);}
                 | tVAR idents type '=' exps ';' {$$ = makeDECL_block(yylineno, $2, $3, $5);}
-                | tVAR idents '=' exps ';' {$$ = makeDECL_block(yylineno, $2, NULL, $4)}
                 | tVAR '(' decdistributed ')' ';' {$$ = $3;}
                 | typedec ';' {$$ = $1;}
                 ;
 
 /* A block of things put into a distributed var () statement */
-decdistributed  : decdistributed idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); (findBottomDecl($$))->next = $1;}
-                | decdistributed idents type '=' exps ';' {$$ = makeDECL_block(yylineno, $2, $3, $5); 
-                    (findBottomDecl($$))->next = $1;}
-                | decdistributed idents '=' exps ';' {$$ = makeDECL_blocknotype(yylineno, $2, $4); 
-                    (findBottomDecl($$))->next = $1;}
+decdistributed  : decdistributed idents type ';' {DECLARATION *d = makeDECL_blocknorhs(yylineno, $2, $3); (findBottomDECL(d))->next = $1; $$ = d;}
+                | decdistributed idents type '=' exps ';' {DECLARATION *d = makeDECL_block(yylineno, $2, $3, $5); 
+                    (findBottomDECL(d))->next = $1; $$ = d;}
+                | decdistributed idents '=' exps ';' {DECLARATION *d = makeDECL_blocknotype(yylineno, $2, $4); 
+                    (findBottomDECL(d))->next = $1; $$ = d;}
                 | idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
                 | idents type '=' exps ';' {$$ = makeDECL_block(yylineno, $1, $2, $4);}
                 | idents '=' exps ';' {$$ = makeDECL_blocknotype(yylineno, $1, $3);}
@@ -301,7 +305,7 @@ typelist        : typelist ',' idents type {$$ = makeDECL_blocknorhs(yylineno, $
 type            : tIDENTIFIER {$$ = makeTYPE(baseType, 1, $1, NULL);}
                 | '[' ']' tIDENTIFIER {$$ = makeTYPE(sliceType, 0, $3, NULL);}
                 | '[' tINTLITERAL ']' tIDENTIFIER {$$ = makeTYPE(arrayType, $2, $4, NULL);}
-                | {$$ = makeTYPE(nilType, 0, "", NULL);}
+                | {$$ = makeTYPE(nilType, 0, " ", NULL);}
                 ;
 
 /* A block of statements */
@@ -328,7 +332,7 @@ stmt            : simplestmt {$$ = $1;}
 such as before the conditional expressions of if statements */
 simplestmt      : exp ';' {$$ = makeSTMT_exp(yylineno, $1);} 
                 | tIDENTIFIER tDECREMENT ';' {EXP *ident = makeEXP_id($1); EXP *one = makeEXP_int(1); 
-                    EXP *identMinus = makeEXP_sub(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identMinus);}
+                    EXP *identMinus = makeEXP_minus(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identMinus);}
                 | tIDENTIFIER tINCREMENT ';' {EXP *ident = makeEXP_id($1); EXP *one = makeEXP_int(1); 
                     EXP *identPlus = makeEXP_plus(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identPlus);}
                 | asnexps ';' {$$ = $1;}
@@ -336,19 +340,19 @@ simplestmt      : exp ';' {$$ = makeSTMT_exp(yylineno, $1);}
 
 /* Defines all kinds of if statement, with or without a simplestmt before the conditional */
 ifstmt          : tIF exp '{' stmts '}' elsestmt {$$ = makeSTMT_if(yylineno, $2, NULL, $4, $6);}
-                | tIF condstmt exp '{' stmts '}' elsestmt {$$ = makeSTMT_if(yylineno, $3, $2, $5, $7);}
+                | tIF condstmt ';' exp '{' stmts '}' elsestmt {$$ = makeSTMT_if(yylineno, $4, $2, $6, $8);}
                 ;
 
 elsestmt        : tELSE tIF exp '{' stmts '}' elsestmt {$$ = makeSTMT_elif(yylineno, $3, NULL, $5, $7);}
-                | tELSE tIF condstmt exp '{' stmts '}' elsestmt {$$ = makeSTMT_elif(yylineno, $4, $3, $6, $8);}
+                | tELSE tIF condstmt ';' exp '{' stmts '}' elsestmt {$$ = makeSTMT_elif(yylineno, $5, $3, $7, $9);}
                 | tELSE '{' stmts '}' ';' {$$ = makeSTMT_else(yylineno, $3);}
                 | ';' {$$ = NULL;}
                 ;
 /* Defines switch statements */
 switchstmt      : tSWITCH '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, NULL, NULL, $3);}
-                | tSWITCH condstmt '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, NULL, $2, $4);}
+                | tSWITCH condstmt ';' '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, NULL, $2, $5);}
                 | tSWITCH exp '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, $2, NULL, $4);}
-                | tSWITCH condstmt exp '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, $3, $2, $5);}
+                | tSWITCH condstmt ';' exp '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, $4, $2, $6);}
                 ;
 
 /* Defines the body of a switch statement Handling expression list as cases?*/
@@ -360,7 +364,7 @@ switchbody      : switchbody tCASE exps ':' stmts ';' {$$ = makeSTMT_case(yyline
 /* Defines all three supported kinds of support statements */
 forstmt         : tFOR '{' stmts '}' ';' {$$ = makeSTMT_while(yylineno, NULL, $3);}
                 | tFOR exp '{' stmts '}' ';' {$$ = makeSTMT_while(yylineno, $2, $4);}
-                | tFOR simplestmt exp simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, $3, $6, $4);}
+                | tFOR condstmt ';' exp ';' simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, $4, $8, $6);}
                 ;
 
 /* Defines return statements */
@@ -384,7 +388,7 @@ asnexps         : wideridents '=' exps {$$ = makeSTMT_blockassign(yylineno, $1, 
                 | tIDENTIFIER tPLUSASSIGN exp {EXP *id = makeEXP_id($1); 
                     EXP *newExp = makeEXP_plus(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
                 | tIDENTIFIER tMINUSASSIGN exp {EXP *id = makeEXP_id($1); 
-                    EXP *newExp = makeEXP_sub(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
+                    EXP *newExp = makeEXP_minus(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
                 | tIDENTIFIER tTIMESASSIGN exp {EXP *id = makeEXP_id($1); 
                     EXP *newExp = makeEXP_times(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
                 | tIDENTIFIER tDIVASSIGN exp {EXP *id = makeEXP_id($1); 
@@ -403,11 +407,12 @@ asnexps         : wideridents '=' exps {$$ = makeSTMT_blockassign(yylineno, $1, 
                     EXP *newExp = makeEXP_lshift(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
                 | tIDENTIFIER tRSHIFTASSIGN exp {EXP *id = makeEXP_id($1); 
                     EXP *newExp = makeEXP_rshift(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
+                | {$$ = NULL;}
                 ;
 
-condstmt        : idents tCOLONASSIGN exps ';' {DECLARATION *d = makeDECL_blocknotype(yylineno, $1, $3); $$ = makeSTMT_decl(yylineno, d);}
-                | tIDENTIFIER '(' idents ')' ';' {EXP *e = makeEXP_func($1, 0, $3); $$ = makeDECL_blocknorhs(yylineno, e, makeTYPE(0,0,NULL,NULL)); }
-
+condstmt        : idents tCOLONASSIGN exps {$$ = makeDECL_blocknotype(yylineno, $1, $3);}
+                | idents '=' exps {$$ = makeDECL_blocknotype(yylineno, $1, $3); $$->d = fakeDecl;}
+                | tIDENTIFIER '(' idents ')' {DECLARATION *d = makeDECL_blocknorhs(yylineno, $3, makeTYPE(0,0," ",NULL)); FUNCTION *f = makeFCTN(yylineno, $1, 0, d, NULL, NULL); $$ = makeDECL_fn(d,f); $$->d = funcDecl; }
 
 
 %%
