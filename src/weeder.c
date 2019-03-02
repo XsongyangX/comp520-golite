@@ -176,6 +176,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	case strExp:
 	case boolExp:
 	case runeExp:
+	case rawstrExp:
 		return;
 	
 	// potentially 0 literals

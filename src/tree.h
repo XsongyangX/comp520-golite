@@ -15,7 +15,7 @@ enum ExpressionKind{emptyExp, //NULL
                     intExp, 
                     floatExp, 
                     strExp, 
-		    rawstrExp,
+					rawstrExp,
                     boolExp, 
                     runeExp,
                     plusExp, //.+.
