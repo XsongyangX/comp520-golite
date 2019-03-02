@@ -25,87 +25,103 @@ void weedFunction(FUNCTION *function){
 More than one default cases in switch
 Break and continue
 If, switch, for short declaration
+Return statement
 */
-void weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, 
-bool lookForDefaultCase){
+// Return value is true if the statement and its decendents have a return statement
+bool weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, 
+bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 	
 	// check for null
-	if (s == NULL) return;
+	if (s == NULL) return false;
+	
+	// temporary values
+	bool returnInBody;
+	bool returnInElsePart;
 	
 	switch (s->kind) {
 		
 		// unused token
 		case emptyS:
-			return;
+			return false;
 			
 		// assignment
 		case assignS:
 			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
-			return;
+			return false;
 			
 		// quick declaration
 		case quickDeclS:
 			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
-			return;
+			return false;
 			
 		// statement block
 		case blockS:
-			weedStatement(s->val.body, allowBreak, allowContinue, false);
-			return;
+			return weedStatement(s->val.body, allowBreak, allowContinue, 
+				false, false, needReturn);
 			
 		// if and else-if statement
 		case ifS: 
 		case elifS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			weedStatement(s->val.conditional.optDecl, false, false, false);
-			weedStatement(s->val.conditional.elif, allowBreak, allowContinue, false);
+			weedStatement(s->val.conditional.optDecl, false, false, false, true, false);
+			returnInElsePart = 
+				weedStatement(s->val.conditional.elif, allowBreak, allowContinue, 
+				false, encounteredReturn, needReturn);
 		// else statement
 		case elseS:
-			weedStatement(s->val.conditional.body, allowBreak, allowContinue, false);
-			return;
+			returnInBody = 
+				weedStatement(s->val.conditional.body, allowBreak, allowContinue, 
+				false, encounteredReturn, needReturn);
+			return returnInElsePart && returnInBody;
 			
 		// for statement
 		case forS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			weedStatement(s->val.conditional.optDecl, false, false, false);
-			weedStatement(s->val.conditional.body, true, true, false);
-			return;
+			weedStatement(s->val.conditional.optDecl, false, false, false, true, false);
+			returnInBody = 
+				weedStatement(s->val.conditional.body, true, true, false,
+				encounteredReturn, needReturn);
+			return returnInBody;
 			
 		// while statement
 		case whileS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			weedStatement(s->val.conditional.body, true, true, false);
-			return;
+			return weedStatement(s->val.conditional.body, true, true, false,
+				encounteredReturn, needReturn);	
 			
 		// print statement
 		case printS:
 			weedExpression(s->val.iostmt.value, s->lineno, false, false, true);
-			return;
+			return false;
 			
 		// expression statement
 		case exprS:
 			weedExpression(s->val.expression, s->lineno, false, true, true);
-			return;
+			return false;
 			
 		// return statement
 		case returnS:
+			if (encounteredReturn) {
+				fprintf(stderr, "Error: (line %d) too many return statement\n", s->lineno);
+				exit(1);
+			}
 			weedExpression(s->val.expression, s->lineno, false, false, true);
-			return;
+			return true;
 		
 		// switch statement
 		case switchS:
-			weedStatement(s->val.switchBody.optDecl, false, false, false);
+			weedStatement(s->val.switchBody.optDecl, false, false, false, true, false);
 			weedExpression(s->val.switchBody.condition, s->lineno, false, false, true);
-			weedStatement(s->val.switchBody.cases, allowBreak, allowContinue, true);
-			return;
-		
+			return weedStatement(s->val.switchBody.cases, 
+				allowBreak, allowContinue, true, false, needReturn);
+			
 		// case statement
 		case caseS:
 			weedExpression(s->val.caseBody.condition, s->lineno, false, false, true);
-			weedStatement(s->val.caseBody.body, true, false, false);
-			return;
+			return weedStatement(s->val.caseBody.body, 
+				true, false, false, false, needReturn);
 			
 		// break statement
 		case breakS:
@@ -115,7 +131,7 @@ bool lookForDefaultCase){
 				s->lineno);
 				exit(1);
 			}
-			return;
+			return false;
 			
 		// continue statement
 		case continueS:
@@ -125,12 +141,12 @@ bool lookForDefaultCase){
 				s->lineno);
 				exit(1);
 			}
-			return;
+			return false;
 			
 		// declaration statement
 		case declS:
 			weedDeclaration(s->val.declaration, s->lineno);
-			return;
+			return false;
 			
 		// throw error
 		default:

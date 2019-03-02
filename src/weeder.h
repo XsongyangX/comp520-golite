@@ -8,8 +8,12 @@ void weedRoot(PROGRAM *root);
 void weedProgram(PROGRAM *program);
 void weedDeclaration(DECLARATION *declaration, int lineno);
 void weedFunction(FUNCTION *function);
-void weedStatement(STATEMENT *statement, bool allowBreak, bool allowContinue, bool lookForDefaultCase);
-void weedExpression(EXP *expression, int lineno, bool divBy0, bool funcExpOnly, bool lookForBlankId);
+bool weedStatement(STATEMENT *statement, 
+	bool allowBreak, bool allowContinue, bool lookForDefaultCase,
+	bool encounteredReturn, bool needReturn);
+void weedExpression(EXP *expression, 
+	int lineno, bool divBy0, bool funcExpOnly, 
+	bool lookForBlankId);
 
 void notFuncExp(int lineno);
 
