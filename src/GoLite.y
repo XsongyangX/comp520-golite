@@ -367,8 +367,8 @@ switchstmt      : tSWITCH '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno,
                 ;
 
 /* Defines the body of a switch statement Handling expression list as cases?*/
-switchbody      : switchbody tCASE exps ':' stmts {$$ = makeSTMT_case(yylineno, $3, $5);}
-                | switchbody tDEFAULT ':' stmts {$$ = makeSTMT_case(yylineno, NULL, $4);}
+switchbody      : switchbody tCASE exps ':' stmts {$$ = makeSTMT_case(yylineno, $3, $5); $$->next = $1;}
+                | switchbody tDEFAULT ':' stmts {$$ = makeSTMT_case(yylineno, NULL, $4); $$->next = $1;}
                 | {$$ = NULL;}
                 ;
 
