@@ -9,12 +9,24 @@ void weedRoot(PROGRAM *root){
 	weedProgram(root);
 }
 
-void weedProgram(PROGRAM *program){
+void weedProgram(PROGRAM *p){
 	
+	if (p == NULL) return;
+	
+	weedDeclaration(p->declList, 1);
 }
 
-void weedDeclaration(DECLARATION *declaration, int lineno){
+void weedDeclaration(DECLARATION *d, int lineno){
+	if (d == NULL) return;
 	
+	switch (d->d){
+		
+		// simple declarations
+		case typeDecl:
+		case varDecl:
+		case structDecl
+			return;
+	}
 }
 
 void weedFunction(FUNCTION *f){
