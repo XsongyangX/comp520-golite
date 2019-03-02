@@ -18,7 +18,7 @@ void prettyElif(STATEMENT *s,int t);
 void prettyElse(STATEMENT *s,int t);
 void prettyFor(STATEMENT *s, int t);
 void prettyWhile(STATEMENT *s, int t);
-void prettyPrint(STATEMENT *s, int t);
+void prettyPrintS(STATEMENT *s, int t);
 void prettyReturn(STATEMENT *s, int t);
 void prettyBreak(int t);
 void prettyContinue(int t);
