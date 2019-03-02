@@ -60,7 +60,7 @@ void yyerror(const char *s) {
 %type <funcval> funcdef 
 %type <decval> progdefs topdecl dec blockidents decdistributed typelist typedec typedistributed vardec
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr access exps explist idents wideridents widmod funccall widshort
+%type <expval> exp trm ftr access exps explist idents funccall
 %type <typeval> type opttype
 
 %token tINT
@@ -179,7 +179,7 @@ prgrm           : tPACKAGE tIDENTIFIER ';' progdefs {$$ = makePROG($2, $4); my_p
                 ;
 /*list of declarations and function declarations*/
 progdefs        : {$$ = NULL;}
-                | progdefs topdecl {$$ = $2; $2->next = $1;}
+                | progdefs topdecl {$$ = $2; $$->next = $1;}
                 ;
 
 topdecl         : dec { $$ = $1;}
@@ -388,15 +388,6 @@ returnstmt      : tRETURN ';' {$$ = makeSTMT_return(yylineno, NULL);}
                 | tRETURN exp ';' {$$ = makeSTMT_return(yylineno, $2);}
                 ;
 
-wideridents     : wideridents ',' tIDENTIFIER widmod {EXP *e = makeEXP_id($3); if($4 != NULL){ e = makeEXP_element(e, $4);} $$ = makeEXP_expblock(e, $1);}
-                | widshort {$$ = $1;}
-                ;
-widshort        : tIDENTIFIER widmod {$$ = makeEXP_idblock($1, NULL);}
-                ;
-
-widmod          : '[' exp ']' {$$ = makeEXP_index($2);}
-                | {$$ = NULL;}
-                ;
 
 /* Defines the kind of valid assignment expressions.
 Again, we need to account for an equal number of idents and exps on either side.
