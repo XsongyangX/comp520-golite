@@ -37,6 +37,14 @@ EXP *makeEXP_str(char *literal)
     e->val.strLiteral = literal;
     return e;
 }
+EXP *makeEXP_rawstr(char *literal)
+{
+    EXP *e = malloc(sizeof(EXP));
+    e->kind = rawstrExp;
+    e->val.strLiteral = literal;
+    return e;
+}
+
 EXP *makeEXP_bool(int literal)
 {
     EXP *e = malloc(sizeof(EXP));
@@ -681,7 +689,7 @@ DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
         //If there is a next id, recurse onto that id. 
         //Then create a dec for this level and a pointer this dec to the subtree 
         else{
-            DECLARATION *nextD = malloc(sizeof(DECLARATION));
+            DECLARATION *nextD;
             nextD = makeDECL_blocknorhs(lineno, ids->val.idblock.next, t);
             d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t);
             d->next = nextD;

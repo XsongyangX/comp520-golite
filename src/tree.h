@@ -15,6 +15,7 @@ enum ExpressionKind{emptyExp, //NULL
                     intExp, 
                     floatExp, 
                     strExp, 
+		    rawstrExp,
                     boolExp, 
                     runeExp,
                     plusExp, //.+.
@@ -127,7 +128,7 @@ struct DECLARATION{//compound declarations should be broken down into individual
         FUNCTION *f;
         DECLARATION *body;
     }val;
-    DECLARATION *next;
+    DECLARATION *next;    DECLARATION *chain;
 };
 // struct SHORT_DECL{//Struct for function declaration parameters for space efficiency
 //     EXP *identifier;
@@ -171,6 +172,7 @@ EXP *makeEXP_empty();
 EXP *makeEXP_int(int literal);
 EXP *makeEXP_float(float literal);
 EXP *makeEXP_str(char *literal);
+EXP *makeEXP_rawstr(char *literal);
 EXP *makeEXP_bool(int literal);
 EXP *makeEXP_rune(char literal);
 EXP *makeEXP_plus(EXP *e1, EXP *e2);

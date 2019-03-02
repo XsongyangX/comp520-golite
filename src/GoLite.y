@@ -223,12 +223,13 @@ trm             : trm '*' ftr {$$ = makeEXP_times($1, $3);}
 
 /* The final expansion of exp. Can expand back to exp with parentheses. Also handles literals
  and function calls. */
-ftr             : '(' exp ')' {$$ = $2;}
+ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tINTLITERAL {$$ = makeEXP_int($1);}
                 | tFLOATLITERAL {$$ = makeEXP_float($1);}
                 | tBOOLLITERAL {$$ = makeEXP_bool($1);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
+		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
                 | access {$$ = $1;}
                 ;
@@ -257,11 +258,12 @@ exps            : exps ',' exp {$$ = makeEXP_expblock($3, $1);}
 
 /* an arbitrily long list of identifiers, separated by commas */
 idents          : idents ',' tIDENTIFIER %prec UNARY {$$ = makeEXP_idblock($3, $1);} 
-                | tIDENTIFIER ',' tIDENTIFIER {$$ = makeEXP_idblock($1, makeEXP_idblock($3, NULL));}
+                | tIDENTIFIER ',' tIDENTIFIER {$$ = makeEXP_idblock($3, makeEXP_idblock($1, NULL));}
                 ;
 
 /* a block of lists of identifiers. Used in the distributed type () statements. */
-blockidents     : blockidents tIDENTIFIER type ';' {$$ = makeDECL_norhs(0, $2, $3); $$->next = $1;}
+blockidents     : blockidents tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $2, $3); $$->next = $1;}
+		| blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); $$->next = $1;}
                 | {$$ = NULL;}
                 ;
 
@@ -277,7 +279,7 @@ vardec          : idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
                 | tIDENTIFIER opttype '=' exp ';' {$$ = makeDECL(1, $1, $2, $4);}
                 ;
 /* A block of things put into a distributed var () statement */
-decdistributed  : decdistributed vardec {$$ = $1;}
+decdistributed  : decdistributed vardec {$$ = $2; $$->next = $1;}
                 | {$$ = NULL;}
                 ;
 
@@ -288,9 +290,9 @@ typedec         : tTYPE tIDENTIFIER type {$$ = makeDECL_type($2, $3);}
                 ;
 
 /* Used for declaring user defined types with the distributed type () syntax */
-typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, $3); $$->next = $1;}
+typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, $3); $$->chain = $1;}
                 | typedistributed tIDENTIFIER tSTRUCT '{' blockidents '}' ';'
-                    { $$ = makeDECL_struct($2, $5); $$->next = $1;}
+                    { $$ = makeDECL_struct($2, $5); $$->chain = $1;}
                 | {$$ = NULL;}
                 ;
 
@@ -299,10 +301,6 @@ funcdef         : tFUNC tIDENTIFIER '(' typelist ')' opttype '{' stmts '}' ';'
                     {$$ = makeFCTN(yylineno, $2, 0, $4, $6, $8);}
 		|  tFUNC tIDENTIFIER '(' ')' opttype '{' stmts '}' ';'
                     {$$ = makeFCTN(yylineno, $2, 0, NULL, $5, $7);}
-		| tFUNC tIDENTIFIER '(' typelist ')' opttype '{' '}' ';'
-                    {$$ = makeFCTN(yylineno, $2, 0, $4, $6, NULL);}
-		|  tFUNC tIDENTIFIER '(' ')' opttype '{' '}' ';'
-                    {$$ = makeFCTN(yylineno, $2, 0, NULL, $5, NULL);}
                 ;
 
 /* Defines the syntax for types in function headers */
@@ -322,8 +320,8 @@ type            : tIDENTIFIER {$$ = makeTYPE(baseType, 1, $1, NULL);}
                 ;
 
 /* A block of statements */
-stmts           : stmts stmt {$$ = $2; $2->next = $1;}
-                | stmt {$$ = $1;}
+stmts           : stmts stmt {$$ = $2; $$->next = $1;}
+                | {$$ = NULL;}
                 ;
 
 /* Defines the kinds of statements that can be used in any context 
@@ -369,8 +367,8 @@ switchstmt      : tSWITCH '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno,
                 ;
 
 /* Defines the body of a switch statement Handling expression list as cases?*/
-switchbody      : switchbody tCASE exps ':' stmts ';' {$$ = makeSTMT_case(yylineno, $3, $5);}
-                | switchbody tDEFAULT ':' stmts ';' {$$ = makeSTMT_case(yylineno, NULL, $4);}
+switchbody      : switchbody tCASE exps ':' stmts {$$ = makeSTMT_case(yylineno, $3, $5); $$->next = $1;}
+                | switchbody tDEFAULT ':' stmts {$$ = makeSTMT_case(yylineno, NULL, $4); $$->next = $1;}
                 | {$$ = NULL;}
                 ;
 

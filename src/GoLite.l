@@ -15,11 +15,6 @@ void rawStringHelper(char *tmp, char *s, int len)
 	int offset = 0;
 	for(int i = 1; i < len; i++){
 		switch(s[i]){
-			case '\\':
-				tmp[i+offset] = '\\';
-				tmp[i+offset+1] = '\\';
-				offset++;
-				break;
 			case '\0':
 				tmp[i+offset] = '\\';
 				tmp[i+offset+1] = '0';
@@ -28,16 +23,6 @@ void rawStringHelper(char *tmp, char *s, int len)
 			case '\n':
 				tmp[i+offset] = '\\';
 				tmp[i+offset+1] = 'n';
-				offset++;
-				break;
-			case '\'':
-				tmp[i+offset] = '\\';
-				tmp[i+offset+1] = '\'';
-				offset++;
-				break;
-			case '\"':
-				tmp[i+offset] = '\\';
-				tmp[i+offset+1] = '"';
 				offset++;
 				break;
 			case '\r':
@@ -70,8 +55,8 @@ void rawStringHelper(char *tmp, char *s, int len)
 				break;
 		}
 	}
-	tmp[len+offset] = '"';
-	tmp[len+offset+1] = '\0';
+	tmp[len+offset-1] = '"';
+	tmp[len+offset] = '\0';
 }
 %}
 
@@ -173,6 +158,8 @@ PUNCTUATION [?<>+-=,^$|&]
 "struct" {if(isToken){printf("tSTRUCT\n");} requiresIns = 0;return tSTRUCT;}
 "switch" {if(isToken){printf("tSWITCH\n");} requiresIns = 0;return tSWITCH;}
 "type" {if(isToken){printf("tTYPE\n");} requiresIns = 0;return tTYPE;}
+"print" {if(isToken){printf("tPRINT\n");} requiresIns = 0;return tPRINT;}
+"println" {if(isToken){printf("tPRINTLN\n");} requiresIns = 0;return tPRINTLN;}
 "var" {if(isToken){printf("tVAR\n");} requiresIns = 0;return tVAR;}
 
 
@@ -237,7 +224,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 '([ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\'))' {//RUNE (CHAR)
-    yylval.runeval = strdup(yytext)[0];
+    yylval.runeval = strdup(yytext)[1];
     if(isToken){
         fprintf(stdout, "tRUNELITERAL(%s)\n", yytext);
     }
@@ -262,7 +249,7 @@ PUNCTUATION [?<>+-=,^$|&]
         fprintf(stdout, "tRAWSTRINGLITERAL(%s)\n", yytext);
     }
     requiresIns = 1; 
-    return tSTRINGLITERAL;
+    return tRAWSTRINGLITERAL;
 
 }
 
