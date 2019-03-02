@@ -521,7 +521,7 @@ STATEMENT *makeSTMT_for(int lineno, STATEMENT *optDecl, EXP *condition, STATEMEN
     action->next = body;
     s->val.conditional.body = action;
     s->val.conditional.condition = condition;
-    s->val.conditional.optDecl = NULL;
+    s->val.conditional.optDecl = optDecl;
     s->val.conditional.elif = NULL;
     s->next = NULL;
     return s;
