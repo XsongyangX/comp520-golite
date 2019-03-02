@@ -3,7 +3,7 @@ package main
 
 
 func functionToGraph(x float64)float64{
-	return 3*x*x*x - 4*x + 2;
+	return 3*x*x*x - 4*x + 2.0;
 }
 
 
@@ -23,15 +23,15 @@ func printGraph(xmin, xmax, ymin, ymax, precision float64){
 					print("~ ");
 				}
 			}
-			curx += (xmax-xmin)/50;
+			curx += (xmax-xmin)/50.0;
 			
 		}
 		curx = xmin;
-		cury -= (ymax-ymin)/50;
+		cury -= (ymax-ymin)/50.0;
 		println("");
 	}
 }
 
 func main() {
-	printGraph(-5, 5, -5, 5, 0.7);
+	printGraph(-5.0, 5.0, -5.0, 5.0, 0.7);
 }
