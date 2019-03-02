@@ -40,14 +40,14 @@ bool lookForDefaultCase){
 			
 		// assignment
 		case assignS:
-			weedExpression(s->val.assignment.identifier, false, false, false);
-			weedExpression(s->val.assignment.value, false, false, true);
+			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
+			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
 			return;
 			
 		// quick declaration
 		case quickDeclS:
-			weedExpression(s->val.assignment.identifier, false, false, false);
-			weedExpression(s->val.assignment.value, false, false, true);
+			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
+			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
 			return;
 			
 		// statement block
@@ -58,7 +58,7 @@ bool lookForDefaultCase){
 		// if and else-if statement
 		case ifS: 
 		case elifS:
-			weedExpression(s->val.conditional.condition, false, false, true);
+			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 			weedStatement(s->val.conditional.optDecl, false, false, false);
 			weedStatement(s->val.conditional.elif, allowBreak, allowContinue, false);
 		// else statement
@@ -68,42 +68,42 @@ bool lookForDefaultCase){
 			
 		// for statement
 		case forS:
-			weedExpression(s->val.conditional.condition, false, false, true);
+			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 			weedStatement(s->val.conditional.optDecl, false, false, false);
 			weedStatement(s->val.conditional.body, true, true, false);
 			return;
 			
 		// while statement
 		case whileS:
-			weedExpression(s->val.conditional.condition, false, false, true);
+			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 			weedStatement(s->val.conditional.body, true, true, false);
 			return;
 			
 		// print statement
 		case printS:
-			weedExpression(s->val.iostmt.value, false, false, true);
+			weedExpression(s->val.iostmt.value, s->lineno, false, false, true);
 			return;
 			
 		// expression statement
 		case exprS:
-			weedExpression(s->val.expression, false, true, true);
+			weedExpression(s->val.expression, s->lineno, false, true, true);
 			return;
 			
 		// return statement
 		case returnS:
-			weedExpression(s->val.expression, false, false, true);
+			weedExpression(s->val.expression, s->lineno, false, false, true);
 			return;
 		
 		// switch statement
 		case switchS:
 			weedStatement(s->val.switchBody.optDecl, false, false, false);
-			weedExpression(s->val.switchBody.condition, false, false, true);
+			weedExpression(s->val.switchBody.condition, s->lineno, false, false, true);
 			weedStatement(s->val.switchBody.cases, allowBreak, allowContinue, true);
 			return;
 		
 		// case statement
 		case caseS:
-			weedExpression(s->val.caseBody.condition, false, false, true);
+			weedExpression(s->val.caseBody.condition, s->lineno, false, false, true);
 			weedStatement(s->val.caseBody.body, true, false, false);
 			return;
 			
@@ -145,14 +145,13 @@ Division by 0
 Blank identifier
 If, switch, for short declaration
 */
-void weedExpression(EXP *e, int lineno, bool lookForDivisionBy0,
-bool lookForFuncExp, bool lookForBlankId){
+void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool lookForBlankId){
 	
 	// null expression
 	if (e == NULL) return;
 	
 	// look for function call only
-	if (lookForFuncExp && e->kind != funcExp) notFuncExp(lineno);
+	if (funcExpOnly && e->kind != funcExp) notFuncExp(lineno);
 	
 	switch (e->kind){
 	
@@ -165,12 +164,12 @@ bool lookForFuncExp, bool lookForBlankId){
 	
 	// potentially 0 literals
 	case intExp:
-		if (lookForDivisionBy0 && e->val.intLiteral == 0){
+		if (divBy0 && e->val.intLiteral == 0){
 			fprintf(stderr, "Error: (line %d) division by 0\n", lineno);
 			exit(1);
 		}
 	case floatExp:
-		if (lookForDivisionBy0 && e->val.floatLiteral == 0){
+		if (divBy0 && e->val.floatLiteral == 0){
 			fprintf(stderr, "Error: (line %d) division by 0\n", lineno);
 			exit(1);
 		}
