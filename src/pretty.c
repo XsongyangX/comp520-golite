@@ -20,7 +20,7 @@ void prettyProg(PROGRAM *my_prog)
     prettyDecl(my_prog->declList, 0);
 }
 //prints a function list
-void prettyFctn(Fctn *fn, int t)
+void prettyFctn(FUNCTION *fn, int t)
 {
     prettyTabs(t);
     printf("func %s(", fn->identifier);
@@ -33,33 +33,33 @@ void prettyFctn(Fctn *fn, int t)
 }
 
 //prints a list of function arguments
-// void prettyFctnDecl(SDECLARATION *sd, int printComma)
-// {
-//     if(sd->next != NULL)
-//     {
-//         prettyFctnDecl(sd->next,1);
-//     }
-//     printf("%s ", sd->identifier);
-//     prettyType(sd->t);
+void prettyFctnDecl(DECLARATION *sd, int printComma)
+{
+    if(sd->next != NULL)
+    {
+        prettyFctnDecl(sd->next,1);
+    }
+    printf("%s ", sd->identifier);
+    prettyType(sd->t);
     
-//     if(printComma)
-//         printf(", ");
-// }
+    if(printComma)
+        printf(", ");
+}
 
 //prints a type
-void prettyType(type *t)
+void prettyType(TYPE *t)
 {
     switch(t->gType){
+        case nilType:
+            break;
         case arrayType:
             printf("[%d]%s", t->size, t->name);
             break;
         case sliceType:
             printf("[]%s", t->name);
             break;
-        case ptrType:
-            printf("*%s", t->name);
-            break;
         case structType:
+        case userType:
         default:
             printf("%s", t->name);
     }
@@ -92,8 +92,7 @@ void prettyDecl(DECLARATION *d, int t)
             break;
         case structDecl:
             printf("type %s struct {", d->identifier);
-            prettyDecl(d->val.body.dbody, t+1);
-            prettyFctn(d->val.body.fbody, t+1);
+            prettyDecl(d->val.body, t+1);
             prettyTabs(t);
             printf("}\n");
             break;
@@ -103,50 +102,59 @@ void prettyDecl(DECLARATION *d, int t)
 }
 
 //prints a short declaration e.g. in conditionals
-void prettySDecl(DECLARATION *d)
+void prettySDecl(STATEMENT *d)
 {
-    if(d->next != NULL){
-        prettySDeclId(d->next);
-    }
-    if(d->d != fakeDecl && d->d != funcDecl)
+    
+    if(d->kind == quickDeclS)
     {
-        printf("%s := ", d->identifier);
-        if(d->next != NULL){
-            prettySDeclVal(d->next);
+        if(d->val.assignment.chain != NULL){
+            prettySDeclId(d->val.assignment.chain);
         }
-        prettyExp(d->val.right);
+        prettyExp(d->val.assignment.identifier);
+        printf(" := ");
+        if(d->val.assignment.chain != NULL){
+            prettySDeclVal(d->val.assignment.chain);
+        }
+        prettyExp(d->val.assignment.value);
         printf("; ");
     }
-    else if(d->d ==fakeDecl)
+    else if(d->kind == assignS)
     {
-        printf("%s = ", d->identifier);
-        if(d->next != NULL){
-            prettySDeclVal(d->next);
+        if(d->val.assignment.chain != NULL){
+            prettySDeclId(d->val.assignment.chain);
         }
-        prettyExp(d->val.right);
+        prettyExp(d->val.assignment.identifier);
+        printf(" = ");
+        if(d->val.assignment.chain != NULL){
+            prettySDeclVal(d->val.assignment.chain);
+        }
+        prettyExp(d->val.assignment.value);
+        printf("; ");
+    }
+    else if(d->kind == exprS){
+        prettyExp(d->val.expression);
         printf("; ");
     }
     else{
-        printf("%s", d->val.f->identifier);
-        prettySDeclFn(d->val.f->params);
-        printf(");");
+        prettyStmt(d,0);
     }
 
 }
-void prettySDeclId(DECLARATION *d)
+void prettySDeclId(STATEMENT *d)
 {
-    if(d->next != NULL){
-        prettySDeclId(d->next);
+    if(d->val.assignment.chain != NULL){
+        prettySDeclId(d->val.assignment.chain);
     }
     
-    printf("%s, ", d->identifier);
+    prettyExp(d->val.assignment.identifier);
+    printf(", ");
 }
-void prettySDeclVal(DECLARATION *d)
+void prettySDeclVal(STATEMENT *d)
 {
-    if(d->next != NULL){
-        prettySDeclId(d->next);
+    if(d->val.assignment.chain != NULL){
+        prettySDeclId(d->val.assignment.chain);
     }
-    prettyExp(d->val.right);
+    prettyExp(d->val.assignment.value);
     printf(", ");
 }
 
@@ -164,6 +172,8 @@ void prettyStmt(STATEMENT *s, int t)
         case assignS:
             prettyAssign(s,t);
             break;
+        case quickDeclS:
+            prettyAssign(s,t);
         case blockS:
             prettyBlock(s,t);
             break;
@@ -211,15 +221,37 @@ void prettyStmt(STATEMENT *s, int t)
     }
 }
 
+void prettyAssignHelper(STATEMENT *s)
+{
+    if(s->val.assignment.chain != NULL)
+    {
+        prettyAssignHelper(s->val.assignment.chain);
+    }
+    prettyExp(s->val.assignment.value);
+}
+
 //prints an assign statement
 void prettyAssign(STATEMENT *s, int t)
 {
-    prettyTabs(t);
-    prettyExp(s->val.assignment.identifier);
-    printf(" = ");
+    if(s->val.assignment.chain != NULL)
+    {
+        prettyAssign(s->val.assignment.chain, t);
+    }
+    else{
+        prettyTabs(t);
+        prettyExp(s->val.assignment.identifier);
+        if(s->kind == assignS)
+        {    printf(" = ");}
+        else
+        {
+            printf(" := ");
+        }
+        
+    }
     prettyExp(s->val.assignment.value);
     printf("\n");
 }
+
 
 //prints a block statement
 void prettyBlock(STATEMENT *s, int t)
@@ -318,7 +350,7 @@ void prettyPrintHelper(EXP *e)
     {
         prettyPrintHelper(e->val.expblock.next);
     }
-    prettyExp(s->val.iostmt.value->val.expblock.next);
+    prettyExp(e->val.expblock.value);
     
 }
 //prints a print stmt
@@ -626,18 +658,18 @@ void prettyExp(EXP *e)
             break;
         case funcExp:
             printf("%s(", e->val.fn->identifier);
-            prettySDeclFn(e->val.fn->body);
+            prettySDeclFn(e->val.fn->params->val.fnCallBlock);
             printf(")");
             break;
     }
 }
 //helper for function case in prettyExp
-void prettySDeclFn(DECLARATION *s)
+void prettySDeclFn(EXP *s)
 {
-    if(s->next != NULL)
+    if(s->val.expblock.next != NULL)
     {
-        prettySDeclFn(s->next);
+        prettySDeclFn(s->val.expblock.next);
         printf(", ");//separate arguments
     }
-    prettyExp(s->val.expression);
+    prettyExp(s->val.expblock.value);
 }
