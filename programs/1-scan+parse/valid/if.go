@@ -15,5 +15,5 @@ func main() {
 		print(l)
 	} else if m := k + l * 90; false {
 		print(m)
-	}
+	} else {}
 }
