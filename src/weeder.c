@@ -13,7 +13,7 @@ void weedProgram(PROGRAM *program){
 	
 }
 
-void weedDeclaration(DECLARATION *declaration){
+void weedDeclaration(DECLARATION *declaration, int lineno){
 
 }
 

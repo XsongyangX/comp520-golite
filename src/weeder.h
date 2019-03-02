@@ -6,7 +6,7 @@
 
 void weedRoot(PROGRAM *root);
 void weedProgram(PROGRAM *program);
-void weedDeclaration(DECLARATION *declaration);
+void weedDeclaration(DECLARATION *declaration, int lineno);
 void weedFunction(FUNCTION *function);
 void weedStatement(STATEMENT *statement, bool allowBreak, 
 	bool allowContinue, bool lookForDefaultCase);
