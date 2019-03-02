@@ -24,5 +24,6 @@ void prettyBreak(int t);
 void prettyContinue(int t);
 void prettySwitch(STATEMENT *s, int t);
 void prettyCase(STATEMENT *s, int t);
+void prettyExpBlock(EXP *e);
 void prettyExp(EXP *e);
 void prettyStmtFn(STATEMENT *s);

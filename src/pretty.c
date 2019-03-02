@@ -457,7 +457,7 @@ void prettyCase(STATEMENT *s, int t)
     }
     else{
         printf("case ");
-        prettyExp(s->val.caseBody.condition);
+        prettyExpBlock(s->val.caseBody.condition);
         printf(":\n");
     }
     prettyStmt(s->val.caseBody.body, t+1);
@@ -473,6 +473,14 @@ void prettyRawStr(char *s)
 	printf("`");
 }
 
+void prettyExpBlock(EXP *e)
+{
+    if(e->val.expblock.next != NULL){
+        prettyExpBlock(e->val.expblock.next);
+        printf(", ");
+    }
+    prettyExp(e->val.expblock.value);
+}
 //prints expressions
 void prettyExp(EXP *e)
 {
