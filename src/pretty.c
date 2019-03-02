@@ -11,22 +11,17 @@ void prettyTabs(int n)
     }
 }
 //prints a program
-void prettyProg(Prog *my_prog)
+void prettyProg(PROGRAM *my_prog)
 {
     if(strlen(my_prog->package) != 0)
     {
         printf("package %s;\n", my_prog->package);
     }
     prettyDecl(my_prog->declList, 0);
-    prettyFctn(my_prog->fnList, 0);
 }
 //prints a function list
-void prettyFctn(Fctn *fn, int t)
+void prettyFctn(FUNCTION *fn, int t)
 {
-    if(fn->next != NULL)
-    {
-        prettyFctn(fn->next, t);
-    }
     prettyTabs(t);
     printf("func %s(", fn->identifier);
     prettyFctnDecl(fn->params, 0);
@@ -38,7 +33,7 @@ void prettyFctn(Fctn *fn, int t)
 }
 
 //prints a list of function arguments
-void prettyFctnDecl(SDecl *sd, int printComma)
+void prettyFctnDecl(DECLARATION *sd, int printComma)
 {
     if(sd->next != NULL)
     {
@@ -52,26 +47,26 @@ void prettyFctnDecl(SDecl *sd, int printComma)
 }
 
 //prints a type
-void prettyType(type *t)
+void prettyType(TYPE *t)
 {
     switch(t->gType){
+        case nilType:
+            break;
         case arrayType:
-            printf("[%d]%s", t->size, t->SymbolType);
+            printf("[%d]%s", t->size, t->name);
             break;
         case sliceType:
-            printf("[]%s", t->SymbolType);
-            break;
-        case ptrType:
-            printf("*%s", t->SymbolType);
+            printf("[]%s", t->name);
             break;
         case structType:
+        case userType:
         default:
-            printf("%s", t->SymbolType);
+            printf("%s", t->name);
     }
 }
 
 //prints a list of Declarations
-void prettyDecl(Decl *d, int t)
+void prettyDecl(DECLARATION *d, int t)
 {
     if(d->next != NULL)
     {
@@ -85,7 +80,7 @@ void prettyDecl(Decl *d, int t)
             break;
         case varDecl:
             printf("var %s ", d->identifier);
-            if(strlen(d->t->SymbolType) != 0)
+            if(strlen(d->t->name) != 0)
             {
                 prettyType(d->t);
             }
@@ -97,46 +92,74 @@ void prettyDecl(Decl *d, int t)
             break;
         case structDecl:
             printf("type %s struct {", d->identifier);
-            prettyDecl(d->val.body.dbody, t+1);
-            prettyFctn(d->val.body.fbody, t+1);
+            prettyDecl(d->val.body, t+1);
             prettyTabs(t);
             printf("}\n");
             break;
+        case funcDecl:
+            prettyFctn(d->val.f, t);
     }
 }
 
 //prints a short declaration e.g. in conditionals
-void prettySDecl(Decl *d)
+void prettySDecl(STATEMENT *d)
 {
-    if(d->next != NULL){
-        prettySDeclId(d->next);
+    
+    if(d->kind == quickDeclS)
+    {
+        if(d->val.assignment.chain != NULL){
+            prettySDeclId(d->val.assignment.chain);
+        }
+        prettyExp(d->val.assignment.identifier);
+        printf(" := ");
+        if(d->val.assignment.chain != NULL){
+            prettySDeclVal(d->val.assignment.chain);
+        }
+        prettyExp(d->val.assignment.value);
+        printf("; ");
     }
-    printf("%s := ", d->identifier);
-    if(d->next != NULL){
-        prettySDeclVal(d->next);
+    else if(d->kind == assignS)
+    {
+        if(d->val.assignment.chain != NULL){
+            prettySDeclId(d->val.assignment.chain);
+        }
+        prettyExp(d->val.assignment.identifier);
+        printf(" = ");
+        if(d->val.assignment.chain != NULL){
+            prettySDeclVal(d->val.assignment.chain);
+        }
+        prettyExp(d->val.assignment.value);
+        printf("; ");
     }
-    prettyExp(d->val.right);
-    printf("; ");
+    else if(d->kind == exprS){
+        prettyExp(d->val.expression);
+        printf("; ");
+    }
+    else{
+        prettyStmt(d,0);
+    }
 
 }
-void prettySDeclId(Decl *d)
+void prettySDeclId(STATEMENT *d)
 {
-    if(d->next != NULL){
-        prettySDeclId(d->next);
+    if(d->val.assignment.chain != NULL){
+        prettySDeclId(d->val.assignment.chain);
     }
-    printf("%s, ", d->identifier);
+    
+    prettyExp(d->val.assignment.identifier);
+    printf(", ");
 }
-void prettySDeclVal(Decl *d)
+void prettySDeclVal(STATEMENT *d)
 {
-    if(d->next != NULL){
-        prettySDeclId(d->next);
+    if(d->val.assignment.chain != NULL){
+        prettySDeclId(d->val.assignment.chain);
     }
-    prettyExp(d->val.right);
+    prettyExp(d->val.assignment.value);
     printf(", ");
 }
 
 //prints a list of statements
-void prettyStmt(Stmt *s, int t)
+void prettyStmt(STATEMENT *s, int t)
 {
     if(s->next != NULL)
     {
@@ -149,6 +172,8 @@ void prettyStmt(Stmt *s, int t)
         case assignS:
             prettyAssign(s,t);
             break;
+        case quickDeclS:
+            prettyAssign(s,t);
         case blockS:
             prettyBlock(s,t);
             break;
@@ -196,18 +221,40 @@ void prettyStmt(Stmt *s, int t)
     }
 }
 
-//prints an assign statement
-void prettyAssign(Stmt *s, int t)
+void prettyAssignHelper(STATEMENT *s)
 {
-    prettyTabs(t);
-    prettyExp(s->val.assignment.identifier);
-    printf(" = ");
+    if(s->val.assignment.chain != NULL)
+    {
+        prettyAssignHelper(s->val.assignment.chain);
+    }
+    prettyExp(s->val.assignment.value);
+}
+
+//prints an assign statement
+void prettyAssign(STATEMENT *s, int t)
+{
+    if(s->val.assignment.chain != NULL)
+    {
+        prettyAssign(s->val.assignment.chain, t);
+    }
+    else{
+        prettyTabs(t);
+        prettyExp(s->val.assignment.identifier);
+        if(s->kind == assignS)
+        {    printf(" = ");}
+        else
+        {
+            printf(" := ");
+        }
+        
+    }
     prettyExp(s->val.assignment.value);
     printf("\n");
 }
 
+
 //prints a block statement
-void prettyBlock(Stmt *s, int t)
+void prettyBlock(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("{\n");
@@ -217,7 +264,7 @@ void prettyBlock(Stmt *s, int t)
 }
 
 //prints an if statement
-void prettyIf(Stmt *s, int t)
+void prettyIf(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("if ");
@@ -234,7 +281,7 @@ void prettyIf(Stmt *s, int t)
     if(s->val.conditional.elif != NULL)
         prettyStmt(s->val.conditional.elif, t);
 }
-void prettyElif(Stmt *s,int t)
+void prettyElif(STATEMENT *s,int t)
 {
     prettyTabs(t);
     printf("else if ");
@@ -251,7 +298,7 @@ void prettyElif(Stmt *s,int t)
     if(s->val.conditional.elif != NULL)
         prettyStmt(s->val.conditional.elif, t);
 }
-void prettyElse(Stmt *s,int t)
+void prettyElse(STATEMENT *s,int t)
 {
     prettyTabs(t);
     printf("else");
@@ -262,7 +309,7 @@ void prettyElse(Stmt *s,int t)
 }
 
 //prints a std for loop
-void prettyFor(Stmt *s, int t)
+void prettyFor(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("for ");
@@ -282,7 +329,7 @@ void prettyFor(Stmt *s, int t)
 }
 
 //prints a "while" loop
-void prettyWhile(Stmt *s, int t)
+void prettyWhile(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("for ");
@@ -297,17 +344,17 @@ void prettyWhile(Stmt *s, int t)
     printf("}\n");
 }
 
-void prettyPrintHelper(Exp *e)
+void prettyPrintHelper(EXP *e)
 {
     if(e->val.expblock.next != NULL)
     {
         prettyPrintHelper(e->val.expblock.next);
     }
-    prettyExp(s->val.iostmt.value->val.expblock.next);
+    prettyExp(e->val.expblock.value);
     
 }
 //prints a print stmt
-void prettyPrint(Stmt *s, int t)
+void prettyPrint(STATEMENT *s, int t)
 {
     prettyTabs(t);
     if(s->val.iostmt.hasNewLine)
@@ -324,7 +371,7 @@ void prettyPrint(Stmt *s, int t)
 
 
 //prints return stmts
-void prettyReturn(Stmt *s, int t)
+void prettyReturn(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("return ");
@@ -342,7 +389,7 @@ void prettyContinue(int t)
     printf("continue\n");
 }
 //prints a switch statement
-void prettySwitch(Stmt *s, int t)
+void prettySwitch(STATEMENT *s, int t)
 {
     prettyTabs(t);
     printf("switch ");
@@ -360,7 +407,7 @@ void prettySwitch(Stmt *s, int t)
     printf("}\n");
 }
 //prints a list of case statements
-void prettyCase(Stmt *s, int t)
+void prettyCase(STATEMENT *s, int t)
 {
     if(s->next != NULL)
     {
@@ -380,7 +427,7 @@ void prettyCase(Stmt *s, int t)
 }
 
 //prints expressions
-void prettyExp(Exp *e)
+void prettyExp(EXP *e)
 {
     switch(e->kind){
         case emptyExp:
@@ -611,18 +658,18 @@ void prettyExp(Exp *e)
             break;
         case funcExp:
             printf("%s(", e->val.fn->identifier);
-            prettySDeclFn(e->val.fn->body);
+            prettySDeclFn(e->val.fn->params->val.fnCallBlock);
             printf(")");
             break;
     }
 }
 //helper for function case in prettyExp
-void prettySDeclFn(Decl *s)
+void prettySDeclFn(EXP *s)
 {
-    if(s->next != NULL)
+    if(s->val.expblock.next != NULL)
     {
-        prettySDeclFn(s->next);
+        prettySDeclFn(s->val.expblock.next);
         printf(", ");//separate arguments
     }
-    prettyExp(s->val.expression);
+    prettyExp(s->val.expblock.value);
 }
