@@ -84,12 +84,12 @@ void rawStringHelper(char *tmp, char *s, int len)
 
 /* Helper */
 PUNCTUATION [?<>+-=,^$|&]
-
+%s EOFCHECK
 %x IN_COMMENT
 %%
 [ \t\r]+ 
 
-"\n" {
+"\n" {  BEGIN(EOFCHECK);
 	if(requiresIns){
 		requiresIns = 0;
 		if(isToken)	printf("tSEMICOLON\n");
@@ -189,7 +189,7 @@ PUNCTUATION [?<>+-=,^$|&]
 	}
 }
 <IN_COMMENT>. 
-
+<EOFCHECK><<EOF>> {BEGIN(INITIAL); if(requiresIns){ requiresIns = 0; if(isToken){ printf("tSEMICOLON\n"); } return ';';	} }
 0|([1-9][0-9]*) { // INT
 	//DECIMAL VALUE
     yylval.intval = atoi(yytext);
@@ -207,7 +207,7 @@ PUNCTUATION [?<>+-=,^$|&]
     requiresIns = 1; 
     return tINTLITERAL;
 }
-0(x|X)[0-9a-f]* {//HEXADECIMAL VALUE
+0(x|X)[0-9a-fA-F]* {//HEXADECIMAL VALUE
     yylval.intval = (int)strtol(yytext, NULL, 0);
     if(isToken){
         fprintf(stdout, "tINTLITERAL(%s = %ld)\n", yytext, strtol(yytext, NULL, 0));
@@ -217,7 +217,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 
-(0"."[0-9]*)|([1-9][0-9]*"."[0-9]*) { // FLOAT
+([0-9][0-9]*"."[0-9]*) { // FLOAT
 	//LEFT of period
     yylval.floatval = atof(yytext);
     if(isToken){

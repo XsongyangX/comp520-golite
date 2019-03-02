@@ -332,29 +332,47 @@ EXP *makeEXP_func(char *identifier, int size, DECLARATION *args)
     e->val.fn = tmpf;
     return e;
 }
+/*inserts a funcExp node into an existing tree*/
+void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
+{
+    EXP *prev;
+    EXP *tmp = identifier;
+    while(identifier->val.binary.rhs != NULL)
+    {
+        prev = tmp;
+        tmp = identifier->val.binary.rhs;
+    }
+    EXP *e = malloc(sizeof(EXP));
+    e->kind = funcExp;
+    //make a dummy function struct to represent the function call
+    FUNCTION *tmpf = malloc(sizeof(FUNCTION));
+    tmpf->identifier = tmp->val.identifier;
+    tmpf->paramCount = size;
+    //setup the linked list of arguments
+    tmpf->body = NULL;
+    tmpf->params = args;
+    tmpf->returnt = NULL;
+    tmpf->next = NULL;
+    e->val.fn = tmpf;
+    prev->val.binary.rhs = e;
+}
 
-DECLARATION *makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, EXP *rhs)
+DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
     d->d = isVar;
     d->identifier = identifier;
-    d->t = malloc(sizeof(TYPE));
-    d->t->name = declType;
-    d->t->gType = gtype;
-    d->t->size = arraysize;
+    d->t = t;
     d->val.right = rhs;
     d->next = NULL;
     return d;
 }
-DECLARATION *makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize)
+DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
     d->d = isVar;
     d->identifier = identifier;
-    d->t = malloc(sizeof(TYPE));
-    d->t->name = declType;
-    d->t->gType = gtype;
-    d->t->size = arraysize;
+    d->t = t;
     d->val.right = NULL;
     d->next = NULL;
     return d;
@@ -424,10 +442,22 @@ STATEMENT *makeSTMT_assmt(int lineno, EXP *identifier, EXP *val)
     s->kind = assignS;
     s->val.assignment.identifier = identifier;
     s->val.assignment.value = val;
+    s->val.assignment.chain = NULL;
     s->next = NULL;
     return s;
 }
-STATEMENT *makeSTMT_if(int lineno, EXP *condition, DECLARATION *optDecl, STATEMENT *body, STATEMENT *elif)
+STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val)
+{
+    STATEMENT *s = malloc(sizeof(STATEMENT));
+    s->lineno = lineno;
+    s->kind = quickDeclS;
+    s->val.assignment.identifier = identifier;
+    s->val.assignment.value = val;
+    s->val.assignment.chain = NULL;
+    s->next = NULL;
+    return s;
+}
+STATEMENT *makeSTMT_if(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *body, STATEMENT *elif)
 {
     STATEMENT *s = malloc(sizeof(STATEMENT));
     s->lineno = lineno;
@@ -439,7 +469,7 @@ STATEMENT *makeSTMT_if(int lineno, EXP *condition, DECLARATION *optDecl, STATEME
     s->next = NULL;
     return s;
 }
-STATEMENT *makeSTMT_elif(int lineno, EXP *condition, DECLARATION *optDecl, STATEMENT *body, STATEMENT *elif)
+STATEMENT *makeSTMT_elif(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *body, STATEMENT *elif)
 {
     STATEMENT *s = malloc(sizeof(STATEMENT));
     s->lineno = lineno;
@@ -475,7 +505,7 @@ STATEMENT *makeSTMT_while(int lineno, EXP *condition, STATEMENT *body)//empty ex
     s->next = NULL;
     return s;
 }
-STATEMENT *makeSTMT_for(int lineno, DECLARATION *optDecl, EXP *condition, STATEMENT *body, STATEMENT *action)
+STATEMENT *makeSTMT_for(int lineno, STATEMENT *optDecl, EXP *condition, STATEMENT *body, STATEMENT *action)
 {
     STATEMENT *s = malloc(sizeof(STATEMENT));
     s->lineno = lineno;
@@ -506,7 +536,7 @@ STATEMENT *makeSTMT_exp(int lineno, EXP *expression)
     s->next = NULL;
     return s;
 }
-STATEMENT *makeSTMT_switch(int lineno, EXP *condition, DECLARATION *optDecl, STATEMENT *cases)
+STATEMENT *makeSTMT_switch(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *cases)
 {
     STATEMENT *s = malloc(sizeof(STATEMENT));
     s->lineno = lineno;
@@ -574,37 +604,10 @@ STATEMENT *makeSTMT_return(int lineno, EXP *expression)
 
 PROGRAM *makePROG(char* package, DECLARATION *declList)
 {
-    if(declList->next == NULL)
-    {
-        PROGRAM *p = malloc(sizeof(Prog));
-        p->package = package;
-        if(declList != NULL)
-        {
-            if (declList->d == funcDecl)
-            {
-                p->fnList = declList->val.f;
-            }
-            else{
-                p->declList = declList;
-            }
-        }
-        return p;
-    }
-    else{
-        PROGRAM *p = makePROG(package, declList->next);
-        if(declList->d == funcDecl)
-        {
-            FUNCTION *f = declList->val.f;
-            f->next = p->fnList;
-            p->fnList = f;
-            declList->next = NULL;
-        }
-        else{
-            declList->next = p->declList;
-            p->declList = declList;
-        }
-        return p;
-    }
+    PROGRAM *p = malloc(sizeof(PROGRAM));
+    p->declList = declList;
+    p->package = package;
+     
     
 }
 
@@ -616,7 +619,10 @@ TYPE *makeTYPE(int gtype, int size, char *name, TYPE *arg){
     t->size = size;
     t->gType = gtype;
     t->name = name;
-    t->val.arg = arg;
+    if(arg != NULL){
+        t->val.arg = arg;
+
+    }
     return t; 
 }
 
@@ -661,21 +667,27 @@ Takes the linked list of identifiers and makes each of them into a declaration s
 propogating the TYPE to all statements*/
 DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
     DECLARATION *d = malloc(sizeof(DECLARATION));
-    // If there is no next id, create a dec for the last id 
-    if(ids->val.expblock.next == NULL){
-        d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size);
-        return d;
+    if(ids == NULL)
+    {
+        d = NULL;
+        return d;   
     }
-    //If there is a next id, recurse onto that id. 
-    //Then create a dec for this level and a pointer this dec to the subtree 
-    else{
-        DECLARATION *nextD = malloc(sizeof(DECLARATION));
-        nextD = makeDECL_blocknorhs(lineno, ids->val.expblock.next, t);
-        d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size);
-        d->next = nextD;
-        return d;
+    if(ids->kind == idblockExp){
+        // If there is no next id, create a dec for the last id 
+        if(ids->val.idblock.next == NULL){
+            d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t);
+            return d;
+        }
+        //If there is a next id, recurse onto that id. 
+        //Then create a dec for this level and a pointer this dec to the subtree 
+        else{
+            DECLARATION *nextD = malloc(sizeof(DECLARATION));
+            nextD = makeDECL_blocknorhs(lineno, ids->val.idblock.next, t);
+            d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t);
+            d->next = nextD;
+            return d;
+        }
     }
-
 }
 
 /*Called for block declarations, but with a right hand side. Does basically the same thing
@@ -683,14 +695,14 @@ As makeDECL_blocknorhs(), but each dec actually assigns too.
 Throws an error if there is an unequal number of ids and exps on either side.*/
 DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
     DECLARATION *d = malloc(sizeof(DECLARATION));
-    if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
-        d = makeDECL(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size, exps->val.expblock.value);
+    if(ids->val.idblock.next == NULL && exps->val.expblock.next == NULL){
+        d = makeDECL(varDecl, ids->val.idblock.identifier, t, exps->val.expblock.value);
         return d;
     }
-    else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
+    else if(ids->val.idblock.next != NULL && exps->val.expblock.next != NULL){
         DECLARATION *nextD = malloc(sizeof(DECLARATION));
-        nextD = makeDECL_block(lineno, ids->val.expblock.next, t, exps->val.expblock.next);
-        d = makeDECL(varDecl, ids->val.idblock.identifier, t->name, t->gType, t->size, exps->val.expblock.value);
+        nextD = makeDECL_block(lineno, ids->val.idblock.next, t, exps->val.expblock.next);
+        d = makeDECL(varDecl, ids->val.idblock.identifier,t, exps->val.expblock.value);
         d->next = nextD;
         return d;
     }
@@ -729,7 +741,26 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps){
         STATEMENT *nextS = malloc(sizeof(STATEMENT));
         nextS = makeSTMT_blockassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
         s = makeSTMT_assmt(lineno, ids->val.expblock.value, exps->val.expblock.value);
-        s->next = nextS;
+        s->val.assignment.chain = nextS;
+        return s;
+    }
+    else{
+        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        exit(1);
+    }
+}
+/*Used for quick := declarations*/
+STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps){
+    STATEMENT *s = malloc(sizeof(STATEMENT));
+    if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
+        s = makeSTMT_qdecl(lineno, ids->val.expblock.value, exps->val.expblock.value);
+        return s;
+    }
+    else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
+        STATEMENT *nextS = malloc(sizeof(STATEMENT));
+        nextS = makeSTMT_blockassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
+        s = makeSTMT_qdecl(lineno, ids->val.expblock.value, exps->val.expblock.value);
+        s->val.assignment.chain = nextS;
         return s;
     }
     else{
@@ -738,6 +769,14 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps){
     }
 }
 
+/*only called for function calls*/
+DECLARATION *makeDECL_fnCallArgs(EXP *args)
+{
+    DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->d = funcCall;
+    d->val.fnCallBlock = args;
+    return d;
+}
 /*Simple functions to get to the bottom of subtrees.
 Made to address a problem with block declarations.
 e.g. For block TYPE norhsdeclarations, a linked list of exps (idents) and a TYPE 

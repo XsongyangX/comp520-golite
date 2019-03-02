@@ -6,11 +6,13 @@
 void prettyTabs(int n);
 void prettyPROG(PROGRAM *my_prog);
 void prettyFctn(FUNCTION *fn, int t);
-//void prettyFctnDecl(SDecl *sd, int printComma);
+void prettyFctnDecl(DECLARATION *sd, int printComma);
 void prettyType(TYPE *t);
 void prettyDecl(DECLARATION  *d, int t);
-void prettySDecl(DECLARATION  *d);
-void prettySDeclId(DECLARATION  *d);
+void prettySDecl(STATEMENT  *d);
+void prettySDeclId(STATEMENT  *d);
+void prettySDeclVal(STATEMENT *d);
+void prettySDeclFn(EXP *s);
 void prettyStmt(STATEMENT *s, int t);
 void prettyAssign(STATEMENT *s, int t);
 void prettyBlock(STATEMENT *s, int t);

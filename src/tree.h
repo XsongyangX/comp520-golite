@@ -57,6 +57,7 @@ enum ExpressionKind{emptyExp, //NULL
                     };
 enum StatementKind{ emptyS, //NULL
                     assignS,
+                    quickDeclS,
                     blockS, //{...}
                     ifS,
                     elifS,
@@ -80,7 +81,7 @@ enum GroupingType{  nilType,
                     structType,
                     userType,
                     };
-enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl};
+enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl, funcCall};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
 
@@ -97,7 +98,7 @@ struct TYPE{
     enum GroupingType gType;
     union {
         TYPE *arg;
-        EXP*args;
+        EXP *args;
     }val;
 };
 struct EXP{
@@ -122,6 +123,7 @@ struct DECLARATION{//compound declarations should be broken down into individual
     char *identifier;
     union {
         EXP *right;
+        EXP *fnCallBlock;
         FUNCTION *f;
         DECLARATION *body;
     }val;
@@ -147,13 +149,13 @@ struct STATEMENT{
     int lineno;
     symTable *localSym;
     union{
-        struct{EXP *identifier; EXP *value;} assignment;
-        struct{EXP *condition; DECLARATION *optDecl; STATEMENT *body; STATEMENT *elif;} conditional;//IF(,ELIF,ELSE) and FOR
+        struct{EXP *identifier; EXP *value; STATEMENT *chain;} assignment;
+        struct{EXP *condition; STATEMENT *optDecl; STATEMENT *body; STATEMENT *elif;} conditional;//IF(,ELIF,ELSE) and FOR
         struct{EXP *value; int hasNewLine;} iostmt;//PRINT
         DECLARATION *declaration;
         STATEMENT *body;
         EXP *expression;//used for return stmts and expr stmts
-        struct{EXP *condition; DECLARATION *optDecl; STATEMENT *cases;} switchBody;
+        struct{EXP *condition; STATEMENT *optDecl; STATEMENT *cases;} switchBody;
         struct{EXP *condition; STATEMENT *body;} caseBody;//null condition represents default
     } val;
     STATEMENT *next;
@@ -161,7 +163,6 @@ struct STATEMENT{
 struct PROGRAM{
     char *package;
     DECLARATION *declList;
-    FUNCTION *fnList;
 };
 
 
@@ -206,12 +207,13 @@ EXP *makeEXP_len(EXP *e1);
 EXP *makeEXP_cap(EXP *e1);
 EXP *makeEXP_uxor(EXP *e1);
 EXP *makeEXP_func(char *identifier, int size, DECLARATION *args);
+void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args);
 EXP *makeEXP_expblock(EXP *e, EXP *next);
 EXP *makeEXP_idblock(char *identifier, EXP *next);
 EXP *makeEXP_not(EXP *e1);
 
-DECLARATION *makeDECL(int isVar, char *identifier, char *declType, int gtype, int arraysize, EXP *rhs);
-DECLARATION *makeDECL_norhs(int isVar, char *identifier, char *declType, int gtype, int arraysize);
+DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs);
+DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t);
 DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs);
 DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body);
 //SDECLARATION *makeSDecl(EXP *e, char* declType, int gtype, int arraysize);
@@ -220,18 +222,19 @@ DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t);
 DECLARATION *makeDECL_type(char *identifier, TYPE *typeNode);
 DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps);
 DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f);
+DECLARATION *makeDECL_fnCallArgs(EXP *args);
 
 FUNCTION *makeFCTN(int lineno, char *identifier, int size, DECLARATION *params, TYPE *returnType, STATEMENT *body);
 
 STATEMENT *makeSTMT_assmt(int lineno, EXP *identifier, EXP *val);
-STATEMENT *makeSTMT_if(int lineno, EXP *condition, DECLARATION *optDecl, STATEMENT *body, STATEMENT *elif);
-STATEMENT *makeSTMT_elif(int lineno, EXP *condition, DECLARATION *optDecl, STATEMENT *body, STATEMENT *elif);
+STATEMENT *makeSTMT_if(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *body, STATEMENT *elif);
+STATEMENT *makeSTMT_elif(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *body, STATEMENT *elif);
 STATEMENT *makeSTMT_else(int lineno, STATEMENT *body);
 STATEMENT *makeSTMT_while(int lineno, EXP *condition, STATEMENT *body);
-STATEMENT *makeSTMT_for(int lineno, DECLARATION *optDecl, EXP *condition, STATEMENT *body, STATEMENT *action);
+STATEMENT *makeSTMT_for(int lineno, STATEMENT *optDecl, EXP *condition, STATEMENT *body, STATEMENT *action);
 STATEMENT *makeSTMT_decl(int lineno, DECLARATION *declaration);
 STATEMENT *makeSTMT_exp(int lineno, EXP *expression);
-STATEMENT *makeSTMT_switch(int lineno, EXP *condition, DECLARATION *optDecl, STATEMENT *cases);
+STATEMENT *makeSTMT_switch(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *cases);
 STATEMENT *makeSTMT_case(int lineno, EXP *condition, STATEMENT *body);
 STATEMENT *makeSTMT_block(int lineno, STATEMENT *body);
 STATEMENT *makeSTMT_print(int lineno, EXP *expression, int hasNewLine);
@@ -239,6 +242,8 @@ STATEMENT *makeSTMT_break(int lineno);
 STATEMENT *makeSTMT_continue(int lineno);
 STATEMENT *makeSTMT_return(int lineno, EXP *expression);
 STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps);
+STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val);
+STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps);
 
 TYPE *makeTYPE(int gtype, int size, char *name, TYPE *arg);
 //TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args);
