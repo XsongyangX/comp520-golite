@@ -11,7 +11,7 @@ void prettyTabs(int n)
     }
 }
 //prints a program
-void prettyProg(PROGRAM *my_prog)
+void prettyPROG(PROGRAM *my_prog)
 {
     if(strlen(my_prog->package) != 0)
     {
@@ -24,10 +24,14 @@ void prettyFctn(FUNCTION *fn, int t)
 {
     prettyTabs(t);
     printf("func %s(", fn->identifier);
-    prettyFctnDecl(fn->params, 0);
-    prettyType(fn->returnt);
+    if(fn->params != NULL)
+    	prettyFctnDecl(fn->params, 0);
+    printf(") ");
+    if(fn->returnt != NULL)
+    	prettyType(fn->returnt);
     printf("{\n");
-    prettyStmt(fn->body, t+1);
+    if(fn->body != NULL)
+    	prettyStmt(fn->body, t+1);
     prettyTabs(t);
     printf("}\n");
 }
@@ -349,6 +353,7 @@ void prettyPrintHelper(EXP *e)
     if(e->val.expblock.next != NULL)
     {
         prettyPrintHelper(e->val.expblock.next);
+	printf(", ");
     }
     prettyExp(e->val.expblock.value);
     
