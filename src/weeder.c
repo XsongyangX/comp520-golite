@@ -17,8 +17,18 @@ void weedDeclaration(DECLARATION *declaration, int lineno){
 
 }
 
-void weedFunction(FUNCTION *function){
+void weedFunction(FUNCTION *f){
+	weedDeclaration(f->params, f->lineno);
 	
+	// no return statement, and not void
+	if (!weedStatement(f->body, false, false, false, false, true)
+		&& f->returnt->gType != nilType)
+		fprintf(stderr, 
+		"Error: (line %d) expecting a return statement in all control flows\n",
+		f->lineno);
+		exit(1);
+		
+	// next pointer ignored
 }
 
 /* Things to weed for:
