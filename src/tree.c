@@ -343,18 +343,11 @@ EXP *makeEXP_func(char *identifier, int size, DECLARATION *args)
 /*inserts a funcExp node into an existing tree*/
 void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
 {
-    EXP *prev;
-    EXP *tmp = identifier;
-    while(identifier->val.binary.rhs != NULL)
-    {
-        prev = tmp;
-        tmp = identifier->val.binary.rhs;
-    }
     EXP *e = malloc(sizeof(EXP));
     e->kind = funcExp;
     //make a dummy function struct to represent the function call
     FUNCTION *tmpf = malloc(sizeof(FUNCTION));
-    tmpf->identifier = tmp->val.identifier;
+    tmpf->identifier = "";
     tmpf->paramCount = size;
     //setup the linked list of arguments
     tmpf->body = NULL;
@@ -362,7 +355,7 @@ void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
     tmpf->returnt = NULL;
     tmpf->next = NULL;
     e->val.fn = tmpf;
-    prev->val.binary.rhs = e;
+    identifier = makeEXP_invoc(identifier,e);
 }
 
 DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs)

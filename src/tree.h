@@ -48,7 +48,7 @@ enum ExpressionKind{emptyExp, //NULL
                     rshiftExp, //.>>.
                     rangeExp, //[.:.] NOT SUPPORTED IN GOLITE
                     indexExp, //[.]  e.g. arrays
-                    elementExp, //for arrays and slices
+                    elementExp, //for arrays and slices, e.g. identifier[x]
                     invocExp, //x.y
                     appendExp, //built-in
                     lenExp, //built-in

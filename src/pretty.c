@@ -83,13 +83,15 @@ void prettyDecl(DECLARATION *d, int t)
     }
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
-	    if(d->chain != NULL)
-		prettyDecl(d->chain, t);
+	        if(d->chain != NULL)
+		        prettyDecl(d->chain, t);
             printf("type %s ", d->identifier);
             prettyType(d->t);
             printf("\n");
             break;
         case varDecl:
+            if(d->chain != NULL)
+                prettyDecl(d->chain, t);
             printf("var %s ", d->identifier);
             if(strlen(d->t->name) != 0)
             {
@@ -100,7 +102,7 @@ void prettyDecl(DECLARATION *d, int t)
                 printf(" = ");
                 prettyExp(d->val.right);
             }
-	    printf("\n");
+	        printf("\n");
             break;
         case structDecl:
 	    if(d->chain != NULL)
