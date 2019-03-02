@@ -708,7 +708,7 @@ DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
         return d;
     }
     else{
-        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
         exit(1);
     }
 }
@@ -727,7 +727,7 @@ DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps){
         return d;
     }
     else{
-        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
         exit(1);
     }
 }
@@ -746,7 +746,7 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps){
         return s;
     }
     else{
-        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
         exit(1);
     }
 }
@@ -765,7 +765,7 @@ STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps){
         return s;
     }
     else{
-        printf("Error in line %d; unequal number of idents and exps\n", lineno);
+        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
         exit(1);
     }
 }
