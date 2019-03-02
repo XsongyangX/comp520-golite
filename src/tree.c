@@ -355,7 +355,6 @@ void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
     tmpf->returnt = NULL;
     tmpf->next = NULL;
     e->val.fn = tmpf;
-    prev->val.binary.rhs = e;
     identifier = makeEXP_invoc(identifier,e);
 }
 
