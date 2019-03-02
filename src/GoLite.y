@@ -175,7 +175,7 @@ void yyerror(const char *s) {
 %% 
 
 /* Represents the entire program. Makes sure there is only one package dec */
-prgrm           : tPACKAGE tIDENTIFIER progdefs {$$ = makePROG($2, $3); my_prog = $$;}
+prgrm           : tPACKAGE tIDENTIFIER ';' progdefs {$$ = makePROG($2, $4); my_prog = $$;}
                 ;
 /*list of declarations and function declarations*/
 progdefs        : {$$ = NULL;}
@@ -274,7 +274,7 @@ dec             : tVAR vardec {$$ = $2;}
 vardec          : idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
                 | idents opttype '=' exps ';' {$$ = makeDECL_block(yylineno, $1, $2, $4);}
                 | tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $1, $2);}
-                | tIDENTIFIER opttype '=' exps ';' {$$ = makeDECL(1, $1, $2, $4);}
+                | tIDENTIFIER opttype '=' exp ';' {$$ = makeDECL(1, $1, $2, $4);}
                 ;
 /* A block of things put into a distributed var () statement */
 decdistributed  : decdistributed vardec {$$ = $1;}
@@ -295,8 +295,14 @@ typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, 
                 ;
 
 /* function definitions */
-funcdef         : tFUNC tIDENTIFIER '(' typelist ')' type '{' stmts '}' ';'
+funcdef         : tFUNC tIDENTIFIER '(' typelist ')' opttype '{' stmts '}' ';'
                     {$$ = makeFCTN(yylineno, $2, 0, $4, $6, $8);}
+		|  tFUNC tIDENTIFIER '(' ')' opttype '{' stmts '}' ';'
+                    {$$ = makeFCTN(yylineno, $2, 0, NULL, $5, $7);}
+		| tFUNC tIDENTIFIER '(' typelist ')' opttype '{' '}' ';'
+                    {$$ = makeFCTN(yylineno, $2, 0, $4, $6, NULL);}
+		|  tFUNC tIDENTIFIER '(' ')' opttype '{' '}' ';'
+                    {$$ = makeFCTN(yylineno, $2, 0, NULL, $5, NULL);}
                 ;
 
 /* Defines the syntax for types in function headers */
@@ -322,7 +328,7 @@ stmts           : stmts stmt {$$ = $2; $2->next = $1;}
 
 /* Defines the kinds of statements that can be used in any context 
 A potential issue is having returnstmt in here. Should you be able to return from anywhere?*/
-stmt            : simplestmt {$$ = $1;}
+stmt            : simplestmt ';' {$$ = $1;}
                 | tPRINT '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
                 | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
                 | tBREAK ';' {$$ = makeSTMT_break(yylineno);}
@@ -337,12 +343,12 @@ stmt            : simplestmt {$$ = $1;}
 
 /* A subset of statements that can be used in certain extra contexts,
 such as before the conditional expressions of if statements */
-simplestmt      : exp ';' {$$ = makeSTMT_exp(yylineno, $1);} 
-                | tIDENTIFIER tDECREMENT ';' {EXP *ident = makeEXP_id($1); EXP *one = makeEXP_int(1); 
+simplestmt      : exp  {$$ = makeSTMT_exp(yylineno, $1);} 
+                | exp tDECREMENT  {EXP *ident = $1; EXP *one = makeEXP_int(1); 
                     EXP *identMinus = makeEXP_minus(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identMinus);}
-                | tIDENTIFIER tINCREMENT ';' {EXP *ident = makeEXP_id($1); EXP *one = makeEXP_int(1); 
+                | exp tINCREMENT  {EXP *ident = $1; EXP *one = makeEXP_int(1); 
                     EXP *identPlus = makeEXP_plus(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identPlus);}
-                | asnexps ';' {$$ = $1;}
+                | asnexps {$$ = $1;}
                 ;
 
 /* Defines all kinds of if statement, with or without a simplestmt before the conditional */
@@ -372,6 +378,9 @@ switchbody      : switchbody tCASE exps ':' stmts ';' {$$ = makeSTMT_case(yyline
 forstmt         : tFOR '{' stmts '}' ';' {$$ = makeSTMT_while(yylineno, NULL, $3);}
                 | tFOR exp '{' stmts '}' ';' {$$ = makeSTMT_while(yylineno, $2, $4);}
                 | tFOR simplestmt ';' exp ';' simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, $4, $8, $6);}
+                | tFOR ';' exp ';' simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, NULL, $3, $7, $5);}
+                | tFOR simplestmt ';' exp ';' '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, $4, $7, NULL);}
+                | tFOR ';' exp ';' '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, NULL, $3, $6, NULL);}
                 ;
 
 /* Defines return statements */
@@ -392,29 +401,29 @@ widmod          : '[' exp ']' {$$ = makeEXP_index($2);}
 /* Defines the kind of valid assignment expressions.
 Again, we need to account for an equal number of idents and exps on either side.
 We also need to account for the operand-equals construction. */
-asnexps         : wideridents '=' exps {$$ = makeSTMT_blockassign(yylineno, $1, $3);}
-                | wideridents tCOLONASSIGN exps {$$ = makeSTMT_blockqassign(yylineno, $1, $3);}
-                | tIDENTIFIER tPLUSASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+asnexps         : exps '=' exps {$$ = makeSTMT_blockassign(yylineno, $1, $3);}
+                | exps tCOLONASSIGN exps {$$ = makeSTMT_blockqassign(yylineno, $1, $3);}
+                | exp tPLUSASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_plus(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tMINUSASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tMINUSASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_minus(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tTIMESASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tTIMESASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_times(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tDIVASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tDIVASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_div(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tMODASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tMODASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_mod(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tANDASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tANDASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_band(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tORASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tORASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_bor(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tPOWASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tPOWASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_xor(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tAMPPOWASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tAMPPOWASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_andnot(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tLSHIFTASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tLSHIFTASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_lshift(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
-                | tIDENTIFIER tRSHIFTASSIGN exp %prec UNARY {EXP *id = makeEXP_id($1); 
+                | exp tRSHIFTASSIGN exp %prec UNARY {EXP *id = $1; 
                     EXP *newExp = makeEXP_rshift(id, $3);  $$ = makeSTMT_assmt(yylineno, id, newExp);}
                 ;
 
