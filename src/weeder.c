@@ -21,14 +21,61 @@ void weedFunction(FUNCTION *function){
 	
 }
 
-void weedStatement(STATEMENT *statement){
+/* Things to weed for:
+More than one default cases in switch
+Break and continue
+If, switch, for short declaration
+*/
+void weedStatement(STATEMENT *s){
+	
+	// check for null
+	if (s == NULL) return;
+	
+	switch (s->kind) {
+		
+		// unused token
+		case emptyS:
+			return;
+			
+		// assignment
+		case assignS:
+			weedExpression(s->val.assignment.identifier, false, false, false);
+			weedExpression(s->val.assignment.value, false, false, true);
+			return;
+			
+		// quick declaration
+		case quickDeclS:
+			weedExpression(s->val.assignment.identifier, false, false, false);
+			weedExpression(s->val.assignment.value, false, false, true);
+			return;
+			
+		// statement block
+		case blockS:
+			weedStatement(s->val.body);
+			return;
+			
+		// if and else-if statement
+		case ifS: 
+		case elifS:
+			weedExpression(s->val.conditional.condition, false, false, true);
+			weedStatement(s->val.conditional.optDecl);
+			weedStatement(s->val.conditional.elif);
+		// else statement
+		case elseS:
+			weedStatement(s->val.conditional.body);
+			return;
+			
+		// for statement
+		case forS:
+			weedExpression(s->val.conditional.condition, false, false, true);
+	}
 	
 }
 
 /* Things to weed for:
 Division by 0
 Blank identifier
-If, switch, for 
+If, switch, for short declaration
 */
 void weedExpression(EXP *e, int lineno, bool lookForDivisionBy0,
 bool lookForFuncExp, bool lookForBlankId){
@@ -124,7 +171,7 @@ bool lookForFuncExp, bool lookForBlankId){
 	
 	// array and slices
 	case indexExp:
-		weedExpression(e->val.binary.rhs, lineno, false, false, false);
+		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	case elementExp:
 		weedExpression(e->val.binary.lhs, lineno, false, false, false);
@@ -151,6 +198,7 @@ bool lookForFuncExp, bool lookForBlankId){
 		weedFunction(e->val.fn); // TODO
 		return;
 	
+	// throw errors
 	default:
 		fprintf(stderr, "Error: (line %d) unknown expression\n", lineno);
 		exit(1);

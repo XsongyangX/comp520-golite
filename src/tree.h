@@ -56,7 +56,7 @@ enum ExpressionKind{emptyExp, //NULL
 		            uxorExp, // unary ^
                     funcExp //function call
                     };
-enum StatementKind{ emptyS, //NULL
+enum StatementKind{ emptyS, //NULL // UNUSED
                     assignS,
                     quickDeclS,
                     blockS, //{...}
