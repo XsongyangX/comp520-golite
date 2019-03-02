@@ -33,6 +33,7 @@
 	char *strval;
 	float floatval;
 	char *identifier;
+	char runeval;
 }
 
 // AST types
