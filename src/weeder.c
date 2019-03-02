@@ -14,10 +14,13 @@ void weedProgram(PROGRAM *program){
 }
 
 void weedDeclaration(DECLARATION *declaration, int lineno){
-
+	
 }
 
 void weedFunction(FUNCTION *f){
+	
+	if (f == NULL) return;
+	
 	weedDeclaration(f->params, f->lineno);
 	
 	// no return statement, and not void
@@ -28,7 +31,7 @@ void weedFunction(FUNCTION *f){
 		f->lineno);
 		exit(1);
 		
-	// next pointer ignored
+	// next pointer ignore
 }
 
 /* Things to weed for:
