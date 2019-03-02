@@ -279,7 +279,7 @@ vardec          : idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
                 | tIDENTIFIER opttype '=' exp ';' {$$ = makeDECL(1, $1, $2, $4);}
                 ;
 /* A block of things put into a distributed var () statement */
-decdistributed  : decdistributed vardec {$$ = $2; $$->next = $1;}
+decdistributed  : decdistributed vardec {$$ = $2; $$->chain = $1;}
                 | {$$ = NULL;}
                 ;
 
