@@ -26,7 +26,8 @@ More than one default cases in switch
 Break and continue
 If, switch, for short declaration
 */
-void weedStatement(STATEMENT *s){
+void weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, 
+bool lookForDefaultCase){
 	
 	// check for null
 	if (s == NULL) return;
@@ -51,24 +52,91 @@ void weedStatement(STATEMENT *s){
 			
 		// statement block
 		case blockS:
-			weedStatement(s->val.body);
+			weedStatement(s->val.body, allowBreak, allowContinue, false);
 			return;
 			
 		// if and else-if statement
 		case ifS: 
 		case elifS:
 			weedExpression(s->val.conditional.condition, false, false, true);
-			weedStatement(s->val.conditional.optDecl);
-			weedStatement(s->val.conditional.elif);
+			weedStatement(s->val.conditional.optDecl, false, false, false);
+			weedStatement(s->val.conditional.elif, allowBreak, allowContinue, false);
 		// else statement
 		case elseS:
-			weedStatement(s->val.conditional.body);
+			weedStatement(s->val.conditional.body, allowBreak, allowContinue, false);
 			return;
 			
 		// for statement
 		case forS:
 			weedExpression(s->val.conditional.condition, false, false, true);
-	}
+			weedStatement(s->val.conditional.optDecl, false, false, false);
+			weedStatement(s->val.conditional.body, true, true, false);
+			return;
+			
+		// while statement
+		case whileS:
+			weedExpression(s->val.conditional.condition, false, false, true);
+			weedStatement(s->val.conditional.body, true, true, false);
+			return;
+			
+		// print statement
+		case printS:
+			weedExpression(s->val.iostmt.value, false, false, true);
+			return;
+			
+		// expression statement
+		case exprS:
+			weedExpression(s->val.expression, false, true, true);
+			return;
+			
+		// return statement
+		case returnS:
+			weedExpression(s->val.expression, false, false, true);
+			return;
+		
+		// switch statement
+		case switchS:
+			weedStatement(s->val.switchBody.optDecl, false, false, false);
+			weedExpression(s->val.switchBody.condition, false, false, true);
+			weedStatement(s->val.switchBody.cases, allowBreak, allowContinue, true);
+			return;
+		
+		// case statement
+		case caseS:
+			weedExpression(s->val.caseBody.condition, false, false, true);
+			weedStatement(s->val.caseBody.body, true, false, false);
+			return;
+			
+		// break statement
+		case breakS:
+			if (!allowBreak) {
+				fprintf(stderr, 
+				"Error: (line %d) break used outside of a loop or switch statement\n", 
+				s->lineno);
+				exit(1);
+			}
+			return;
+			
+		// continue statement
+		case continueS:
+			if (!allowContinue) {
+				fprintf(stderr, 
+				"Error: (line %d) continue used outside of a loop context\n",
+				s->lineno);
+				exit(1);
+			}
+			return;
+			
+		// declaration statement
+		case declS:
+			weedDeclaration(s->val.declaration, s->lineno);
+			return;
+			
+		// throw error
+		default:
+			fprintf(stderr, "Error: (line %d) unknown statement\n", s->lineno);
+			exit(1);
+	}		
 	
 }
 
