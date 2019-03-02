@@ -6,6 +6,8 @@ Main file of the GoLite compiler
 #include <string.h>
 #include "tree.h"
 #include "pretty.h"
+#include "weeder.h"
+
 void yyparse();
 int yylex();
 int isToken;
@@ -42,6 +44,7 @@ int main(int argc, char** argv)
 	{
 		isToken = 0;
 		yyparse();
+		weedRoot(my_prog);
 		printf("OK\n");
 		return 0;
 	}

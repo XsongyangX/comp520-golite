@@ -1,5 +1,5 @@
 #ifndef PRETTY_H
-#def PRETTY_H
+#define PRETTY_H
 
 #include "tree.h"
 
