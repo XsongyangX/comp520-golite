@@ -12,6 +12,8 @@ func main() {
 	} else if k:=i; x<k {
 		print(x)
 	} else if l:=fib(10); true {
-		print(x)
-	}
+		print(l)
+	} else if m := k + l * 90; false {
+		print(m)
+	} else {}
 }
