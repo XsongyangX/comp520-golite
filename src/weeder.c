@@ -152,7 +152,8 @@ bool lookForFuncExp, bool lookForBlankId){
 		return;
 	
 	default:
-		;
+		fprintf(stderr, "Error: (line %d) unknown expression\n", lineno);
+		exit(1);
 	}
 }
 
