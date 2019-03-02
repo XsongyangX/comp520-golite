@@ -45,14 +45,14 @@ int main(int argc, char** argv)
 		printf("OK\n");
 		return 0;
 	}
-	/*
+	
 	else if ( 0 == strcmp(argv[1], "pretty"))
 	{
 		isToken = 0;
 		yyparse();
-		prettyProgram(root, 0); // 0 for no tabs so far
+		prettyPROG(my_prog); 
 		return 0;
-	}
+	}/*
 	else if ( 0 == strcmp(argv[1], "symbol"))
 	{
 		isToken = 0;
