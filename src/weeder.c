@@ -7,6 +7,7 @@
 /* Function that serves as an interface with the main file */
 void weedRoot(PROGRAM *root){
 	weedProgram(root);
+	fprintf(stderr, "Im here in weeder\n");
 }
 
 void weedProgram(PROGRAM *p){
@@ -21,11 +22,31 @@ void weedDeclaration(DECLARATION *d, int lineno){
 	
 	switch (d->d){
 		
-		// simple declarations
+		// type declaration
 		case typeDecl:
-		case varDecl:
-		case structDecl
 			return;
+		
+		// variable declaration
+		case varDecl:
+			weedExpression(d->val.right, lineno, false, false, true);
+			weedDeclaration(d->next, lineno);
+			return;
+		
+		// struct declaration
+		case structDecl:
+			weedDeclaration(d->val.body, int lineno);
+			return;
+			
+		// function declaration
+		case funcDecl:
+			weedFunction(d->val.f, lineno);
+			weedDeclaration(d->next, lineno);
+			return;
+		
+		// function call
+		case funcCall:
+			weedExpression(d->val.fnCallBlock, lineno, false, false, true);
+			return;		
 	}
 }
 

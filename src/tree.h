@@ -82,7 +82,12 @@ enum GroupingType{  nilType,
                     structType,
                     userType,
                     };
-enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl, funcCall};
+enum DeclarationType{typeDecl,
+					varDecl,
+					structDecl,
+					funcDecl,
+					funcCall
+					};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
 
