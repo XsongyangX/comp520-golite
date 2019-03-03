@@ -4,6 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* 
+The weeder traverses the AST from root to leaves to check for 
+invalid constructs that the parser cannot detect easily. The 
+checks are done by keeping track of temporary variables that 
+are recursively passed down the nodes.
+
+One challenge in this weeder design is the cryptic nature of the
+AST nodes. There might be some missing traversals because the
+AST is not a good abstraction of the parsed language.
+
+Currently, there is a segmentation fault in the weeder.
+*/
+
 /* Function that serves as an interface with the main file */
 void weedRoot(PROGRAM *root){
 	weedProgram(root);
