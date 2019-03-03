@@ -103,6 +103,7 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 	bool returnChain;
 	bool returnNext;
 	
+	
 	switch (s->kind) {
 		
 		// unused token
@@ -189,14 +190,32 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			weedStatement(s->val.switchBody.optDecl, false, false, false, true, false);
 			weedExpression(s->val.switchBody.condition, s->lineno, false, false, true);
 			return weedStatement(s->val.switchBody.cases, 
-				allowBreak, allowContinue, true, false, needReturn);
+				allowBreak, allowContinue, false, false, needReturn);
 			
 		// case statement
 		case caseS:
-			weedExpression(s->val.caseBody.condition, s->lineno, false, false, true);
+			// default case
+			if (s->val.caseBody.condition == NULL) {
+				if (lookForDefaultCase) { // second one seen so far
+					fprintf(stderr, 
+					"Error: (line %d) multiple default cases in switch statement\n", 
+					s->lineno);
+					exit(1);
+				}
+				returnInBody = weedStatement(s->val.caseBody.body, 
+					true, allowContinue, false, false, needReturn);
+				returnNext = weedStatement(s->next, true, allowContinue, true, 
+					false, needReturn);
+				return returnInBody && returnNext;
+					
+				
+			}
+			weedExpression(s->val.caseBody.condition, 
+				s->lineno, false, false, true);
 			return weedStatement(s->val.caseBody.body, 
 				true, allowContinue, false, false, needReturn)
-				&& weedStatement(s->next, true, allowContinue, true, false, needReturn);
+				&& weedStatement(s->next, true, allowContinue, 
+				lookForDefaultCase, false, needReturn);
 			
 		// break statement
 		case breakS:

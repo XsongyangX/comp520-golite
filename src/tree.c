@@ -2,6 +2,14 @@
 #include "tree.h"
 #include <stdio.h>
 
+/* Helper error printing */
+void printUnequalAssignError(int lineno){
+	fprintf(stderr, 
+	"Error: (line %d) unequal number of variables and assignment values\n", 
+	lineno);
+	exit(1);
+}
+
 
 EXP *makeEXP_empty()
 {
@@ -708,8 +716,7 @@ DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
         return d;
     }
     else{
-        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
-        exit(1);
+        printUnequalAssignError(lineno);
     }
 }
 
@@ -727,8 +734,7 @@ DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps){
         return d;
     }
     else{
-        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
-        exit(1);
+        printUnequalAssignError(lineno);
     }
 }
 /*A similar function to block declarations, but for STMTs*/
@@ -746,8 +752,7 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps){
         return s;
     }
     else{
-        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
-        exit(1);
+        printUnequalAssignError(lineno);
     }
 }
 /*Used for quick := declarations*/
@@ -765,8 +770,7 @@ STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps){
         return s;
     }
     else{
-        fprintf(stderr,"Error in line %d; unequal number of idents and exps\n", lineno);
-        exit(1);
+        printUnequalAssignError(lineno);
     }
 }
 
