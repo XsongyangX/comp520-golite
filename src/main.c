@@ -53,6 +53,7 @@ int main(int argc, char** argv)
 	{
 		isToken = 0;
 		yyparse();
+		weedRoot(my_prog);
 		prettyPROG(my_prog); 
 		return 0;
 	}/*
