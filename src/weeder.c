@@ -196,7 +196,7 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			// default case
 			if (s->val.caseBody.condition == NULL) {
 				if (lookForDefaultCase) { // second one seen so far
-					fprintf(stederr, 
+					fprintf(stderr, 
 					"Error: (line %d) multiple default cases in switch statement\n", 
 					s->lineno);
 					exit(1);
