@@ -20,7 +20,6 @@ Currently, there is a segmentation fault in the weeder.
 /* Function that serves as an interface with the main file */
 void weedRoot(PROGRAM *root){
 	weedProgram(root);
-	fprintf(stderr, "Im here in weeder\n");
 }
 
 void weedProgram(PROGRAM *p){
