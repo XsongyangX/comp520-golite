@@ -34,12 +34,12 @@ void weedDeclaration(DECLARATION *d, int lineno){
 		
 		// struct declaration
 		case structDecl:
-			weedDeclaration(d->val.body, int lineno);
+			weedDeclaration(d->val.body, lineno);
 			return;
 			
 		// function declaration
 		case funcDecl:
-			weedFunction(d->val.f, lineno);
+			weedFunction(d->val.f);
 			weedDeclaration(d->next, lineno);
 			return;
 		
