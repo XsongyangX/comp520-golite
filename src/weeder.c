@@ -24,12 +24,14 @@ void weedDeclaration(DECLARATION *d, int lineno){
 		
 		// type declaration
 		case typeDecl:
+			weedDeclaration(d->chain, lineno);
 			return;
 		
 		// variable declaration
 		case varDecl:
 			weedExpression(d->val.right, lineno, false, false, true);
 			weedDeclaration(d->next, lineno);
+			weedDeclaration(d->chain, lineno);
 			return;
 		
 		// struct declaration
