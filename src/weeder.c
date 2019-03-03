@@ -71,15 +71,17 @@ void weedFunction(FUNCTION *f){
 	
 	weedDeclaration(f->params, f->lineno);
 	
+	// function declaration
 	// no return statement, and not void
-	if (!weedStatement(f->body, false, false, false, false, true)
+	if ( !weedStatement(f->body, false, false, false, false, true)
 		&& f->returnt->gType != nilType){
 		fprintf(stderr, 
 		"Error: (line %d) expecting a return statement in all control flows\n",
 		f->lineno);
 		exit(1);
 	}
-	// next pointer ignore
+	
+	
 }
 
 /* Things to weed for:
@@ -351,7 +353,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 		return;
 	
 	case funcExp:
-		weedFunction(e->val.fn); // TODO
+		weedDeclaration(e->val.fn->params, lineno);
 		return;
 	
 	// throw errors
