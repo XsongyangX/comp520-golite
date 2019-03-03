@@ -2,14 +2,6 @@ package main
 
 type Account struct {balance float64; password string;}
 
-func main(){
-
-	var acct1 Account;
-	acct1.balance = 0.0;
-	acct1.password = "foo";
-	deposit("foo", 100.00, acct1);
-}
-
 func deposit(pass string, amount float64, acct Account){
 	if acct.password == pass {
 		acct.balance += amount;
@@ -33,4 +25,11 @@ func withdraw(pass string, amount float64, acct Account){
 	}else {
 		print("Wrong password");
 	}
+}
+func main(){
+
+	var acct1 Account;
+	acct1.balance = 0.0;
+	acct1.password = "foo";
+	deposit("foo", 100.00, acct1);
 }
