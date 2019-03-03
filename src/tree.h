@@ -15,7 +15,7 @@ enum ExpressionKind{emptyExp, //NULL
                     intExp, 
                     floatExp, 
                     strExp, 
-		    rawstrExp,
+					rawstrExp,
                     boolExp, 
                     runeExp,
                     plusExp, //.+.
@@ -26,8 +26,8 @@ enum ExpressionKind{emptyExp, //NULL
                     notExp, //!.
                     posExp, //+.
                     negExp, //-.
-                    ptrExp, //*.
-                    addrExp, //&.
+                    ptrExp, //*. // NOT ALLOWED IN GOLITE
+                    addrExp, //&. // NOT ALLOWED IN GOLITE
                     parExp, //(.)
                     eqExp, //.==.
                     neqExp, //.!=.
@@ -40,23 +40,23 @@ enum ExpressionKind{emptyExp, //NULL
                     andnotExp, //.&^.
                     idExp,
                     idblockExp, //Blocks of identifiers
-                    explblockExp, //Blocks of expressions 
+                    expblockExp, //Blocks of expressions 
                     bitAndExp, //.&.
                     bitOrExp, //.|.
                     xorExp, //.^.
                     lshiftExp, //.<<.
                     rshiftExp, //.>>.
-                    rangeExp, //[.:.]
+                    rangeExp, //[.:.] NOT SUPPORTED IN GOLITE
                     indexExp, //[.]  e.g. arrays
                     elementExp, //for arrays and slices, e.g. identifier[x]
                     invocExp, //x.y
                     appendExp, //built-in
                     lenExp, //built-in
                     capExp, //built-in
-		            uxorExp,
+		            uxorExp, // unary ^
                     funcExp //function call
                     };
-enum StatementKind{ emptyS, //NULL
+enum StatementKind{ emptyS, //NULL // UNUSED
                     assignS,
                     quickDeclS,
                     blockS, //{...}
@@ -82,7 +82,12 @@ enum GroupingType{  nilType,
                     structType,
                     userType,
                     };
-enum DeclarationType{typeDecl, varDecl, structDecl, funcDecl, funcCall};
+enum DeclarationType{typeDecl,
+					varDecl,
+					structDecl,
+					funcDecl,
+					funcCall
+					};
 /*fakeDecl are a construct that use the declaration
  data structure, but represent something else*/
 
