@@ -103,6 +103,7 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 	bool returnChain;
 	bool returnNext;
 	
+	
 	switch (s->kind) {
 		
 		// unused token
@@ -201,15 +202,20 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 					s->lineno);
 					exit(1);
 				}
+				returnInBody = weedStatement(s->val.caseBody.body, 
+					true, allowContinue, false, false, needReturn);
+				returnNext = weedStatement(s->next, true, allowContinue, true, 
+					false, needReturn);
+				return returnInBody && returnNext;
+					
 				
 			}
-			else {
-				weedExpression(s->val.caseBody.condition, 
-					s->lineno, false, false, true);
-			}
+			weedExpression(s->val.caseBody.condition, 
+				s->lineno, false, false, true);
 			return weedStatement(s->val.caseBody.body, 
 				true, allowContinue, false, false, needReturn)
-				&& weedStatement(s->next, true, allowContinue, true, false, needReturn);
+				&& weedStatement(s->next, true, allowContinue, 
+				lookForDefaultCase, false, needReturn);
 			
 		// break statement
 		case breakS:
