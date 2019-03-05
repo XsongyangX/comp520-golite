@@ -245,7 +245,7 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps);
 STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val);
 STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps);
 
-TYPE *makeTYPE(int gtype, int size, char *name, TYPE *arg);
+TYPE *makeTYPE(int gtype, int size, char *name);
 //TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args);
 
 

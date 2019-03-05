@@ -237,10 +237,8 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
 access          : access '.' tIDENTIFIER {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
                 | funccall {  $$ = $1;}
                 | access '[' exp ']' {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | access '[' exp ':' exp ']' {$$ = makeEXP_element($1, makeEXP_range($3, $5));}
                 | tIDENTIFIER '.' tIDENTIFIER {EXP *e = makeEXP_id($1); $$ = makeEXP_id($3); $$ = makeEXP_invoc(e,$$);}
                 | tIDENTIFIER '[' exp ']' {EXP *e = makeEXP_id($1); $$ = makeEXP_element(e, makeEXP_index($3));}
-                | tIDENTIFIER '[' exp ':' exp ']' {EXP *e = makeEXP_id($1); $$ = makeEXP_element(e, makeEXP_range($3, $5));}
                 ;
 
 funccall        : tIDENTIFIER '(' explist ')' {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}

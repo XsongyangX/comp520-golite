@@ -323,7 +323,6 @@ EXP *makeEXP_func(char *identifier, int size, DECLARATION *args)
     tmpf->body = NULL;
     tmpf->params = args;
     tmpf->returnt = NULL;
-    tmpf->next = NULL;
     e->val.fn = tmpf;
     return e;
 }
@@ -340,7 +339,6 @@ void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
     tmpf->body = NULL;
     tmpf->params = args;
     tmpf->returnt = NULL;
-    tmpf->next = NULL;
     e->val.fn = tmpf;
     identifier = makeEXP_invoc(identifier,e);
 }
