@@ -26,8 +26,6 @@ enum ExpressionKind{emptyExp, //NULL
                     notExp, //!.
                     posExp, //+.
                     negExp, //-.
-                    ptrExp, //*. // NOT ALLOWED IN GOLITE
-                    addrExp, //&. // NOT ALLOWED IN GOLITE
                     parExp, //(.)
                     eqExp, //.==.
                     neqExp, //.!=.
@@ -46,7 +44,6 @@ enum ExpressionKind{emptyExp, //NULL
                     xorExp, //.^.
                     lshiftExp, //.<<.
                     rshiftExp, //.>>.
-                    rangeExp, //[.:.] NOT SUPPORTED IN GOLITE
                     indexExp, //[.]  e.g. arrays
                     elementExp, //for arrays and slices, e.g. identifier[x]
                     invocExp, //x.y
@@ -148,7 +145,6 @@ struct FUNCTION{//parameters are referred to as a list of declarations where the
     DECLARATION *params;
     TYPE *returnt;
     STATEMENT *body;
-    FUNCTION *next;
 };
 struct STATEMENT{
     enum StatementKind kind;
@@ -187,8 +183,6 @@ EXP *makeEXP_div(EXP *e1, EXP *e2);
 EXP *makeEXP_mod(EXP *e1, EXP *e2);
 EXP *makeEXP_pos(EXP *e1);
 EXP *makeEXP_neg(EXP *e1);
-EXP *makeEXP_ptr(EXP *e1);
-EXP *makeEXP_addr(EXP *e1);
 EXP *makeEXP_par(EXP *e1);
 EXP *makeEXP_eq(EXP *e1, EXP *e2);
 EXP *makeEXP_neq(EXP *e1, EXP *e2);
@@ -205,7 +199,6 @@ EXP *makeEXP_bor(EXP *e1, EXP *e2);
 EXP *makeEXP_xor(EXP *e1, EXP *e2);
 EXP *makeEXP_lshift(EXP *e1, EXP *e2);
 EXP *makeEXP_rshift(EXP *e1, EXP *e2);
-EXP *makeEXP_range(EXP *e1, EXP *e2);
 EXP *makeEXP_index(EXP *e2);
 EXP *makeEXP_element(EXP *e1, EXP *e2);
 EXP *makeEXP_invoc(EXP *e1, EXP *e2);

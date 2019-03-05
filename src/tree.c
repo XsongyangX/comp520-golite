@@ -1,3 +1,4 @@
+/*Constructors for AST nodes*/
 #include <stdlib.h>
 #include "tree.h"
 #include <stdio.h>
@@ -10,7 +11,7 @@ void printUnequalAssignError(int lineno){
 	exit(1);
 }
 
-
+/*Not ever used, emptyExp = 0 acts as a safety net in later stages*/
 EXP *makeEXP_empty()
 {
     EXP *e = malloc(sizeof(EXP));
@@ -45,6 +46,8 @@ EXP *makeEXP_str(char *literal)
     e->val.strLiteral = literal;
     return e;
 }
+/*We distinguish raw strings because the pretty printing phase asks for this
+Otherwise it will behave like a string*/
 EXP *makeEXP_rawstr(char *literal)
 {
     EXP *e = malloc(sizeof(EXP));
@@ -112,22 +115,6 @@ EXP *makeEXP_neg(EXP *e1)
 {
     EXP *e = malloc(sizeof(EXP));
     e->kind = negExp;
-    e->val.binary.lhs = NULL;
-    e->val.binary.rhs = e1;
-    return e;
-}
-EXP *makeEXP_ptr(EXP *e1)
-{
-    EXP *e = malloc(sizeof(EXP));
-    e->kind = ptrExp;
-    e->val.binary.lhs = NULL;
-    e->val.binary.rhs = e1;
-    return e;
-}
-EXP *makeEXP_addr(EXP *e1)
-{
-    EXP *e = malloc(sizeof(EXP));
-    e->kind = addrExp;
     e->val.binary.lhs = NULL;
     e->val.binary.rhs = e1;
     return e;
@@ -259,14 +246,6 @@ EXP *makeEXP_rshift(EXP *e1, EXP *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-EXP *makeEXP_range(EXP *e1, EXP *e2)
-{
-    EXP *e = malloc(sizeof(EXP));
-    e->kind = rangeExp;
-    e->val.binary.lhs = e1;
-    e->val.binary.rhs = e2;
-    return e;
-}
 EXP *makeEXP_index(EXP *e2)
 {
     EXP *e = malloc(sizeof(EXP));
@@ -275,7 +254,7 @@ EXP *makeEXP_index(EXP *e2)
     e->val.binary.rhs = e2;
     return e;
 }
-EXP *makeEXP_element(EXP *e1, EXP *e2)//e1 should be an identifier, e2 should be a range or and index exp
+EXP *makeEXP_element(EXP *e1, EXP *e2)//e1 should be an identifier, e2 should be an index exp
 {
     EXP *e = malloc(sizeof(EXP));
     e->kind = elementExp;
@@ -365,7 +344,8 @@ void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
     e->val.fn = tmpf;
     identifier = makeEXP_invoc(identifier,e);
 }
-
+/*makes a declaration node with a rhs value
+the rhs value should be null in case of a type decl*/
 DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
@@ -376,6 +356,8 @@ DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs)
     d->next = NULL;
     return d;
 }
+/*makes a declaration node with no rhs
+a type should be provided*/
 DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
@@ -386,6 +368,8 @@ DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t)
     d->next = NULL;
     return d;
 }
+/*makes a declaration with no type declared
+a rhs should be provided*/
 DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
@@ -399,6 +383,8 @@ DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysi
     d->next = NULL;
     return d;
 }
+/*makes a declaration node for a struct definition
+the struct body is made of a list of declarations*/
 DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
@@ -411,6 +397,8 @@ DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body)
     d->next = NULL;
     return d;
 }
+/*makes a declaration node for a function
+simply wraps around the function*/
 DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
@@ -419,17 +407,6 @@ DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f)
     d->next = next;
     return d;
 }
-// SDECLARATION *makeSDecl(EXP *e, char* declType, int gtype, int arraysize)
-// {
-//     SDECLARATION *sd = malloc(sizeof(SDecl));
-//     sd->identifier = e;
-//     sd->t = malloc(sizeof(TYPE));
-//     sd->t->name = declType;
-//     sd->t->gType = gtype;
-//     sd->t->size = arraysize;
-//     sd->next = NULL;
-//     return sd;
-// }
 
 FUNCTION *makeFCTN(int lineno, char *identifier, int size, DECLARATION *params, TYPE *returnType, STATEMENT *body)
 {
@@ -440,10 +417,10 @@ FUNCTION *makeFCTN(int lineno, char *identifier, int size, DECLARATION *params, 
     f->params = params;
     f->body = body;
     f->returnt = returnType;
-    f->next = NULL;
     return f;
 }
-
+/*makes an assignment statement of the form exps = exps
+note that some variables may be declared in this*/
 STATEMENT *makeSTMT_assmt(int lineno, EXP *identifier, EXP *val)
 {
     STATEMENT *s = malloc(sizeof(STATEMENT));
@@ -455,6 +432,8 @@ STATEMENT *makeSTMT_assmt(int lineno, EXP *identifier, EXP *val)
     s->next = NULL;
     return s;
 }
+/*makes an assignment statement of the form exps := exps
+note that some variables should be declared in this*/
 STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val)
 {
     STATEMENT *s = malloc(sizeof(STATEMENT));
@@ -623,15 +602,11 @@ PROGRAM *makePROG(char* package, DECLARATION *declList)
 /*Stuff written by Greg starts here */
 
 
-TYPE *makeTYPE(int gtype, int size, char *name, TYPE *arg){
+TYPE *makeTYPE(int gtype, int size, char *name){
     TYPE *t = malloc(sizeof(TYPE));
     t->size = size;
     t->gType = gtype;
     t->name = name;
-    if(arg != NULL){
-        t->val.arg = arg;
-
-    }
     return t; 
 }
 
@@ -652,7 +627,7 @@ EXP *makeEXP_idblock(char *identifier, EXP *next){
     e->val.idblock.next = next;
     e->val.idblock.identifier = identifier;
 }
-
+/*used for exps*/
 EXP *makeEXP_expblock(EXP *e1, EXP *next){
     EXP *e = malloc(sizeof(EXP));
     e->t = NULL;
@@ -660,7 +635,7 @@ EXP *makeEXP_expblock(EXP *e1, EXP *next){
     e->val.expblock.next = next;
     e->val.expblock.value = e1;
 }
-
+/*specific declaration node constructor for type declarations*/
 DECLARATION *makeDECL_type(char* identifier, TYPE *typeNode){
     DECLARATION *d = malloc(sizeof(DECLARATION));
     d->d = typeDecl;

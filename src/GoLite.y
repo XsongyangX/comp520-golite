@@ -310,13 +310,13 @@ typelist        : typelist ',' typelist {$$ = $3; findBottomDECL($$)->next = $1;
                 ;
 
 opttype         : type {$$ = $1;}
-                | {$$ = makeTYPE(nilType, 0, " ", NULL);}
+                | {$$ = makeTYPE(nilType, 0, " ");}
                 ;
 
 /* Defines the various kinds of types that can be used.*/
-type            : tIDENTIFIER {$$ = makeTYPE(baseType, 1, $1, NULL);}
-                | '[' ']' tIDENTIFIER {$$ = makeTYPE(sliceType, 0, $3, NULL);}
-                | '[' tINTLITERAL ']' tIDENTIFIER {$$ = makeTYPE(arrayType, $2, $4, NULL);}
+type            : tIDENTIFIER {$$ = makeTYPE(baseType, 1, $1);}
+                | '[' ']' tIDENTIFIER {$$ = makeTYPE(sliceType, 0, $3);}
+                | '[' tINTLITERAL ']' tIDENTIFIER {$$ = makeTYPE(arrayType, $2, $4);}
                 ;
 
 /* A block of statements */

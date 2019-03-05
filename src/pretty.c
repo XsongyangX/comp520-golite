@@ -24,7 +24,7 @@ void prettyPROG(PROGRAM *my_prog)
 void prettyFctn(FUNCTION *fn, int t)
 {
     if(fn == NULL)
-	return;
+	    return;
     prettyTabs(t);
     printf("func %s(", fn->identifier);
     if(fn->params != NULL)
@@ -560,16 +560,6 @@ void prettyExp(EXP *e)
             prettyExp(e->val.binary.rhs);
             printf(")");
             break;
-        case ptrExp:
-            printf("( *");
-            prettyExp(e->val.binary.rhs);
-            printf(")");
-            break;
-        case addrExp:
-            printf("( &");
-            prettyExp(e->val.binary.rhs);
-            printf(")");
-            break;
         case parExp:
             printf("(");
             prettyExp(e->val.binary.rhs);
@@ -677,13 +667,6 @@ void prettyExp(EXP *e)
             printf(" >> ");
             prettyExp(e->val.binary.rhs);
             printf(")");
-            break;
-        case rangeExp:
-            printf("[");
-            prettyExp(e->val.binary.lhs);
-            printf(":");
-            prettyExp(e->val.binary.rhs);
-            printf("]");
             break;
         case indexExp:
             printf("[");
