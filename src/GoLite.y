@@ -230,7 +230,8 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
 		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
-                | preaccess {$$ = $1;}
+                | access {$$ = $1;}
+                | funccall {$$ = $1;}
                 ;
 preaccess       : tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
