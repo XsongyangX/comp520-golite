@@ -6,10 +6,10 @@ weeder.o:
 	gcc -c weeder.c weeder.h -g
 
 tree.o:
-	gcc -c tree.c tree.h
+	gcc -c tree.c tree.h -g
 
 pretty.o:
-	gcc -c pretty.c pretty.h
+	gcc -c pretty.c pretty.h -g
 
 y.tab.o: y.tab.c
 	gcc -c y.tab.c y.tab.h
@@ -18,13 +18,17 @@ y.tab.c:
 	bison --yacc --verbose -d GoLite.y
 	
 main.o: 
-	gcc -c main.c 
+	gcc -c main.c -g
 
 lex.yy.o: lex.yy.c y.tab.c
 	gcc -c lex.yy.c 
 
 lex.yy.c:
 	flex GoLite.l
+
+# pretty option for testing the pretty printer
+pretty: lex.yy.o y.tab.o tree.o weeder.o pretty.o main.o
+	gcc -o minic main.o lex.yy.o y.tab.o tree.o weeder.o pretty.o -lfl	
 
 # scan option only uses bison to generate the token headers
 scan: emptyParser.o
