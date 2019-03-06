@@ -135,7 +135,6 @@ void prettySDecl(STATEMENT *d)
             prettySDeclVal(d->val.assignment.chain);
         }
         prettyExp(d->val.assignment.value);
-        printf("; ");
     }
     else if(d->kind == assignS)
     {
@@ -148,11 +147,9 @@ void prettySDecl(STATEMENT *d)
             prettySDeclVal(d->val.assignment.chain);
         }
         prettyExp(d->val.assignment.value);
-        printf("; ");
     }
     else if(d->kind == exprS){
         prettyExp(d->val.expression);
-        printf("; ");
     }
     else{
         prettyStmt(d,0);
@@ -356,12 +353,12 @@ void prettyFor(STATEMENT *s, int t)
     if(s->val.conditional.optDecl != NULL){
         prettySDecl(s->val.conditional.optDecl);//print loop var
     }
-    else{ printf("; ");}//print missing semi colon
+    printf("; ");//print missing semi colon
     if(s->val.conditional.condition != NULL)
     {prettyExp(s->val.conditional.condition);}//print loop condition
     printf("; ");
     if(s->val.conditional.elif != NULL)
-    {prettyStmt(s->val.conditional.elif, t);}//elif should be an expression stmt, typically an increment
+    {prettySDecl(s->val.conditional.elif, t);}//elif should be an expression stmt, typically an increment
     printf("{\n");
     prettyStmt(s->val.conditional.body, t+1);
     prettyTabs(t);
@@ -375,6 +372,7 @@ void prettyWhile(STATEMENT *s, int t)
     printf("for ");
     if(s->val.conditional.optDecl != NULL){
         prettySDecl(s->val.conditional.optDecl);//print loop var
+        printf(";");
     }
     if(s->val.conditional.condition != NULL)
     {prettyExp(s->val.conditional.condition);}//print loop condition
@@ -437,6 +435,7 @@ void prettySwitch(STATEMENT *s, int t)
     if (s->val.switchBody.optDecl != NULL)
     {
         prettySDecl(s->val.switchBody.optDecl);
+        printf(";");
     }
     if (s->val.switchBody.condition)
     {
