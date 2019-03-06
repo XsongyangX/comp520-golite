@@ -134,7 +134,7 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 		case blockS:
 			returnNext = weedStatement(s->next, allowBreak, allowContinue,
 				false, encounteredReturn, needReturn);
-			returnInBody = weedStatement(s->val.body, allowBreak, allowContinue, false, false, needReturn);	       
+			returnInBody = weedStatement(s->val.body, allowBreak, allowContinue, false, encounteredReturn, needReturn);	       
 			return returnNext || returnInBody;
 			
 		// if and else-if statement
