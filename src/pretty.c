@@ -93,7 +93,7 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
             if(d->chain != NULL)
                 prettyDecl(d->chain, t, isInStruct);
             if(!isInStruct)
-                printf("var ")
+                printf("var ");
             printf("%s ", d->identifier);
             if(strlen(d->t->name) != 0)
             {
