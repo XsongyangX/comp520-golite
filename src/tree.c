@@ -496,11 +496,10 @@ STATEMENT *makeSTMT_for(int lineno, STATEMENT *optDecl, EXP *condition, STATEMEN
     STATEMENT *s = malloc(sizeof(STATEMENT));
     s->lineno = lineno;
     s->kind = forS;
-    action->next = body;
-    s->val.conditional.body = action;
+    s->val.conditional.body = body;
     s->val.conditional.condition = condition;
     s->val.conditional.optDecl = optDecl;
-    s->val.conditional.elif = NULL;
+    s->val.conditional.elif = action;
     s->next = NULL;
     return s;
 }
