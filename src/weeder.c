@@ -14,7 +14,14 @@ One challenge in this weeder design is the cryptic nature of the
 AST nodes. There might be some missing traversals because the
 AST is not a good abstraction of the parsed language.
 
-Currently, there is a segmentation fault in the weeder.
+The weeder checks for:
+	- Division by 0
+	- Missing return statement
+	- Unreachable return statements
+	- Too many default cases
+	- Break and continue validity
+	- If, switch, for: short declaration
+	- Blank identifier usage in expressions
 */
 
 /* Function that serves as an interface with the main file */
@@ -179,7 +186,7 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 		// return statement
 		case returnS:
 			if (encounteredReturn) {
-				fprintf(stderr, "Error: (line %d) too many return statement\n", s->lineno);
+				fprintf(stderr, "Error: (line %d) too many return statements\n", s->lineno);
 				exit(1);
 			}
 			weedExpression(s->val.expression, s->lineno, false, false, true);
