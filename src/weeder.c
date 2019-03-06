@@ -134,8 +134,8 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 		case blockS:
 			returnNext = weedStatement(s->next, allowBreak, allowContinue,
 				false, encounteredReturn, needReturn);
-			return returnNext || weedStatement(s->val.body, allowBreak, 
-				allowContinue, false, false, needReturn);
+			returnInBody = weedStatement(s->val.body, allowBreak, allowContinue, false, false, needReturn);	       
+			return returnNext || returnInBody;
 			
 		// if and else-if statement
 		case ifS: 
@@ -219,11 +219,12 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			}
 			weedExpression(s->val.caseBody.condition, 
 				s->lineno, false, false, true);
-			return weedStatement(s->val.caseBody.body, 
-				true, allowContinue, false, false, needReturn)
-				&& weedStatement(s->next, true, allowContinue, 
-				lookForDefaultCase, false, needReturn);
-			
+
+			returnNext = weedStatement(s->next, true, allowContinue, lookForDefaultCase, false, needReturn);
+
+			returnInBody =  weedStatement(s->val.caseBody.body, true, allowContinue, false, false, needReturn);
+			return returnNext && returnInBody;
+
 		// break statement
 		case breakS:
 			if (!allowBreak) {
