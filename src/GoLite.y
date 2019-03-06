@@ -151,7 +151,7 @@ void yyerror(const char *s) {
 %left tEQ tNEQ 
 %left tGEQ tLEQ '>' '<'
 %left '+' '-'
-%left '*' '/' '%'
+%left '*' '/' '%' NONUNARY
 %left UNARY
 
 /* Start token (by default if this is missing it takes the first production */
@@ -237,7 +237,7 @@ access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); 
                 | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
                 | funccall %prec UNARY {$$ = $1;}
                 | '(' access ')' %prec UNARY {$$ = $2;}
-                | tIDENTIFIER {$$ = makeEXP_id($1);}
+                | tIDENTIFIER %prec NONUNARY {$$ = makeEXP_id($1);}
                 ;
 
 funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
