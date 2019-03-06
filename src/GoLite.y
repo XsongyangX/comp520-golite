@@ -60,7 +60,7 @@ void yyerror(const char *s) {
 %type <funcval> funcdef 
 %type <decval> progdefs topdecl dec blockidents decdistributed typelist typedec typedistributed vardec
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr access exps explist idents funccall preaccess
+%type <expval> exp trm ftr access exps explist idents funccall
 %type <typeval> type opttype
 
 %token tINT
@@ -240,7 +240,7 @@ access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); 
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
-funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1->val.identifier, 0, makeDECL_fnCallArgs($3));}
+funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
                 
                 | access '(' explist ')' {  makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); $$ = $1;}
                 ;
