@@ -18,7 +18,7 @@ void prettyPROG(PROGRAM *my_prog)
     {
         printf("package %s;\n", my_prog->package);
     }
-    prettyDecl(my_prog->declList, 0);
+    prettyDecl(my_prog->declList, 0, 0);
 }
 //prints a function list
 void prettyFctn(FUNCTION *fn, int t)
@@ -75,24 +75,25 @@ void prettyType(TYPE *t)
 }
 
 //prints a list of Declarations
-void prettyDecl(DECLARATION *d, int t)
+void prettyDecl(DECLARATION *d, int t, int isInStruct)
 {
     if(d->next != NULL)
     {
-        prettyDecl(d->next, t);
+        prettyDecl(d->next, t, 0);
     }
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
 	        if(d->chain != NULL)
-		        prettyDecl(d->chain, t);
+		        prettyDecl(d->chain, t, 0);
             printf("type %s ", d->identifier);
             prettyType(d->t);
             printf("\n");
             break;
         case varDecl:
             if(d->chain != NULL)
-                prettyDecl(d->chain, t);
-            printf("var %s ", d->identifier);
+                prettyDecl(d->chain, t, 0);
+            if(!isInStruct)
+                printf("var %s ", d->identifier);
             if(strlen(d->t->name) != 0)
             {
                 prettyType(d->t);
@@ -105,11 +106,11 @@ void prettyDecl(DECLARATION *d, int t)
 	        printf("\n");
             break;
         case structDecl:
-	    if(d->chain != NULL)
-		prettyDecl(d->chain, t);
+            if(d->chain != NULL)
+                prettyDecl(d->chain, t, 0);
             printf("type %s struct {\n", d->identifier);
 	    
-            prettyDecl(d->val.body, t+1);
+            prettyDecl(d->val.body, t+1, 1);
             prettyTabs(t);
             printf("}\n");
             break;
@@ -233,7 +234,7 @@ void prettyStmt(STATEMENT *s, int t)
             prettyContinue(t);
             break;
         case declS:
-            prettyDecl(s->val.declaration,t);
+            prettyDecl(s->val.declaration,t,0);
 	    printf("\n");
             break;
         case caseS://this should never be executed
