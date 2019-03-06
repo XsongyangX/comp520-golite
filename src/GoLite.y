@@ -240,7 +240,7 @@ access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); 
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
-funccall        : tIDENTIFIER '(' explist ')' {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
+funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
                 
                 | access '(' explist ')' {  makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); $$ = $1;}
                 ;
