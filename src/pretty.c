@@ -709,7 +709,12 @@ void prettyExp(EXP *e)
             printf(")");
             break;
 	case runeExp:
-	    printf("'%c'",e->val.runeLiteral);
+        if(e->val.runeLiteral == '\\')
+        {
+            printf("'\\\\'");
+        }
+        else
+	        printf("'%c'",e->val.runeLiteral);
     }
 }
 //helper for function case in prettyExp
