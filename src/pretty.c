@@ -358,7 +358,7 @@ void prettyFor(STATEMENT *s, int t)
     {prettyExp(s->val.conditional.condition);}//print loop condition
     printf("; ");
     if(s->val.conditional.elif != NULL)
-    {prettySDecl(s->val.conditional.elif, t);}//elif should be an expression stmt, typically an increment
+    {prettySDecl(s->val.conditional.elif);}//elif should be an expression stmt, typically an increment
     printf("{\n");
     prettyStmt(s->val.conditional.body, t+1);
     prettyTabs(t);
