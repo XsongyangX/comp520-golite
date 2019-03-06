@@ -79,12 +79,12 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
 {
     if(d->next != NULL)
     {
-        prettyDecl(d->next, t, 0);
+        prettyDecl(d->next, t, isInStruct);
     }
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
 	        if(d->chain != NULL)
-		        prettyDecl(d->chain, t, 0);
+		        prettyDecl(d->chain, t, isInStruct);
             printf("type %s ", d->identifier);
             prettyType(d->t);
             printf("\n");
@@ -108,7 +108,7 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
             break;
         case structDecl:
             if(d->chain != NULL)
-                prettyDecl(d->chain, t, 0);
+                prettyDecl(d->chain, t, isInStruct);
             printf("type %s struct {\n", d->identifier);
 	    
             prettyDecl(d->val.body, t+1, 1);
