@@ -60,7 +60,7 @@ void yyerror(const char *s) {
 %type <funcval> funcdef 
 %type <decval> progdefs topdecl dec blockidents decdistributed typelist typedec typedistributed vardec
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr access exps explist idents funccall
+%type <expval> exp trm ftr access exps explist idents funccall preaccess
 %type <typeval> type opttype
 
 %token tINT
@@ -230,17 +230,17 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
 		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
-                | access {$$ = $1;}
+                | preaccess {$$ = $1;}
                 ;
-
+preaccess       : tIDENTIFIER {$$ = makeEXP_id($1);}
+                ;
 access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | funccall %prec UNARY {  $$ = $1;}
                 | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
                 | '(' access ')' %prec UNARY {$$ = $2;}
-                | tIDENTIFIER {$$ = makeEXP_id($1);}
+                | preaccess {$$ = $1;}
                 ;
 
-funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
+funccall        : preaccess '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1->val.identifier, 0, makeDECL_fnCallArgs($3));}
                 
                 | access '(' explist ')' {  makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); $$ = $1;}
                 ;
