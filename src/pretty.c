@@ -91,9 +91,10 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
             break;
         case varDecl:
             if(d->chain != NULL)
-                prettyDecl(d->chain, t, 0);
+                prettyDecl(d->chain, t, isInStruct);
             if(!isInStruct)
-                printf("var %s ", d->identifier);
+                printf("var ")
+            printf("%s ", d->identifier);
             if(strlen(d->t->name) != 0)
             {
                 prettyType(d->t);
