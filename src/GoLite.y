@@ -236,10 +236,7 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
 access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
                 | funccall %prec UNARY {  $$ = $1;}
                 | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | tIDENTIFIER '.' tIDENTIFIER %prec UNARY {EXP *e = makeEXP_id($1); $$ = makeEXP_id($3); $$ = makeEXP_invoc(e,$$);}
-                | tIDENTIFIER '[' exp ']' %prec UNARY {EXP *e = makeEXP_id($1); $$ = makeEXP_element(e, makeEXP_index($3));}
                 | '(' access ')' %prec UNARY {$$ = $2;}
-                | '(' tIDENTIFIER ')' '[' exp ']' %prec UNARY {EXP *e = makeEXP_id($2); $$ = makeEXP_element(e, makeEXP_index($5));}
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
