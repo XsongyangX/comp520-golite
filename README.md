@@ -12,6 +12,8 @@ We provide 3 scripts for convenience and two directories for organization:
 * `run.sh`: Runs your compiler using two arguments (mode - $1 and input file - $2). You should replace the commands here if necessary to invoke your compiler
 * `test.sh`: Automatically runs your compiler against test programs in the programs directory and checks the output
 * `testScan.sh`: Automatically runs the scanner against test programs in the `1-scan+parse` directory. You should use the `tokens` argument with this Bash script to make the scanner run on the **entire** program. Otherwise, no arguments given just builds the scanner and runs it for one token.
+* `testPretty.sh`: Automatically runs the pretty printer against test programs in the `1-scan+parse` directory. The test is divided in 2 phases: pretty printing twice and comparison with the reference pretty printer and pretty identity. To run the second phase too, use the `compare` argument. 
+* `prettyChecker.py`: Checks whether two files are identical in content. If not, it reports the line where they differ. Although named for the pretty printer, it can be used to compare any two files. Requires `python3`.
 
 Comments found in both files provide more details as to the requirements. Since a large portion of grading is performed automatically, please ensure to follow the input/output specifications **exactly**. You must be able to run the provided scripts on the SOCS Trottier machines.
 
