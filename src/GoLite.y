@@ -230,7 +230,6 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
 		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
-                | tIDENTIFIER {$$ = makeEXP_id($1);}
                 | access {$$ = $1;}
                 ;
 
@@ -241,6 +240,7 @@ access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); 
                 | tIDENTIFIER '[' exp ']' %prec UNARY {EXP *e = makeEXP_id($1); $$ = makeEXP_element(e, makeEXP_index($3));}
                 | '(' access ')' %prec UNARY {$$ = $2;}
                 | '(' tIDENTIFIER ')' '[' exp ']' %prec UNARY {EXP *e = makeEXP_id($2); $$ = makeEXP_element(e, makeEXP_index($5));}
+                | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
 funccall        : tIDENTIFIER '(' explist ')' {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
