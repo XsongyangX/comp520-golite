@@ -307,7 +307,7 @@ typelist        : typelist ',' typelist {$$ = $3; findBottomDECL($$)->next = $1;
                 ;
 
 opttype         : type {$$ = $1;}
-                | {$$ = makeTYPE(nilType, 0, " ");}
+                | {$$ = makeTYPE(nilType, 0, " ", NULL);}
                 ;
 
 /* Defines the various kinds of types that can be used.*/
