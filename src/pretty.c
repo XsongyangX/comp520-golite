@@ -62,10 +62,20 @@ void prettyType(TYPE *t)
         case nilType:
             break;
         case arrayType:
-            printf("[%d]%s", t->size, t->name);
+            printf("[%d]", t->size);
+            if(t->name != NULL)
+            {printf("%s", t->name);}
+            else{
+                prettyType(t->val.arg);
+            }
             break;
         case sliceType:
-            printf("[]%s", t->name);
+            printf("[]");
+            if(t->name != NULL)
+            {printf("%s", t->name);}
+            else{
+                prettyType(t->val.arg);
+            }
             break;
         case structType:
         case userType:

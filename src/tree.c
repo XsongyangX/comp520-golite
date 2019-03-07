@@ -344,9 +344,10 @@ void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
 }
 /*makes a declaration node with a rhs value
 the rhs value should be null in case of a type decl*/
-DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs)
+DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs, int lineno)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->lineno = lineno;
     d->d = isVar;
     d->identifier = identifier;
     d->t = t;
@@ -356,9 +357,10 @@ DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs)
 }
 /*makes a declaration node with no rhs
 a type should be provided*/
-DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t)
+DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t, int lineno)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->lineno = lineno;
     d->d = isVar;
     d->identifier = identifier;
     d->t = t;
@@ -368,9 +370,10 @@ DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t)
 }
 /*makes a declaration with no type declared
 a rhs should be provided*/
-DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs)
+DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs, int lineno)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->lineno = lineno;
     d->d = isVar;
     d->identifier = identifier;
     d->t = malloc(sizeof(TYPE));
@@ -383,9 +386,10 @@ DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysi
 }
 /*makes a declaration node for a struct definition
 the struct body is made of a list of declarations*/
-DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body)
+DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body, int lineno)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->lineno = lineno;
     d->d = structDecl;
     d->identifier = identifier;
     d->t = malloc(sizeof(TYPE));
@@ -397,9 +401,10 @@ DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body)
 }
 /*makes a declaration node for a function
 simply wraps around the function*/
-DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f)
+DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f, int lineno)
 {
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->lineno = lineno;
     d->d = funcDecl;
     d->val.f = f;
     d->next = next;
@@ -599,11 +604,12 @@ PROGRAM *makePROG(char* package, DECLARATION *declList)
 /*Stuff written by Greg starts here */
 
 
-TYPE *makeTYPE(int gtype, int size, char *name){
+TYPE *makeTYPE(int gtype, int size, char *name, TYPE *ref){
     TYPE *t = malloc(sizeof(TYPE));
     t->size = size;
     t->gType = gtype;
     t->name = name;
+    t->val.arg = ref;
     return t; 
 }
 
@@ -633,8 +639,9 @@ EXP *makeEXP_expblock(EXP *e1, EXP *next){
     e->val.expblock.value = e1;
 }
 /*specific declaration node constructor for type declarations*/
-DECLARATION *makeDECL_type(char* identifier, TYPE *typeNode){
+DECLARATION *makeDECL_type(char* identifier, TYPE *typeNode, int lineno){
     DECLARATION *d = malloc(sizeof(DECLARATION));
+    d->lineno = lineno;
     d->d = typeDecl;
     d->t = typeNode;
     d->identifier = identifier;
@@ -656,7 +663,7 @@ DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
     if(ids->kind == idblockExp){
         // If there is no next id, create a dec for the last id 
         if(ids->val.idblock.next == NULL){
-            d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t);
+            d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t, lineno);
             return d;
         }
         //If there is a next id, recurse onto that id. 
@@ -664,7 +671,7 @@ DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
         else{
             DECLARATION *nextD;
             nextD = makeDECL_blocknorhs(lineno, ids->val.idblock.next, t);
-            d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t);
+            d = makeDECL_norhs(varDecl, ids->val.idblock.identifier, t, lineno);
             d->next = nextD;
             return d;
         }
@@ -677,13 +684,13 @@ Throws an error if there is an unequal number of ids and exps on either side.*/
 DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
     DECLARATION *d = malloc(sizeof(DECLARATION));
     if(ids->val.idblock.next == NULL && exps->val.expblock.next == NULL){
-        d = makeDECL(varDecl, ids->val.idblock.identifier, t, exps->val.expblock.value);
+        d = makeDECL(varDecl, ids->val.idblock.identifier, t, exps->val.expblock.value, lineno);
         return d;
     }
     else if(ids->val.idblock.next != NULL && exps->val.expblock.next != NULL){
         DECLARATION *nextD = malloc(sizeof(DECLARATION));
         nextD = makeDECL_block(lineno, ids->val.idblock.next, t, exps->val.expblock.next);
-        d = makeDECL(varDecl, ids->val.idblock.identifier,t, exps->val.expblock.value);
+        d = makeDECL(varDecl, ids->val.idblock.identifier,t, exps->val.expblock.value, lineno);
         d->next = nextD;
         return d;
     }
@@ -695,13 +702,13 @@ DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
 DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps){
     DECLARATION *d = malloc(sizeof(DECLARATION));
     if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
-        d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value);
+        d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value, lineno);
         return d;
     }
     else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
         DECLARATION *nextD = malloc(sizeof(DECLARATION));
         nextD = makeDECL_blocknotype(lineno, ids->val.expblock.next, exps->val.expblock.next);
-        d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value);
+        d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value, lineno);
         d->next = nextD;
         return d;
     }
