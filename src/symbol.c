@@ -465,7 +465,7 @@ void symProg(PROGRAM *prog)
         prettyTabs(1);
         printf("false[constant] = bool\n");
     }
-    symDecl(prog->declList, prog->globalScope);
+    symDecl(prog->declList, prog->globalScope, 2);
     if(symbolPrint == 1)
     {
         printf("}\n");
@@ -544,7 +544,7 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
             SYMBOL *tmp = makeSymbol(decl->identifier, funcSym, 1);
             char *typename = getName(decl->val.f->returnt);
             SYMBOL *typeref = getSymbol(table, typename, typeSym);
-            if(parent == NULL && strlen(typename) != 0)
+            if(typeref == NULL && strlen(typename) != 0)
             {
                 fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, typename);
                 exit(1);
@@ -651,7 +651,7 @@ void printFnScope(symTable *table, SYMBOL *args, int depth)
         printFnScope(table, args->next, depth);
         prettyTabs(depth);
         printf("%s[variable] = ", args->name);
-        prettyType(args->t);
+        printType(args->t);
         printf("\n");
     }
 }
@@ -761,7 +761,7 @@ void symElifStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("{\n");
             }
-            symStmt(stmt->val.conditional.optDecl, subTable, depth+1);
+            symStmt(stmt->val.conditional.optDecl, subtable, depth+1);
             if(symbolPrint == 1)
             {
                 prettyTabs(depth+1);
@@ -860,7 +860,7 @@ void symSwitchStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("{\n");
             }
-            symStmt(stmt->val.switchBody.optDecl, subTable, depth+1);
+            symStmt(stmt->val.switchBody.optDecl, subtable, depth+1);
             
             symExp(stmt->val.switchBody.condition, subtable, stmt->lineno);
             symStmt(stmt->val.switchBody.cases, subtable, depth+1);
@@ -872,14 +872,14 @@ void symSwitchStmt(STATEMENT *stmt, symTable *table, int depth){
             }
 }
 void symCaseStmt(STATEMENT *stmt, symTable *table, int depth){
-            symExp(stmt->caseBody.condition, table, stmt->lineno);
+            symExp(stmt->val.caseBody.condition, table, stmt->lineno);
             symTable *subtable = initScopeTable(table);
             if(symbolPrint == 1)
             {
                 prettyTabs(depth);
                 printf("{\n");
             }
-            symStmt(stmt->caseBody.body, subTable, depth+1);
+            symStmt(stmt->val.caseBody.body, subtable, depth+1);
             if(symbolPrint == 1)
             {
                 prettyTabs(depth);
@@ -920,7 +920,7 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth)
             symWhileStmt(stmt, table, depth);
             break; 
         case printS:
-            symExp(stmt->val.iostmt.condition, table, stmt->lineno);
+            symExp(stmt->val.iostmt.value, table, stmt->lineno);
             break;
         case exprS:
         case returnS:

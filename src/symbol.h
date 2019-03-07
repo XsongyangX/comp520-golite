@@ -45,7 +45,7 @@ void symWhileStmt(STATEMENT *stmt, symTable *table, int depth);
 void symCaseStmt(STATEMENT *stmt, symTable *table, int depth);
 void symSwitchStmt(STATEMENT *stmt, symTable *table, int depth);
 void symStmt(STATEMENT *stmt, symTable *table, int depth);
-void symQDecl(STATEMENT *cur, symTable *table, int depth);
+void symQDecl(STATEMENT *cur, symTable *table);
 void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 
 void symExp(EXP *exp, symTable *table, int lineno);
