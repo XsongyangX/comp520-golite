@@ -729,7 +729,7 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
                     {//keep track of new declared variables
                         newLocals++;
                         
-                        symQDecl(cur, table, depth);
+                        symQDecl(cur, table);
                         symExp(cur->val.assignment.value, table, stmt->lineno);
                     }  
                     else{
@@ -803,7 +803,7 @@ void symForStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("{\n");
             }
-            symStmt(stmt->val.conditional.optDecl, subTable, depth+1);
+            symStmt(stmt->val.conditional.optDecl, subtable, depth+1);
             symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
             if(symbolPrint == 1)
             {
