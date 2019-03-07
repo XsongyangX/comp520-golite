@@ -3,7 +3,15 @@
 #include <string.h>
 #include "symbol.h"
 
-extern int typecheck;
+extern int symbolPrint;
+//prints n tabs
+void prettyTabs(int n)
+{
+    for(int i = 0; i < n; i++)
+    {
+        printf("\t");
+    }
+}
 /*taken from the JOOS compiler*/
 int Hash(char *str)
 {
@@ -87,15 +95,16 @@ void putFunc(SYMBOL *s, symTable *t, int lineno)
 char *shortTypeStr(SYMBOL *tmp)
 {
     if(tmp->kind == structSym)
-                return "struct";
+        return "struct";
     char typename[128];
     typename = strcpy(typename, "");
     TYPE *cur = tmp->t;
+    if(cur->gType == nilType)
+        return typename;
     while(true)
     {
-        if(cur == NULL)
+        if(cur == NULL || cur->gType != nilType)
         {
-            strcat(typename, tmp->name);
             return typename;
         }    
         else if(cur->gType == arrayType){
@@ -106,6 +115,9 @@ char *shortTypeStr(SYMBOL *tmp)
         else if(cur->gType == sliceType)
         {
             strcat(typename, "[]");
+        }
+        else{
+            strcat(typename, cur->name);
         }
         cur = cur->val.arg;//get next
     }
@@ -119,9 +131,11 @@ char *longTypeStr(SYMBOL *tmp)
     typename = strcpy(typename, "");
     SYMBOL *cursym = tmp;
     TYPE *cur = tmp->t;
+    if(cur->gType == nilType)
+        return typename;
     while(true)
     {
-        if(cur == NULL)
+        if(cur == NULL || cur->gType == nilType)
         {//move up hierarchy
             if(cursym->kind == funcSym)
             {
@@ -131,6 +145,10 @@ char *longTypeStr(SYMBOL *tmp)
             else{
                 if(strcmp(cursym->val.parentType->name, " ") == 0){
                     //next is the base type, end recursion now
+                    strcat(typename, cursym->name);
+                    return typename;
+                }
+                if(cursym->val.parentType->kind == structSym){
                     strcat(typename, cursym->name);
                     return typename;
                 }
@@ -374,27 +392,41 @@ void addPredefinitions(symTable *s)
     tmp->val.parentType = base;
     tmp->t = NULL;
     putType(tmp,s);
-    
+
     *name = malloc(sizeof(char)*10);
-    *name = "cap"
-    *tmp = makeSymbol(name, funcSym, 1);
-    tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
-    tmp->t = NULL;
-    putFunc(tmp,s);
-    
+    *name = "true"
+    *tmp = makeSymbol(name, varSym, 0);
+    tmp->val.parentType = getSymbol(s, "bool", typeSym);
+    tmp->t = makeTYPE(baseType, 0, "bool", NULL);
+    putType(tmp,s);
+
     *name = malloc(sizeof(char)*10);
-    *name = "len"
-    *tmp = makeSymbol(name, funcSym, 1);
-    tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
-    tmp->t = NULL;
-    putFunc(tmp,s);
+    *name = "false"
+    *tmp = makeSymbol(name, varSym, 0);
+    tmp->val.parentType = getSymbol(s, "bool", typeSym);
+    tmp->t = makeTYPE(baseType, 0, "bool", NULL);
+    putType(tmp,s);
     
-    *name = malloc(sizeof(char)*10);
-    *name = "append"
-    *tmp = makeSymbol(name, funcSym, 1);
-    tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
-    tmp->t = NULL;
-    putFunc(tmp,s);
+    // *name = malloc(sizeof(char)*10);
+    // *name = "cap"
+    // *tmp = makeSymbol(name, funcSym, 1);
+    // tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
+    // tmp->t = NULL;
+    // putFunc(tmp,s);
+    
+    // *name = malloc(sizeof(char)*10);
+    // *name = "len"
+    // *tmp = makeSymbol(name, funcSym, 1);
+    // tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
+    // tmp->t = NULL;
+    // putFunc(tmp,s);
+    
+    // *name = malloc(sizeof(char)*10);
+    // *name = "append"
+    // *tmp = makeSymbol(name, funcSym, 1);
+    // tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
+    // tmp->t = NULL;
+    // putFunc(tmp,s);
 }
 /*First will build a symbol table for the program, then call typechecking functions*/
 void checkProg(PROGRAM *prog)
@@ -410,10 +442,45 @@ void checkProg(PROGRAM *prog)
 void symProg(PROGRAM *prog)
 {
     addPredefinitions(prog->globalScope);
+    if(symbolPrint == 1)
+    {
+        printf("{\n");
+        prettyTabs(1);
+        printf("int[type] = int\n")
+        prettyTabs(1);
+        printf("float64[type] = float64\n");
+        prettyTabs(1);
+        printf("bool[type] = bool\n");
+        prettyTabs(1);
+        printf("string[type] = string]\n");
+        prettyTabs(1);
+        printf("true[constant] = bool\n");
+        prettyTabs(1);
+        printf("false[constant] = bool\n");
+    }
     symDecl(prog->declList, prog->globalScope);
+    if(symbolPrint == 1)
+    {
+        printf("}\n");
+    }
 }
-
-void symDecl(DECLARATION *decl, symTable *table)
+char *getName(TYPE *t)
+{
+    if(t == NULL)
+    {
+        return "";
+    }
+    if(t->name == NULL)
+    {
+        return getName(t->val.arg);
+    }
+    else
+    {
+        return t->name;
+    }
+    
+}
+void symDecl(DECLARATION *decl, symTable *table, int depth)
 {
     if(decl == NULL)
     {
@@ -428,32 +495,77 @@ void symDecl(DECLARATION *decl, symTable *table)
     {
         case typeDecl:
             SYMBOL *tmp = makeSymbol(decl->identifier, typeSym, 1);
-            SYMBOL *parent = getSymbol(table, decl->t->name, typeSym);
+            char *parentname = getName(decl->t);
+            SYMBOL *parent = getSymbol(table, parentname, typeSym);
+            if(parent == NULL)
+            {
+                fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
+                exit(1);
+            }
             tmp->val.parentType = parent;
             tmp->t = decl->t;
             putType(tmp, table, decl->lineno);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("%s[type] = %s -> %s\n", decl->identifier, decl->identifier, lookupType(table, decl->identifier, decl->lineno, 1));
+            }
             break;
         case varDecl:
             SYMBOL *tmp = makeSymbol(decl->identifier, varSym, 1);
-            SYMBOL *parent = getSymbol(table, decl->t->name, varSym);
+            char *parentname = getName(decl->t);
+            SYMBOL *parent = getSymbol(table, parentname, typeSym);
+            if(parent == NULL)
+            {
+                fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
+                exit(1);
+            }
             tmp->val.parentType = parent;
             tmp->t = decl->t;
             putType(tmp, table, decl->lineno);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("%s[variable] = %s\n", decl->identifier, lookupVar(table, decl->identifier, decl->lineno, 1));
+            }
             break;
         case structDecl:
             SYMBOL *tmp = makeSymbol(decl->identifier, structSym, 1);
             SYMBOL *bodyList = symStructHelper(decl->val.body, table);
             tmp->val.structFields = bodyList;
             putType(tmp, table, decl->lineno);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("%s[type] = %s -> struct {\n", decl->identifier, decl->identifier);
+                printStructFields(table, bodyList);
+                printf("}\n");
+            }
             break;
         case funcDecl:
             SYMBOL *tmp = makeSymbol(decl->identifier, funcSym, 1);
-            SYMBOL *typeref = getSymbol(table, decl->val.f->returnt->name, typeSym);
+            char *typename = getName(decl->val.f->returnt);
+            SYMBOL *typeref = getSymbol(table, typename, typeSym);
+            if(parent == NULL && strlen(typename) != 0)
+            {
+                fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, typename);
+                exit(1);
+            }
             SYMBOL *paramList = symFuncHelper(decl->val.f->params, table);
             tmp->val.func.funcParams = paramList;
             tmp->val.func.returnTypeRef = typeref;
             tmp->t = decl->val.f->returnt;
             putFunc(tmp, table, decl->lineno);
+
+            //main and init check
+            if(strcmp(decl->identifier, "main") == 0 || strcmp(decl->identifier, "init") == 0)
+            {
+                if(tmp->t->gType != nilType || paramList != NULL)
+                {
+                    fprintf(stderr, "Error: (line %d) function %s must have a void return type and no arguments.\n", decl->lineno, decl->identifier);
+                    exit(1);
+                }
+            }
 
             symTable *subTable = initScopeTable(table);
             while(paramList != NULL)
@@ -461,11 +573,74 @@ void symDecl(DECLARATION *decl, symTable *table)
                 putVar(paramList, subTable, decl->lineno);
                 paramList = paramList->next;
             }
-            symStmt(decl->val.f->body, subTable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("%s[function] = (", decl->val.f->identifier);
+                printFnArgs(table, paramList);
+                prettyTabs(depth);
+                printf("{\n");
+                printFnScope(table, paramList, depth+1);
+            }
+            symStmt(decl->val.f->body, subTable, depth+1);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break;
         case funcCall:
             break; //handled in expr function
     }
+}
+void printType(TYPE *t)
+{
+    TYPE *tmp = t;
+    while(tmp != NULL && tmp->gType != nilType)
+    {
+        if(tmp->gType == arrayType){
+            printf("[%d]", tmp->size);
+        }
+        else if(tmp->gType == sliceType)
+        {
+            printf("[]");
+        }
+        else{
+            printf("%s;", tmp->name);
+        }
+        tmp = tmp->val.arg;
+    }
+}
+void printFnArgs(symTable *table, SYMBOL *args)
+{
+    if(args != NULL)
+    {
+        printFnArgs(table, args->next);
+        printf(", ");
+        printType(args->t);
+    }
+
+}
+void printFnScope(symTable *table, SYMBOL *args, int depth)
+{
+    if(args != NULL)
+    {
+        printFnScope(table, args->next)
+        prettyTabs(depth);
+        printf("%s[variable] = ", args->name);
+        prettyType(args->t);
+        preintf("\n");
+    }
+}
+void printStructFields(symTable *table, SYMBOL *fields)
+{
+    if(fields != NULL)
+    {
+        printStructFields(table, fields->next);
+        printf(", ");
+    }
+    printf("%s ", fields->name);
+    printType(fields->t);
 }
 /*helps construct struct body reference, these are all var declarations in GoLite*/
 SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
@@ -498,7 +673,7 @@ SYMBOL *symFuncHelper(DECLARATION *params, symTable *table)
     return tmp;
 }
 
-void symStmt(STATEMENT *stmt, symTable *table)
+void symStmt(STATEMENT *stmt, symTable *table, int depth)
 {
     if(stmt == NULL)
     {
@@ -506,7 +681,7 @@ void symStmt(STATEMENT *stmt, symTable *table)
     }
     if(stmt->next != NULL)
     {
-        symStmt(stmt->next, table);
+        symStmt(stmt->next, table, depth);
     }
     switch(stmt->kind){
         case assignS:
@@ -541,7 +716,7 @@ void symStmt(STATEMENT *stmt, symTable *table)
                     {//keep track of new declared variables
                         newLocals++;
                         
-                        symQDecl(cur, table);
+                        symQDecl(cur, table, depth);
                         symExp(cur->val.assignment.value, table, stmt->lineno);
                     }  
                     else{
@@ -561,35 +736,109 @@ void symStmt(STATEMENT *stmt, symTable *table)
                 fprintf(stderr, "Error: (line %d) no new variables declared in quick declaration.\n", stmt->lineno);
                 exit(1);
             }
+            if(symbolPrint == 1)
+            {
+                printQDeclHelper(table, stmt, depth);
+            }
             break;
         case blockS:
             symTable *subtable = initScopeTable(table);
-            symStmt(stmt->val.body, subtable, stmt->lineno);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
+            symStmt(stmt->val.body, subtable, depth+1);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break;
         case ifS:
         case elifS:
             symTable *subtable = initScopeTable(table);
-            symStmt(stmt->val.conditional.optDecl, subTable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
+            symStmt(stmt->val.conditional.optDecl, subTable, depth+1);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth+1);
+                printf("{\n");
+            }
             symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
-            symStmt(stmt->val.conditional.body, subtable);
-            symStmt(stmt->val.conditional.elif, table);
+            symStmt(stmt->val.conditional.body, subtable, depth+2);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth+1);
+                printf("}\n");
+            }
+            symStmt(stmt->val.conditional.elif, table, depth+1);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break;
         case elseS:
             symTable *subtable = initScopeTable(table);
             symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
-            symStmt(stmt->val.conditional.body, subtable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
+            symStmt(stmt->val.conditional.body, subtable, depth+1);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break;
         case forS:
             symTable *subtable = initScopeTable(table);
-            symStmt(stmt->val.conditional.optDecl, subTable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
+            symStmt(stmt->val.conditional.optDecl, subTable, depth+1);
             symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
-            symStmt(stmt->val.conditional.body, subtable);
-            symStmt(stmt->val.conditional.elif, subtable);//may depend on quick declarations here
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth+1);
+                printf("{\n");
+            }
+            symStmt(stmt->val.conditional.body, subtable, depth+2);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth+1);
+                printf("}\n");
+            }
+            symStmt(stmt->val.conditional.elif, subtable, depth+1);//may depend on quick declarations here
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break; 
         case whileS:
             symTable *subtable = initScopeTable(table);
             symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
             symStmt(stmt->val.conditional.body, subtable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break; 
         case printS:
             symExp(stmt->val.iostmt.condition, table, stmt->lineno);
@@ -600,24 +849,56 @@ void symStmt(STATEMENT *stmt, symTable *table)
             break;
         case switchS:
             symTable *subtable = initScopeTable(table);
-            symStmt(stmt->val.switchBody.optDecl, subTable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
+            symStmt(stmt->val.switchBody.optDecl, subTable, depth+1);
+            
             symExp(stmt->val.switchBody.condition, subtable, stmt->lineno);
-            symStmt(stmt->val.switchBody.cases, subtable);
+            symStmt(stmt->val.switchBody.cases, subtable, depth+1);
+            
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break; 
         case caseS:
             symExp(stmt->caseBody.condition, table, stmt->lineno);
             symTable *subtable = initScopeTable(table);
-            symStmt(stmt->caseBody.body, subTable);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("{\n");
+            }
+            symStmt(stmt->caseBody.body, subTable, depth+1);
+            if(symbolPrint == 1)
+            {
+                prettyTabs(depth);
+                printf("}\n");
+            }
             break;
         case breakS://nothing to do
         case continueS://nothing to do
             break;
         case declS:
-            symDecl(stmt->val.declaration, table);
+            symDecl(stmt->val.declaration, table, depth);
             break;
     }
 }
 
+void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth)
+{
+    if(stmt == NULL)
+    {
+        return;
+    }
+    printQDeclHelper(table, stmt->val.assignment.chain, depth);
+    prettyTabs(depth);
+    printf("%s[variable] = <infer>\n", stmt->val.assignment.identifier->val.identifier);
+}
 void symQDecl(STATEMENT *cur, symTable *table)
 {
     SYMBOL *tmp = makeSymbol(cur->val.assignment.identifier->val.identifier, varSym, 1);

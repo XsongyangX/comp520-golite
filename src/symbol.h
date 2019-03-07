@@ -4,6 +4,7 @@
 #include "tree.h"
 
 enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
+void prettyTabs(int n);
 int Hash(char *str);
 symTable *initSymbolTable();
 symTable *initScopeTable(symTable *parent);
@@ -22,10 +23,15 @@ char *longTypeStr(SYMBOL *tmp);
 
 void symProg(PROGRAM *prog);
 void symDecl(DECLARATION *decl, symTable *table);
+void printStructFields(symTable *table, SYMBOL *fields);
+void printType(TYPE *t);
+void printFnArgs(symTable *table, SYMBOL *args);
+void printFnScope(symTable *table, SYMBOL *args, int depth);
 SYMBOL *symStructHelper(DECLARATION *body, symTable *table);
 SYMBOL *symFuncHelper(DECLARATION *params, symTable *table);
-void symStmt(STATEMENT *stmt, symTable *table);
-void symQDecl(STATEMENT *cur, symTable *table);
+void symStmt(STATEMENT *stmt, symTable *table, int depth);
+void symQDecl(STATEMENT *cur, symTable *table, int depth);
+void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 
 void symExp(EXP *exp, symTable *table);
 
