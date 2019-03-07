@@ -12,13 +12,7 @@ typedef struct TYPE TYPE;
 typedef struct symTable symTable;
 
 //prints n tabs
-void prettyTabs(int n)
-{
-    for(int i = 0; i < n; i++)
-    {
-        printf("\t");
-    }
-}
+void prettyTabs(int n);
 enum ExpressionKind{emptyExp, //NULL
                     intExp, 
                     floatExp, 
