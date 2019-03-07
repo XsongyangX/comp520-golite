@@ -593,15 +593,23 @@ void symDecl(DECLARATION *decl, symTable *table, int depth)
     switch(decl->d)
     {
         case typeDecl:
+            if(decl->chain != NULL)
+                symDecl(decl->chain, table, depth);
             symTypeDecl(decl, table, depth);
             break;
         case varDecl:
+            if(decl->chain != NULL)
+                symDecl(decl->chain, table, depth);
             symVarDecl(decl, table, depth);
             break;
         case structDecl:
+            if(decl->chain != NULL)
+                symDecl(decl->chain, table, depth);
             symStructDecl(decl, table, depth);
             break;
         case funcDecl:
+            if(decl->chain != NULL)
+                symDecl(decl->chain, table, depth);
             symFuncDecl(decl, table, depth);
             break;
         case funcCall:
