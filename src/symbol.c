@@ -653,9 +653,9 @@ void printStructFields(symTable *table, SYMBOL *fields)
     {
         printStructFields(table, fields->next);
         printf(", ");
+        printf("%s ", fields->name);
+        printType(fields->t);
     }
-    printf("%s ", fields->name);
-    printType(fields->t);
 }
 /*helps construct struct body reference, these are all var declarations in GoLite*/
 SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
