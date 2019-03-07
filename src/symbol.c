@@ -374,63 +374,63 @@ void addPredefinitions(symTable *s)
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "float64");
-    *tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym, 0);
     tmp->val.parentType = base;
     tmp->t = NULL;
     putType(tmp,s,0);
     
     name = malloc(sizeof(char)*10);
     strcpy(name, "bool");
-    *tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym, 0);
     tmp->val.parentType = base;
     tmp->t = NULL;
     putType(tmp,s,0);
     
     name = malloc(sizeof(char)*10);
     strcpy(name, "string");
-    *tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym, 0);
     tmp->val.parentType = base;
     tmp->t = NULL;
     putType(tmp,s,0);
     
     name = malloc(sizeof(char)*10);
     strcpy(name, "rune");
-    *tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym, 0);
     tmp->val.parentType = base;
     tmp->t = NULL;
     putType(tmp,s,0);
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "true");
-    *tmp = makeSymbol(name, varSym, 0);
+    tmp = makeSymbol(name, varSym, 0);
     tmp->val.parentType = getSymbol(s, "bool", typeSym);
     tmp->t = makeTYPE(baseType, 0, "bool", NULL);
     putType(tmp,s,0);
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "false");
-    *tmp = makeSymbol(name, varSym, 0);
+    tmp = makeSymbol(name, varSym, 0);
     tmp->val.parentType = getSymbol(s, "bool", typeSym);
     tmp->t = makeTYPE(baseType, 0, "bool", NULL);
     putType(tmp,s,0);
     
-    // *name = malloc(sizeof(char)*10);
-    // *name = "cap"
-    // *tmp = makeSymbol(name, funcSym, 1);
+    // name = malloc(sizeof(char)*10);
+    // name = "cap"
+    // tmp = makeSymbol(name, funcSym, 1);
     // tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
     // tmp->t = NULL;
     // putFunc(tmp,s,0);
     
     // *name = malloc(sizeof(char)*10);
-    // *name = "len"
-    // *tmp = makeSymbol(name, funcSym, 1);
+    // name = "len"
+    // tmp = makeSymbol(name, funcSym, 1);
     // tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
     // tmp->t = NULL;
     // putFunc(tmp,s,0);
     
-    // *name = malloc(sizeof(char)*10);
-    // *name = "append"
-    // *tmp = makeSymbol(name, funcSym, 1);
+    // name = malloc(sizeof(char)*10);
+    // name = "append"
+    // tmp = makeSymbol(name, funcSym, 1);
     // tmp->val.funcRef = makeFCTN(0, name, 0, NULL, makeTYPE(0, 0, blankname), NULL);
     // tmp->t = NULL;
     // putFunc(tmp,s,0);
