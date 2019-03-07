@@ -3,14 +3,7 @@
 #include "pretty.h"
 #include <stdlib.h>
 
-//prints n tabs
-void prettyTabs(int n)
-{
-    for(int i = 0; i < n; i++)
-    {
-        printf("\t");
-    }
-}
+
 //prints a program
 void prettyPROG(PROGRAM *my_prog)
 {

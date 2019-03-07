@@ -11,6 +11,14 @@ typedef struct TYPE TYPE;
 #define HASHSIZE 317
 typedef struct symTable symTable;
 
+//prints n tabs
+void prettyTabs(int n)
+{
+    for(int i = 0; i < n; i++)
+    {
+        printf("\t");
+    }
+}
 enum ExpressionKind{emptyExp, //NULL
                     intExp, 
                     floatExp, 

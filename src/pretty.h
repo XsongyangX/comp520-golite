@@ -3,7 +3,6 @@
 
 #include "tree.h"
 
-void prettyTabs(int n);
 void prettyPROG(PROGRAM *my_prog);
 void prettyFctn(FUNCTION *fn, int t);
 void prettyFctnDecl(DECLARATION *sd, int printComma);

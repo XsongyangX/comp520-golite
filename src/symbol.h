@@ -4,7 +4,6 @@
 #include "tree.h"
 
 enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
-void prettyTabs(int n);
 int Hash(char *str);
 symTable *initSymbolTable();
 symTable *initScopeTable(symTable *parent);

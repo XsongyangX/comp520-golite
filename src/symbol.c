@@ -4,14 +4,6 @@
 #include "symbol.h"
 
 extern int symbolPrint;
-//prints n tabs
-void prettyTabs(int n)
-{
-    for(int i = 0; i < n; i++)
-    {
-        printf("\t");
-    }
-}
 /*taken from the JOOS compiler*/
 int Hash(char *str)
 {
