@@ -11,7 +11,8 @@ void prettyPROG(PROGRAM *my_prog)
     {
         printf("package %s;\n", my_prog->package);
     }
-    prettyDecl(my_prog->declList, 0, 0);
+    if(my_prog->declList != NULL)
+        prettyDecl(my_prog->declList, 0, 0);
 }
 //prints a function list
 void prettyFctn(FUNCTION *fn, int t)
@@ -50,7 +51,7 @@ void prettyFctnDecl(DECLARATION *sd, int printComma)
 void prettyType(TYPE *t)
 {
     if(t == NULL)
-	return;
+	    return;
     switch(t->gType){
         case nilType:
             break;
@@ -73,32 +74,32 @@ void prettyType(TYPE *t)
         case structType:
         case userType:
         default:
-            printf("%s", t->name);
+            if(t->name != NULL)
+            {printf("%s", t->name);}
     }
 }
 
 //prints a list of Declarations
 void prettyDecl(DECLARATION *d, int t, int isInStruct)
 {
+    if(d->chain != NULL){
+        prettyDecl(d->chain, t, isInStruct);
+    }
     if(d->next != NULL)
     {
         prettyDecl(d->next, t, isInStruct);
     }
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
-	        if(d->chain != NULL)
-		        prettyDecl(d->chain, t, isInStruct);
             printf("type %s ", d->identifier);
             prettyType(d->t);
             printf("\n");
             break;
         case varDecl:
-            if(d->chain != NULL)
-                prettyDecl(d->chain, t, isInStruct);
             if(!isInStruct)
                 printf("var ");
             printf("%s ", d->identifier);
-            if(strlen(d->t->name) != 0)
+            if(d->t != NULL)
             {
                 prettyType(d->t);
             }
@@ -110,11 +111,9 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
 	        printf("\n");
             break;
         case structDecl:
-            if(d->chain != NULL)
-                prettyDecl(d->chain, t, isInStruct);
             printf("type %s struct {\n", d->identifier);
-	    
-            prettyDecl(d->val.body, t+1, 1);
+            if(d->val.body != NULL)
+                prettyDecl(d->val.body, t+1, 1);
             prettyTabs(t);
             printf("}\n");
             break;
@@ -220,7 +219,7 @@ void prettyStmt(STATEMENT *s, int t)
         case exprS:
             prettyTabs(t);
             prettyExp(s->val.expression);
-	    printf("\n");
+	        printf("\n");
             break;
         case returnS:
             prettyReturn(s,t);
@@ -236,7 +235,7 @@ void prettyStmt(STATEMENT *s, int t)
             break;
         case declS:
             prettyDecl(s->val.declaration,t,0);
-	    printf("\n");
+	        printf("\n");
             break;
         case caseS://this should never be executed
             prettyCase(s,t);
@@ -501,9 +500,9 @@ void prettyExp(EXP *e)
         case floatExp:
             printf("%f", e->val.floatLiteral);
             break;
-	case rawstrExp:
-	    prettyRawStr(e->val.strLiteral);
-	    break;
+        case rawstrExp:
+            prettyRawStr(e->val.strLiteral);
+	        break;
         case strExp:
             printf("%s", e->val.strLiteral);
             break;
@@ -707,22 +706,22 @@ void prettyExp(EXP *e)
             break;
         case funcExp:
             printf("%s(", e->val.fn->identifier);
-	    if(e->val.fn->params->val.fnCallBlock != NULL)
-            	prettySDeclFn(e->val.fn->params->val.fnCallBlock);
+	        prettySDeclFn(e->val.fn->params->val.fnCallBlock);
             printf(")");
             break;
-	case runeExp:
-        if(e->val.runeLiteral == '\\')
-        {
-            printf("'\\\\'");
-        }
-        else
-	        printf("'%c'",e->val.runeLiteral);
+        case runeExp:
+            if(e->val.runeLiteral == '\\')
+            {
+                printf("'\\\\'");
+            }
+            else
+                printf("'%c'",e->val.runeLiteral);
     }
 }
 //helper for function case in prettyExp
 void prettySDeclFn(EXP *s)
 {
+    if(s == NULL) return;
     if(s->val.expblock.next != NULL)
     {
         prettySDeclFn(s->val.expblock.next);

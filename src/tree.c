@@ -360,6 +360,7 @@ DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs, int lineno
     d->t = t;
     d->val.right = rhs;
     d->next = NULL;
+    d->chain = NULL;
     return d;
 }
 /*makes a declaration node with no rhs
@@ -373,6 +374,7 @@ DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t, int lineno)
     d->t = t;
     d->val.right = NULL;
     d->next = NULL;
+    d->chain = NULL;
     return d;
 }
 /*makes a declaration with no type declared
@@ -387,8 +389,10 @@ DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysi
     d->t->name = NULL;
     d->t->gType = gtype;
     d->t->size = arraysize;
+    d->t->val.arg = NULL;
     d->val.right = rhs;
     d->next = NULL;
+    d->chain = NULL;
     return d;
 }
 /*makes a declaration node for a struct definition
@@ -402,8 +406,10 @@ DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body, int lineno)
     d->t = malloc(sizeof(TYPE));
     d->t->name = identifier;
     d->t->gType = structType;
+    d->t->val.arg = NULL;
     d->val.body = body;
     d->next = NULL;
+    d->chain = NULL;
     return d;
 }
 /*makes a declaration node for a function
@@ -415,6 +421,7 @@ DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f, int lineno)
     d->d = funcDecl;
     d->val.f = f;
     d->next = next;
+    d->chain = NULL;
     return d;
 }
 
@@ -654,6 +661,7 @@ DECLARATION *makeDECL_type(char* identifier, TYPE *typeNode, int lineno){
     d->identifier = identifier;
     d->val.right = NULL;
     d->next = NULL;
+    d->chain = NULL;
     return d;
 }
 
@@ -750,7 +758,7 @@ STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps){
     }
     else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
         STATEMENT *nextS = malloc(sizeof(STATEMENT));
-        nextS = makeSTMT_blockassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
+        nextS = makeSTMT_blockqassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
         s = makeSTMT_qdecl(lineno, ids->val.expblock.value, exps->val.expblock.value);
         s->val.assignment.chain = nextS;
         return s;
@@ -766,6 +774,8 @@ DECLARATION *makeDECL_fnCallArgs(EXP *args)
     DECLARATION *d = malloc(sizeof(DECLARATION));
     d->d = funcCall;
     d->val.fnCallBlock = args;
+    d->chain = NULL;
+    d->next = NULL;
     return d;
 }
 /*Simple functions to get to the bottom of subtrees.
