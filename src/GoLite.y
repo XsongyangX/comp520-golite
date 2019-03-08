@@ -151,7 +151,7 @@ void yyerror(const char *s) {
 %left tEQ tNEQ 
 %left tGEQ tLEQ '>' '<'
 %left '+' '-'
-%left '*' '/' '%'
+%left '*' '/' '%' NONUNARY
 %left UNARY
 
 /* Start token (by default if this is missing it takes the first production */
@@ -183,7 +183,7 @@ progdefs        : {$$ = NULL;}
                 ;
 
 topdecl         : dec { $$ = $1;}
-                | funcdef { $$ = makeDECL_fn(NULL, $1); }
+                | funcdef { $$ = makeDECL_fn(NULL, $1, yylineno); }
                 ;
 
 /* Expressions of all kinds. Expands to trm for precedence reasons. Other predecence
@@ -230,20 +230,17 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
 		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
-                | tIDENTIFIER {$$ = makeEXP_id($1);}
                 | access {$$ = $1;}
                 ;
-
-access          : access '.' tIDENTIFIER {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | funccall {  $$ = $1;}
-                | access '[' exp ']' {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | access '[' exp ':' exp ']' {$$ = makeEXP_element($1, makeEXP_range($3, $5));}
-                | tIDENTIFIER '.' tIDENTIFIER {EXP *e = makeEXP_id($1); $$ = makeEXP_id($3); $$ = makeEXP_invoc(e,$$);}
-                | tIDENTIFIER '[' exp ']' {EXP *e = makeEXP_id($1); $$ = makeEXP_element(e, makeEXP_index($3));}
-                | tIDENTIFIER '[' exp ':' exp ']' {EXP *e = makeEXP_id($1); $$ = makeEXP_element(e, makeEXP_range($3, $5));}
+                
+access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
+                | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
+                | funccall %prec UNARY {$$ = $1;}
+                | '(' access ')' %prec UNARY {$$ = $2;}
+                | tIDENTIFIER %prec NONUNARY {$$ = makeEXP_id($1);}
                 ;
 
-funccall        : tIDENTIFIER '(' explist ')' {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
+funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
                 
                 | access '(' explist ')' {  makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); $$ = $1;}
                 ;
@@ -262,7 +259,7 @@ idents          : idents ',' tIDENTIFIER %prec UNARY {$$ = makeEXP_idblock($3, $
                 ;
 
 /* a block of lists of identifiers. Used in the distributed type () statements. */
-blockidents     : blockidents tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $2, $3); $$->next = $1;}
+blockidents     : blockidents tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $2, $3, yylineno); $$->next = $1;}
 		| blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); $$->next = $1;}
                 | {$$ = NULL;}
                 ;
@@ -275,8 +272,8 @@ dec             : tVAR vardec {$$ = $2;}
 
 vardec          : idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
                 | idents opttype '=' exps ';' {$$ = makeDECL_block(yylineno, $1, $2, $4);}
-                | tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $1, $2);}
-                | tIDENTIFIER opttype '=' exp ';' {$$ = makeDECL(1, $1, $2, $4);}
+                | tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $1, $2, yylineno);}
+                | tIDENTIFIER opttype '=' exp ';' {$$ = makeDECL(1, $1, $2, $4, yylineno);}
                 ;
 /* A block of things put into a distributed var () statement */
 decdistributed  : decdistributed vardec {$$ = $2; $$->chain = $1;}
@@ -284,15 +281,15 @@ decdistributed  : decdistributed vardec {$$ = $2; $$->chain = $1;}
                 ;
 
 /* Used for declaring user-defined types */
-typedec         : tTYPE tIDENTIFIER type {$$ = makeDECL_type($2, $3);}
-                | tTYPE tIDENTIFIER tSTRUCT '{' blockidents '}' {$$ = makeDECL_struct($2, $5);}
+typedec         : tTYPE tIDENTIFIER type {$$ = makeDECL_type($2, $3, yylineno);}
+                | tTYPE tIDENTIFIER tSTRUCT '{' blockidents '}' {$$ = makeDECL_struct($2, $5, yylineno);}
                 | tTYPE '(' typedistributed ')' {$$ = $3;}
                 ;
 
 /* Used for declaring user defined types with the distributed type () syntax */
-typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, $3); $$->chain = $1;}
+typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, $3, yylineno); $$->chain = $1;}
                 | typedistributed tIDENTIFIER tSTRUCT '{' blockidents '}' ';'
-                    { $$ = makeDECL_struct($2, $5); $$->chain = $1;}
+                    { $$ = makeDECL_struct($2, $5, yylineno); $$->chain = $1;}
                 | {$$ = NULL;}
                 ;
 
@@ -306,7 +303,7 @@ funcdef         : tFUNC tIDENTIFIER '(' typelist ')' opttype '{' stmts '}' ';'
 /* Defines the syntax for types in function headers */
 typelist        : typelist ',' typelist {$$ = $3; findBottomDECL($$)->next = $1;}
                 | idents type {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
-                | tIDENTIFIER type {$$ = makeDECL_norhs(1, $1, $2);}
+                | tIDENTIFIER type {$$ = makeDECL_norhs(1, $1, $2, yylineno);}
                 ;
 
 opttype         : type {$$ = $1;}
@@ -315,8 +312,8 @@ opttype         : type {$$ = $1;}
 
 /* Defines the various kinds of types that can be used.*/
 type            : tIDENTIFIER {$$ = makeTYPE(baseType, 1, $1, NULL);}
-                | '[' ']' tIDENTIFIER {$$ = makeTYPE(sliceType, 0, $3, NULL);}
-                | '[' tINTLITERAL ']' tIDENTIFIER {$$ = makeTYPE(arrayType, $2, $4, NULL);}
+                | '[' ']' type {$$ = makeTYPE(sliceType, 0, NULL, $3);}
+                | '[' tINTLITERAL ']' type {$$ = makeTYPE(arrayType, $2, NULL, $4);}
                 ;
 
 /* A block of statements */

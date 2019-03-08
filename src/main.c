@@ -7,10 +7,12 @@ Main file of the GoLite compiler
 #include "tree.h"
 #include "pretty.h"
 #include "weeder.h"
+#include "symbol.h"
 
 void yyparse();
 int yylex();
 int isToken;
+int symbolPrint;
 PROGRAM *my_prog;
 
 int main(int argc, char** argv)
@@ -56,15 +58,16 @@ int main(int argc, char** argv)
 		weedRoot(my_prog);
 		prettyPROG(my_prog); 
 		return 0;
-	}/*
+	}
 	else if ( 0 == strcmp(argv[1], "symbol"))
 	{
 		isToken = 0;
-		g_symbols = 1;
+		symbolPrint = 1;
 		yyparse();
-		symbolFromProgramStart(root);
+		weedRoot(my_prog);
+		checkProg(my_prog);
 		return 0;
-	}
+	}/*
 	else if ( 0 == strcmp(argv[1], "typecheck"))
 	{
 		isToken = 0;

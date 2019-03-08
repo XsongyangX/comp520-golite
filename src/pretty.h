@@ -3,12 +3,11 @@
 
 #include "tree.h"
 
-void prettyTabs(int n);
 void prettyPROG(PROGRAM *my_prog);
 void prettyFctn(FUNCTION *fn, int t);
 void prettyFctnDecl(DECLARATION *sd, int printComma);
 void prettyType(TYPE *t);
-void prettyDecl(DECLARATION  *d, int t);
+void prettyDecl(DECLARATION  *d, int t, int isInStruct);
 void prettySDecl(STATEMENT  *d);
 void prettySDeclId(STATEMENT  *d);
 void prettySDeclVal(STATEMENT *d);

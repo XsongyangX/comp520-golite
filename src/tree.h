@@ -11,6 +11,8 @@ typedef struct TYPE TYPE;
 #define HASHSIZE 317
 typedef struct symTable symTable;
 
+//prints n tabs
+void prettyTabs(int n);
 enum ExpressionKind{emptyExp, //NULL
                     intExp, 
                     floatExp, 
@@ -26,8 +28,6 @@ enum ExpressionKind{emptyExp, //NULL
                     notExp, //!.
                     posExp, //+.
                     negExp, //-.
-                    ptrExp, //*. // NOT ALLOWED IN GOLITE
-                    addrExp, //&. // NOT ALLOWED IN GOLITE
                     parExp, //(.)
                     eqExp, //.==.
                     neqExp, //.!=.
@@ -46,7 +46,6 @@ enum ExpressionKind{emptyExp, //NULL
                     xorExp, //.^.
                     lshiftExp, //.<<.
                     rshiftExp, //.>>.
-                    rangeExp, //[.:.] NOT SUPPORTED IN GOLITE
                     indexExp, //[.]  e.g. arrays
                     elementExp, //for arrays and slices, e.g. identifier[x]
                     invocExp, //x.y
@@ -88,8 +87,27 @@ enum DeclarationType{typeDecl,
 					funcDecl,
 					funcCall
 					};
-/*fakeDecl are a construct that use the declaration
- data structure, but represent something else*/
+
+enum SymbolKind{nullSym, varSym, funcSym, typeSym, structSym};
+struct SYMBOL{
+    char *name;
+    enum SymbolKind kind;
+    TYPE *t;
+    int wasRedefined; //used to deal with int redeclerations, for instance
+    union{
+        SYMBOL *parentType;
+        SYMBOL *returnType;
+        SYMBOL *structFields;
+        struct {SYMBOL *funcParams; SYMBOL *returnTypeRef;} func;
+    } val;
+    struct SYMBOL *next;
+};
+struct symTable {
+    SYMBOL *varTable[HASHSIZE];
+    SYMBOL *typeTable[HASHSIZE];
+    SYMBOL *funcTable[HASHSIZE];
+    symTable *next;
+};
 
 
 /*By convention, simple values have size 1.
@@ -126,6 +144,7 @@ struct EXP{
 struct DECLARATION{//compound declarations should be broken down into individual declarations
     enum DeclarationType d;
     TYPE *t;
+    int lineno;
     char *identifier;
     union {
         EXP *right;
@@ -142,18 +161,17 @@ struct DECLARATION{//compound declarations should be broken down into individual
 // };
 struct FUNCTION{//parameters are referred to as a list of declarations where the 'right' field will be nil
     int lineno;
-    symTable *localSym;
+    symTable *localScope;
     char *identifier;
     int paramCount;
     DECLARATION *params;
     TYPE *returnt;
     STATEMENT *body;
-    FUNCTION *next;
 };
 struct STATEMENT{
     enum StatementKind kind;
     int lineno;
-    symTable *localSym;
+    symTable *localScope;
     union{
         struct{EXP *identifier; EXP *value; STATEMENT *chain;} assignment;
         struct{EXP *condition; STATEMENT *optDecl; STATEMENT *body; STATEMENT *elif;} conditional;//IF(,ELIF,ELSE) and FOR
@@ -168,6 +186,7 @@ struct STATEMENT{
 };
 struct PROGRAM{
     char *package;
+    symTable *globalScope;
     DECLARATION *declList;
 };
 
@@ -187,8 +206,6 @@ EXP *makeEXP_div(EXP *e1, EXP *e2);
 EXP *makeEXP_mod(EXP *e1, EXP *e2);
 EXP *makeEXP_pos(EXP *e1);
 EXP *makeEXP_neg(EXP *e1);
-EXP *makeEXP_ptr(EXP *e1);
-EXP *makeEXP_addr(EXP *e1);
 EXP *makeEXP_par(EXP *e1);
 EXP *makeEXP_eq(EXP *e1, EXP *e2);
 EXP *makeEXP_neq(EXP *e1, EXP *e2);
@@ -205,7 +222,6 @@ EXP *makeEXP_bor(EXP *e1, EXP *e2);
 EXP *makeEXP_xor(EXP *e1, EXP *e2);
 EXP *makeEXP_lshift(EXP *e1, EXP *e2);
 EXP *makeEXP_rshift(EXP *e1, EXP *e2);
-EXP *makeEXP_range(EXP *e1, EXP *e2);
 EXP *makeEXP_index(EXP *e2);
 EXP *makeEXP_element(EXP *e1, EXP *e2);
 EXP *makeEXP_invoc(EXP *e1, EXP *e2);
@@ -219,16 +235,16 @@ EXP *makeEXP_expblock(EXP *e, EXP *next);
 EXP *makeEXP_idblock(char *identifier, EXP *next);
 EXP *makeEXP_not(EXP *e1);
 
-DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs);
-DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t);
-DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs);
-DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body);
+DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs, int lineno);
+DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t, int lineno);
+DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs, int lineno);
+DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body, int lineno);
 //SDECLARATION *makeSDecl(EXP *e, char* declType, int gtype, int arraysize);
 DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps);
 DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t);
-DECLARATION *makeDECL_type(char *identifier, TYPE *typeNode);
+DECLARATION *makeDECL_type(char *identifier, TYPE *typeNode, int lineno);
 DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps);
-DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f);
+DECLARATION *makeDECL_fn(DECLARATION *next, FUNCTION *f, int lineno);
 DECLARATION *makeDECL_fnCallArgs(EXP *args);
 
 FUNCTION *makeFCTN(int lineno, char *identifier, int size, DECLARATION *params, TYPE *returnType, STATEMENT *body);
@@ -252,7 +268,7 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps);
 STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val);
 STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps);
 
-TYPE *makeTYPE(int gtype, int size, char *name, TYPE *arg);
+TYPE *makeTYPE(int gtype, int size, char *name, TYPE *ref);
 //TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args);
 
 
