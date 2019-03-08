@@ -50,6 +50,9 @@ void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 void symExp(EXP *exp, symTable *table, int lineno);
 
 void typeProg(PROGRAM *prog);
+void typeDecl(DECLARATION *decl);
+void typeStmt(STATEMENT *stmt);
+void typeExp(EXP *exp);
 
 
 
