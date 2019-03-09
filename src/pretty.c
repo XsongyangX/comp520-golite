@@ -3,14 +3,7 @@
 #include "pretty.h"
 #include <stdlib.h>
 
-//prints n tabs
-void prettyTabs(int n)
-{
-    for(int i = 0; i < n; i++)
-    {
-        printf("\t");
-    }
-}
+
 //prints a program
 void prettyPROG(PROGRAM *my_prog)
 {
@@ -18,13 +11,13 @@ void prettyPROG(PROGRAM *my_prog)
     {
         printf("package %s;\n", my_prog->package);
     }
-    prettyDecl(my_prog->declList, 0);
+    prettyDecl(my_prog->declList, 0, 0);
 }
 //prints a function list
 void prettyFctn(FUNCTION *fn, int t)
 {
     if(fn == NULL)
-	return;
+	    return;
     prettyTabs(t);
     printf("func %s(", fn->identifier);
     if(fn->params != NULL)
@@ -62,10 +55,20 @@ void prettyType(TYPE *t)
         case nilType:
             break;
         case arrayType:
-            printf("[%d]%s", t->size, t->name);
+            printf("[%d]", t->size);
+            if(t->name != NULL)
+            {printf("%s", t->name);}
+            else{
+                prettyType(t->val.arg);
+            }
             break;
         case sliceType:
-            printf("[]%s", t->name);
+            printf("[]");
+            if(t->name != NULL)
+            {printf("%s", t->name);}
+            else{
+                prettyType(t->val.arg);
+            }
             break;
         case structType:
         case userType:
@@ -75,24 +78,26 @@ void prettyType(TYPE *t)
 }
 
 //prints a list of Declarations
-void prettyDecl(DECLARATION *d, int t)
+void prettyDecl(DECLARATION *d, int t, int isInStruct)
 {
     if(d->next != NULL)
     {
-        prettyDecl(d->next, t);
+        prettyDecl(d->next, t, isInStruct);
     }
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
 	        if(d->chain != NULL)
-		        prettyDecl(d->chain, t);
+		        prettyDecl(d->chain, t, isInStruct);
             printf("type %s ", d->identifier);
             prettyType(d->t);
             printf("\n");
             break;
         case varDecl:
             if(d->chain != NULL)
-                prettyDecl(d->chain, t);
-            printf("var %s ", d->identifier);
+                prettyDecl(d->chain, t, isInStruct);
+            if(!isInStruct)
+                printf("var ");
+            printf("%s ", d->identifier);
             if(strlen(d->t->name) != 0)
             {
                 prettyType(d->t);
@@ -105,11 +110,11 @@ void prettyDecl(DECLARATION *d, int t)
 	        printf("\n");
             break;
         case structDecl:
-	    if(d->chain != NULL)
-		prettyDecl(d->chain, t);
+            if(d->chain != NULL)
+                prettyDecl(d->chain, t, isInStruct);
             printf("type %s struct {\n", d->identifier);
 	    
-            prettyDecl(d->val.body, t+1);
+            prettyDecl(d->val.body, t+1, 1);
             prettyTabs(t);
             printf("}\n");
             break;
@@ -133,7 +138,6 @@ void prettySDecl(STATEMENT *d)
             prettySDeclVal(d->val.assignment.chain);
         }
         prettyExp(d->val.assignment.value);
-        printf("; ");
     }
     else if(d->kind == assignS)
     {
@@ -146,11 +150,9 @@ void prettySDecl(STATEMENT *d)
             prettySDeclVal(d->val.assignment.chain);
         }
         prettyExp(d->val.assignment.value);
-        printf("; ");
     }
     else if(d->kind == exprS){
         prettyExp(d->val.expression);
-        printf("; ");
     }
     else{
         prettyStmt(d,0);
@@ -233,7 +235,7 @@ void prettyStmt(STATEMENT *s, int t)
             prettyContinue(t);
             break;
         case declS:
-            prettyDecl(s->val.declaration,t);
+            prettyDecl(s->val.declaration,t,0);
 	    printf("\n");
             break;
         case caseS://this should never be executed
@@ -354,12 +356,12 @@ void prettyFor(STATEMENT *s, int t)
     if(s->val.conditional.optDecl != NULL){
         prettySDecl(s->val.conditional.optDecl);//print loop var
     }
-    else{ printf("; ");}//print missing semi colon
+    printf("; ");//print missing semi colon
     if(s->val.conditional.condition != NULL)
     {prettyExp(s->val.conditional.condition);}//print loop condition
     printf("; ");
     if(s->val.conditional.elif != NULL)
-    {prettyStmt(s->val.conditional.elif, t);}//elif should be an expression stmt, typically an increment
+    {prettySDecl(s->val.conditional.elif);}//elif should be an expression stmt, typically an increment
     printf("{\n");
     prettyStmt(s->val.conditional.body, t+1);
     prettyTabs(t);
@@ -373,6 +375,7 @@ void prettyWhile(STATEMENT *s, int t)
     printf("for ");
     if(s->val.conditional.optDecl != NULL){
         prettySDecl(s->val.conditional.optDecl);//print loop var
+        printf(";");
     }
     if(s->val.conditional.condition != NULL)
     {prettyExp(s->val.conditional.condition);}//print loop condition
@@ -435,6 +438,7 @@ void prettySwitch(STATEMENT *s, int t)
     if (s->val.switchBody.optDecl != NULL)
     {
         prettySDecl(s->val.switchBody.optDecl);
+        printf(";");
     }
     if (s->val.switchBody.condition)
     {
@@ -560,16 +564,6 @@ void prettyExp(EXP *e)
             prettyExp(e->val.binary.rhs);
             printf(")");
             break;
-        case ptrExp:
-            printf("( *");
-            prettyExp(e->val.binary.rhs);
-            printf(")");
-            break;
-        case addrExp:
-            printf("( &");
-            prettyExp(e->val.binary.rhs);
-            printf(")");
-            break;
         case parExp:
             printf("(");
             prettyExp(e->val.binary.rhs);
@@ -678,13 +672,6 @@ void prettyExp(EXP *e)
             prettyExp(e->val.binary.rhs);
             printf(")");
             break;
-        case rangeExp:
-            printf("[");
-            prettyExp(e->val.binary.lhs);
-            printf(":");
-            prettyExp(e->val.binary.rhs);
-            printf("]");
-            break;
         case indexExp:
             printf("[");
             prettyExp(e->val.binary.rhs);
@@ -725,7 +712,12 @@ void prettyExp(EXP *e)
             printf(")");
             break;
 	case runeExp:
-	    printf("'%c'",e->val.runeLiteral);
+        if(e->val.runeLiteral == '\\')
+        {
+            printf("'\\\\'");
+        }
+        else
+	        printf("'%c'",e->val.runeLiteral);
     }
 }
 //helper for function case in prettyExp
