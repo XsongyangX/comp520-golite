@@ -30,8 +30,8 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth);
 void symDecl(DECLARATION *decl, symTable *table, int depth);
 void printStructFields(symTable *table, SYMBOL *fields);
 void printType(TYPE *t);
-void printFnArgs(symTable *table, SYMBOL *args);
-void printFnScope(symTable *table, SYMBOL *args, int depth);
+void printFnArgs(symTable *table, DECLARATION *args);
+void printFnScope(symTable *table, DECLARATION *args, int depth);
 SYMBOL *symStructHelper(DECLARATION *body, symTable *table);
 SYMBOL *symFuncHelper(DECLARATION *params, symTable *table);
 void symAssignStmt(STATEMENT *stmt, symTable *table, int depth);
@@ -50,6 +50,9 @@ void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 void symExp(EXP *exp, symTable *table, int lineno);
 
 void typeProg(PROGRAM *prog);
+void typeDecl(DECLARATION *decl);
+void typeStmt(STATEMENT *stmt);
+void typeExp(EXP *exp);
 
 
 
