@@ -93,10 +93,10 @@ enum DeclarationType{
 };
 
 
-/*By convention, simple values have size 1.
+/* By convention, simple values have size 1.
 Slices start with size 0.
 Name is NULL unless the type is user-defined, in which case it reflects
-the user-specificed name of the type.
+the user-specified name of the type.
 If the type is just a rename of another type, the val is one arg with a pointer to that type.
 If the type is a struct, the val is a linked list of Exps representing the members of the struct.*/
 struct TYPE{
@@ -108,6 +108,10 @@ struct TYPE{
         EXP *args;
     }val;
 };
+
+/* The expression nodes are have no side-effects in the parser.
+They are all well-assigned in the tree.c file. No need to worry 
+about things like $$->next here. */
 struct EXP{
     enum ExpressionKind kind;
     TYPE *t;
@@ -124,7 +128,9 @@ struct EXP{
     }val;
 };
 
-struct DECLARATION{//compound declarations should be broken down into individual declarations
+/* Compound declarations should be broken down into individual declarations
+*/
+struct DECLARATION{
     enum DeclarationType d;
     TYPE *t;
     int lineno;
