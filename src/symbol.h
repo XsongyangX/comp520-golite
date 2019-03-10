@@ -5,7 +5,36 @@
 
 #include "tree.h"
 
+enum SymbolKind{
+	nullSym, 
+	varSym, 
+	funcSym, 
+	typeSym, 
+	structSym
+};
+
 enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
+
+struct SYMBOL{
+    char *name;
+    enum SymbolKind kind;
+    TYPE *t;
+    int wasRedefined; //used to deal with int redeclerations, for instance
+    union{
+        SYMBOL *parentType;
+        SYMBOL *returnType;
+        SYMBOL *structFields;
+        struct {SYMBOL *funcParams; SYMBOL *returnTypeRef;} func;
+    } val;
+    struct SYMBOL *next;
+};
+struct symTable {
+    SYMBOL *varTable[HASHSIZE];
+    SYMBOL *typeTable[HASHSIZE];
+    SYMBOL *funcTable[HASHSIZE];
+    symTable *next;
+};
+
 int Hash(char *str);
 symTable *initSymbolTable();
 symTable *initScopeTable(symTable *parent);
