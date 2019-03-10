@@ -1,6 +1,8 @@
 #ifndef SYMBOL_H
 #define SYMBOL_H
 
+#include <stdbool.h>
+
 #include "tree.h"
 
 enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
@@ -49,10 +51,11 @@ void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 
 void symExp(EXP *exp, symTable *table, int lineno);
 
-void typeProg(PROGRAM *prog);
-void typeDecl(DECLARATION *decl);
-void typeStmt(STATEMENT *stmt);
-void typeExp(EXP *exp);
+/* The following four functions will be in separate .h and .c files. */
+bool typeCheckProgam(PROGRAM *prog);
+bool typeCheckDeclaration(DECLARATION *decl);
+bool typeCheckStatement(STATEMENT *stmt);
+bool typeCheckExpression(EXP *exp);
 
 
 

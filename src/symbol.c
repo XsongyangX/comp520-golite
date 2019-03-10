@@ -444,7 +444,7 @@ void checkProg(PROGRAM *prog)
 
     symProg(prog);
 
-    //typeProg(prog);
+    //typeCheckProgram(prog);
 
 }
 
@@ -1079,11 +1079,11 @@ void symExp(EXP *exp, symTable *table, int lineno)
             exit(1);
     }
 }
-void typeProg(PROGRAM *prog)
+void typeProgram(PROGRAM *prog)
 {//the goal of this call is to make sure variables are used properly within the program
 
 }
-void typeDecl(DECLARATION *decl)
+void typeCheckDeclaration(DECLARATION *decl)
 {//transmit the call to stmts in function bodies
 
 }
@@ -1098,7 +1098,7 @@ void typeDecl(DECLARATION *decl)
     -decl: just propagate the type checking call
     -print: not sure about this one
     */
-void typeStmt(STATEMENT *stmt)
+void typeCheckStatement(STATEMENT *stmt)
 {
 
 }
@@ -1106,7 +1106,7 @@ void typeStmt(STATEMENT *stmt)
 See shortTypeStr, longTypeStr, and lookup methods to do this.
 Arguments passed to function calls must be verified.
 Accessing struct elements should be verified as well. */
-void typeExp(EXP *exp)
+void typeCheckExpression(EXP *exp)
 {
 
 }
