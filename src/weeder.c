@@ -48,6 +48,31 @@ void weedDeclaration(DECLARATION *d, int lineno){
 		
 		// type declaration
 		case typeDecl:
+			if(d->t->name != NULL && strcmp(d->t->name, "struct") == 0)
+			{
+				weedDeclaration(d->t->val.args, lineno);
+			}
+			else if(d->t->val.arg != NULL)
+			{
+				TYPE *tmp = d->t->val.arg;
+				while(true)
+				{
+					if(tmp->name != NULL && strcmp(tmp->name, "struct") == 0)
+					{
+						weedDeclaration(tmp->val.args, lineno);
+						break;
+					}
+					else{
+						if(tmp->val.arg != NULL)
+						{
+							tmp = tmp->val.arg;
+						}
+						else{
+							break;
+						}
+					}
+				}
+			}
 			return;
 		
 		// variable declaration
@@ -113,17 +138,28 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 	
 	switch (s->kind) {
 		
-		// unused token
 		case emptyS:
-			return false;
+			return true;
 			
 		// assignment
 		case assignS:
+			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
+			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
+			returnChain = weedStatement(s->val.assignment.chain, allowBreak, 
+				allowContinue, false, encounteredReturn, needReturn);
+			returnNext = weedStatement(s->next, allowBreak, allowContinue,
+				false, encounteredReturn, needReturn);
+			return returnChain || returnNext;
 		// quick declaration
 		case quickDeclS:
 			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
-			
+			if(s->val.assignment.identifier->kind != idExp)
+			{
+				
+				fprintf(stderr, "Error: (line %d) expecting identifier expression in quick declaration.", s->lineno);
+				exit(1);
+			}
 			returnChain = weedStatement(s->val.assignment.chain, allowBreak, 
 				allowContinue, false, encounteredReturn, needReturn);
 			returnNext = weedStatement(s->next, allowBreak, allowContinue,
@@ -165,6 +201,29 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			returnInBody = 
 				weedStatement(s->val.conditional.body, true, true, false,
 				encounteredReturn, needReturn);
+			weedStatement(s->val.conditional.elif, false, false, false, false, false);
+			if(s->val.conditional.elif != NULL){
+				if(s->val.conditional.elif->kind == exprS)
+				{
+					if (s->val.conditional.elif->val.expression->kind == funcExp)
+					{
+						//do nothing
+					}
+					else{
+						fprintf(stderr, "Error: (line %d) expression statements must be function calls.\n", s->lineno);
+						exit(1);
+					}
+				}
+				else if(s->val.conditional.elif->kind == assignS)
+				{
+					//OK
+				}
+				else{
+					fprintf(stderr, "Error: (line %d) for loop post calls must be assignments or function calls0.\n", s->lineno);
+					exit(1);
+
+				}
+			}
 			return returnInBody;
 			
 		// while statement
@@ -181,6 +240,14 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 		// expression statement
 		case exprS:
 			weedExpression(s->val.expression, s->lineno, false, true, true);
+			if(s->val.expression->kind == funcExp || s->val.expression->kind == funcBlockExp)
+			{
+				//OK
+			}
+			else{
+				fprintf(stderr, "Error: (line %d) expression statements must be function calls.", s->lineno);
+					exit(1);
+			}
 			return false;
 			
 		// return statement
@@ -269,7 +336,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	if (e == NULL) return;
 	
 	// look for function call only
-	if (funcExpOnly && e->kind != funcExp) notFuncExp(lineno);
+	if (funcExpOnly && (e->kind != funcExp && e->kind != funcBlockExp)) notFuncExp(lineno);
 	
 	switch (e->kind){
 	
@@ -382,8 +449,12 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	
 	case funcExp:
 		weedDeclaration(e->val.fn->params, lineno);
+		weedFnCall(e->val.fn, lineno);
 		return;
-	
+	case funcBlockExp:
+		weedDeclaration(e->val.fnblock.fn->params, lineno);
+		weedExpression(e->val.fnblock.identifier, lineno, false, false, true);
+		return;
 	// throw errors
 	default:
 		fprintf(stderr, "Error: (line %d) unknown expression\n", lineno);
@@ -391,6 +462,17 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	}
 }
 
+void weedFnCall(FUNCTION *fn, int lineno)
+{
+	EXP *tmp = fn->params->val.fnCallBlock;
+	int count = 0;
+	while(tmp != NULL && tmp->val.expblock.value != NULL)
+	{
+		tmp = tmp->val.expblock.next;
+		count ++;
+	}
+	
+}
 /* Print an error because it was expecting a function call as an expression */
 void notFuncExp(int lineno){
 	fprintf(stderr, "Error: (line %d) optional declaration as an expression must be a function call\n", lineno);

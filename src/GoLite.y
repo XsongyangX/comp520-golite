@@ -76,7 +76,7 @@ void yyerror(const char *s) {
 %token <runeval> tRUNELITERAL
 %token <identifier> tIDENTIFIER
 %token tTYPE
-%token tSTRUCT
+%token <identifier> tSTRUCT
 %token tFUNC
 %token tGEQ
 %token tLEQ
@@ -179,7 +179,7 @@ prgrm           : tPACKAGE tIDENTIFIER ';' progdefs {$$ = makePROG($2, $4); my_p
                 ;
 /*list of declarations and function declarations*/
 progdefs        : {$$ = NULL;}
-                | progdefs topdecl {$$ = $2; $$->next = $1;}
+                | progdefs topdecl {if($2 != NULL){$$ = $2; $$->next = $1;} else{ $$ = $1;}}
                 ;
 
 topdecl         : dec { $$ = $1;}
@@ -236,13 +236,12 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
 access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
                 | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
                 | funccall %prec UNARY {$$ = $1;}
-                | '(' access ')' %prec UNARY {$$ = $2;}
+                | '(' access ')' %prec UNARY {$$ = makeEXP_par($2);}
                 | tIDENTIFIER %prec NONUNARY {$$ = makeEXP_id($1);}
                 ;
 
 funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
-                
-                | access '(' explist ')' {  makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); $$ = $1;}
+                | access '(' explist ')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
                 ;
 explist         : exps {$$ = $1;}
                 | {$$ = NULL;}
@@ -260,7 +259,7 @@ idents          : idents ',' tIDENTIFIER %prec UNARY {$$ = makeEXP_idblock($3, $
 
 /* a block of lists of identifiers. Used in the distributed type () statements. */
 blockidents     : blockidents tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $2, $3, yylineno); $$->next = $1;}
-		| blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); $$->next = $1;}
+		        | blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); $$->next = $1;}
                 | {$$ = NULL;}
                 ;
 
@@ -282,14 +281,11 @@ decdistributed  : decdistributed vardec {$$ = $2; $$->chain = $1;}
 
 /* Used for declaring user-defined types */
 typedec         : tTYPE tIDENTIFIER type {$$ = makeDECL_type($2, $3, yylineno);}
-                | tTYPE tIDENTIFIER tSTRUCT '{' blockidents '}' {$$ = makeDECL_struct($2, $5, yylineno);}
                 | tTYPE '(' typedistributed ')' {$$ = $3;}
                 ;
 
 /* Used for declaring user defined types with the distributed type () syntax */
 typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, $3, yylineno); $$->chain = $1;}
-                | typedistributed tIDENTIFIER tSTRUCT '{' blockidents '}' ';'
-                    { $$ = makeDECL_struct($2, $5, yylineno); $$->chain = $1;}
                 | {$$ = NULL;}
                 ;
 
@@ -314,6 +310,8 @@ opttype         : type {$$ = $1;}
 type            : tIDENTIFIER {$$ = makeTYPE(baseType, 1, $1, NULL);}
                 | '[' ']' type {$$ = makeTYPE(sliceType, 0, NULL, $3);}
                 | '[' tINTLITERAL ']' type {$$ = makeTYPE(arrayType, $2, NULL, $4);}
+                | tSTRUCT '{' blockidents '}' {$$ = makeTYPE_struct(0, $1, $3 );}
+                | '(' type ')' {$$ = $2;}
                 ;
 
 /* A block of statements */
@@ -324,8 +322,8 @@ stmts           : stmts stmt {$$ = $2; $$->next = $1;}
 /* Defines the kinds of statements that can be used in any context 
 A potential issue is having returnstmt in here. Should you be able to return from anywhere?*/
 stmt            : simplestmt ';' {$$ = $1;}
-                | tPRINT '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
-                | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
+                | tPRINT '(' explist ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
+                | tPRINTLN '(' explist ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
                 | tBREAK ';' {$$ = makeSTMT_break(yylineno);}
                 | tCONTINUE ';' {$$ = makeSTMT_continue(yylineno);}
                 | '{' stmts '}' ';' {$$ = makeSTMT_block(yylineno, $2);}
@@ -334,6 +332,7 @@ stmt            : simplestmt ';' {$$ = $1;}
                 | forstmt {$$ = $1;}
                 | returnstmt {$$ = $1;}
                 | dec {$$ = makeSTMT_decl(yylineno, $1);}
+                | ';' {$$ = makeSTMT_empty();}
                 ;
 
 /* A subset of statements that can be used in certain extra contexts,
@@ -349,16 +348,19 @@ simplestmt      : exp  {$$ = makeSTMT_exp(yylineno, $1);}
 /* Defines all kinds of if statement, with or without a simplestmt before the conditional */
 ifstmt          : tIF exp '{' stmts '}' elsestmt {$$ = makeSTMT_if(yylineno, $2, NULL, $4, $6);}
                 | tIF simplestmt ';' exp '{' stmts '}' elsestmt {$$ = makeSTMT_if(yylineno, $4, $2, $6, $8);}
+                | tIF ';' exp '{' stmts '}' elsestmt {$$ = makeSTMT_if(yylineno, $3, NULL, $5, $7);}
                 ;
 
 elsestmt        : tELSE tIF exp '{' stmts '}' elsestmt {$$ = makeSTMT_elif(yylineno, $3, NULL, $5, $7);}
                 | tELSE tIF simplestmt ';' exp '{' stmts '}' elsestmt {$$ = makeSTMT_elif(yylineno, $5, $3, $7, $9);}
+                | tELSE tIF ';' exp '{' stmts '}' elsestmt {$$ = makeSTMT_elif(yylineno, $4, NULL, $6, $8);}
                 | tELSE '{' stmts '}' ';' {$$ = makeSTMT_else(yylineno, $3);}
                 | ';' {$$ = NULL;}
                 ;
 /* Defines switch statements */
 switchstmt      : tSWITCH '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, NULL, NULL, $3);}
                 | tSWITCH simplestmt ';' '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, NULL, $2, $5);}
+                | tSWITCH ';' '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, NULL, NULL, $4);}
                 | tSWITCH exp '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, $2, NULL, $4);}
                 | tSWITCH simplestmt ';' exp '{' switchbody '}' ';' {$$ = makeSTMT_switch(yylineno, $4, $2, $6);}
                 ;
@@ -376,6 +378,10 @@ forstmt         : tFOR '{' stmts '}' ';' {$$ = makeSTMT_while(yylineno, NULL, $3
                 | tFOR ';' exp ';' simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, NULL, $3, $7, $5);}
                 | tFOR simplestmt ';' exp ';' '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, $4, $7, NULL);}
                 | tFOR ';' exp ';' '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, NULL, $3, $6, NULL);}
+                | tFOR ';' ';' '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, NULL, makeEXP_empty(), $5, NULL);}
+                | tFOR simplestmt ';' ';' '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, makeEXP_empty(), $6, NULL);}
+                | tFOR ';' ';' simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, NULL, makeEXP_empty(), $6, $4);}
+                | tFOR simplestmt ';' ';' simplestmt '{' stmts '}' ';' {$$ = makeSTMT_for(yylineno, $2, makeEXP_empty(), $7, $5);}
                 ;
 
 /* Defines return statements */

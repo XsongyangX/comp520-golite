@@ -29,10 +29,10 @@ void prettyFctn(FUNCTION *fn, int t)
     prettyTabs(t);
     printf("func %s(", fn->identifier);
     if(fn->params != NULL)
-    	prettyFctnDecl(fn->params, 0);
+    	prettyFctnDecl(fn->params, 0, t);
     printf(") ");
     if(fn->returnt != NULL)
-    	prettyType(fn->returnt);
+    	prettyType(fn->returnt, t);
     printf("{\n");
     if(fn->body != NULL)
     	prettyStmt(fn->body, t+1);
@@ -41,21 +41,21 @@ void prettyFctn(FUNCTION *fn, int t)
 }
 
 //prints a list of function arguments
-void prettyFctnDecl(DECLARATION *sd, int printComma)
+void prettyFctnDecl(DECLARATION *sd, int printComma, int t)
 {
     if(sd->next != NULL)
     {
-        prettyFctnDecl(sd->next,1);
+        prettyFctnDecl(sd->next,1,t);
     }
     printf("%s ", sd->identifier);
-    prettyType(sd->t);
+    prettyType(sd->t, t);
     
     if(printComma)
         printf(", ");
 }
 
 //prints a type
-void prettyType(TYPE *t)
+void prettyType(TYPE *t, int tabs)
 {
     if(t == NULL)
 	    return;
@@ -67,7 +67,7 @@ void prettyType(TYPE *t)
             if(t->name != NULL)
             {printf("%s", t->name);}
             else{
-                prettyType(t->val.arg);
+                prettyType(t->val.arg, tabs);
             }
             break;
         case sliceType:
@@ -75,10 +75,18 @@ void prettyType(TYPE *t)
             if(t->name != NULL)
             {printf("%s", t->name);}
             else{
-                prettyType(t->val.arg);
+                prettyType(t->val.arg, tabs);
             }
             break;
         case structType:
+            printf("struct {\n");
+            if(t->val.args != NULL)
+            {
+                prettyDecl(t->val.args, tabs, 1);
+            }
+            prettyTabs(tabs);
+            printf("}");
+            break;
         case userType:
         default:
             if(t->name != NULL)
@@ -99,7 +107,7 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
             printf("type %s ", d->identifier);
-            prettyType(d->t);
+            prettyType(d->t, t);
             printf("\n");
             break;
         case varDecl:
@@ -108,7 +116,7 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
             printf("%s ", d->identifier);
             if(d->t != NULL)
             {
-                prettyType(d->t);
+                prettyType(d->t, t);
             }
             if(d->val.right != NULL && d->val.right->kind != emptyExp)
             {
@@ -263,7 +271,7 @@ void prettyAssignHelper2(STATEMENT *s)
 {
     if(s->val.assignment.chain != NULL)
     {
-        prettyAssignHelper(s->val.assignment.chain);
+        prettyAssignHelper2(s->val.assignment.chain);
     }
     prettyExp(s->val.assignment.value);
 }
@@ -398,8 +406,10 @@ void prettyPrintHelper(EXP *e)
         prettyPrintHelper(e->val.expblock.next);
 	printf(", ");
     }
-    prettyExp(e->val.expblock.value);
-    
+    if(e->val.expblock.value != NULL)
+    {
+        prettyExp(e->val.expblock.value);
+    }
 }
 //prints a print stmt
 void prettyPrintS(STATEMENT *s, int t)
@@ -714,6 +724,12 @@ void prettyExp(EXP *e)
         case funcExp:
             printf("%s(", e->val.fn->identifier);
 	        prettySDeclFn(e->val.fn->params->val.fnCallBlock);
+            printf(")");
+            break;
+        case funcBlockExp:
+            prettyExp(e->val.fnblock.identifier);
+            printf("(");
+	        prettySDeclFn(e->val.fnblock.fn->params->val.fnCallBlock);
             printf(")");
             break;
         case runeExp:

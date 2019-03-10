@@ -47,6 +47,7 @@ enum ExpressionKind{
 	indexExp, //[.]  e.g. arrays
 	elementExp, //for arrays and slices, e.g. identifier[x]
 	invocExp, //x.y
+	funcBlockExp,
 	appendExp, //built-in
 	lenExp, //built-in
 	capExp, //built-in
@@ -55,7 +56,7 @@ enum ExpressionKind{
 };
 
 enum StatementKind{ 
-	emptyS, //NULL // UNUSED
+	emptyS, 
 	assignS,
 	quickDeclS,
 	blockS, //{...}
@@ -96,7 +97,7 @@ enum DeclarationType{
 By convention, simple values have size 1. Slices start with size 0.
 Name is NULL unless the type is user-defined, in which case it reflects
 the user-specified name of the type.
-
+makeTYPE
 If the type is just a rename of another type, the val is one arg with a pointer 
 to that type.
 If the type is a struct, the val is a linked list of Exps representing the 
@@ -108,7 +109,7 @@ struct TYPE{
     enum GroupingType gType;
     union {
         TYPE *arg;
-        EXP *args;
+        DECLARATION *args;
     }val;
 };
 
@@ -143,6 +144,11 @@ struct EXP{
 			EXP *next; 
 			EXP *value;
 		} expblock; 
+
+		struct{
+			EXP *identifier;
+			FUNCTION *fn;
+		} fnblock;
     }val;
 };
 
@@ -286,7 +292,7 @@ EXP *makeEXP_len(EXP *e1);
 EXP *makeEXP_cap(EXP *e1);
 EXP *makeEXP_uxor(EXP *e1);
 EXP *makeEXP_func(char *identifier, int size, DECLARATION *args);
-void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args);
+EXP *makeEXP_func_access(EXP *identifier, int size, DECLARATION *args);
 EXP *makeEXP_expblock(EXP *e, EXP *next);
 EXP *makeEXP_idblock(char *identifier, EXP *next);
 EXP *makeEXP_not(EXP *e1);
@@ -304,6 +310,7 @@ DECLARATION *makeDECL_fnCallArgs(EXP *args);
 
 FUNCTION *makeFCTN(int lineno, char *identifier, int size, DECLARATION *params, TYPE *returnType, STATEMENT *body);
 
+STATEMENT *makeSTMT_empty();
 STATEMENT *makeSTMT_assmt(int lineno, EXP *identifier, EXP *val);
 STATEMENT *makeSTMT_if(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *body, STATEMENT *elif);
 STATEMENT *makeSTMT_elif(int lineno, EXP *condition, STATEMENT *optDecl, STATEMENT *body, STATEMENT *elif);
@@ -324,7 +331,7 @@ STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val);
 STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps);
 
 TYPE *makeTYPE(int gtype, int size, char *name, TYPE *ref);
-//TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args);
+TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args);
 
 
 
