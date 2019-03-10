@@ -5,6 +5,16 @@
 
 #include "tree.h"
 
+enum SymbolKind{
+	nullSym, 
+	varSym, 
+	funcSym, 
+	typeSym, 
+	structSym
+};
+
+enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
+
 struct SYMBOL{
     char *name;
     enum SymbolKind kind;
@@ -25,15 +35,6 @@ struct symTable {
     symTable *next;
 };
 
-enum SymbolKind{
-	nullSym, 
-	varSym, 
-	funcSym, 
-	typeSym, 
-	structSym
-};
-
-enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
 int Hash(char *str);
 symTable *initSymbolTable();
 symTable *initScopeTable(symTable *parent);
