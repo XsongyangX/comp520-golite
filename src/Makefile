@@ -1,6 +1,6 @@
 
-all: lex.yy.o main.o y.tab.o tree.o pretty.h pretty.o weeder.o symbol.o
-	gcc -o minic main.o lex.yy.o y.tab.o tree.o pretty.o weeder.o symbol.o -lfl -g 
+all: main.o lex.yy.o y.tab.o tree.o pretty.h pretty.o weeder.o symbol.o
+	gcc -o minic main.o lex.yy.o y.tab.o tree.o pretty.o weeder.o symbol.o -lfl  
 
 symbol.o:
 	gcc -c symbol.c symbol.h -g
@@ -30,8 +30,11 @@ lex.yy.c:
 	flex GoLite.l
 
 # pretty option for testing the pretty printer
-pretty: lex.yy.o y.tab.o tree.o weeder.o pretty.o main.o
-	gcc -o minic main.o lex.yy.o y.tab.o tree.o weeder.o pretty.o -lfl	
+pretty: lex.yy.o y.tab.o tree.o weeder.o pretty.o mainPrettyTest
+	gcc -o minic main.o lex.yy.o y.tab.o tree.o weeder.o pretty.o -lfl
+
+mainPrettyTest:
+	gcc -c main.c -DPRETTY_TEST
 
 # scan option only uses bison to generate the token headers
 scan: emptyParser.o
