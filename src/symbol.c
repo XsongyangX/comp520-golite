@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symbol.h"
+#include "pretty.h"
 
 extern int symbolPrint;
 /*taken from the JOOS compiler*/

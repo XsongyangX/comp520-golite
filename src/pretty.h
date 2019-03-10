@@ -30,4 +30,6 @@ void prettyExpBlock(EXP *e);
 void prettyExp(EXP *e);
 void prettyStmtFn(STATEMENT *s);
 
+//prints n tabs
+void prettyTabs(int n);
 #endif

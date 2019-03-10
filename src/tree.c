@@ -10,13 +10,7 @@ void printUnequalAssignError(int lineno){
 	lineno);
 	exit(1);
 }
-void prettyTabs(int n)
-{
-    for(int i = 0; i < n; i++)
-    {
-        printf("\t");
-    }
-}
+
 
 /*Not ever used, emptyExp = 0 acts as a safety net in later stages*/
 EXP *makeEXP_empty()

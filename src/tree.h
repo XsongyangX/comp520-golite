@@ -11,50 +11,49 @@ typedef struct TYPE TYPE;
 #define HASHSIZE 317
 typedef struct symTable symTable;
 
-//prints n tabs
-void prettyTabs(int n);
-enum ExpressionKind{emptyExp, //NULL
-                    intExp, 
-                    floatExp, 
-                    strExp, 
-					rawstrExp,
-                    boolExp, 
-                    runeExp,
-                    plusExp, //.+.
-                    minusExp, //.-.
-                    timesExp, //.*.
-                    divExp, //./.
-                    modExp, //.%.
-                    notExp, //!.
-                    posExp, //+.
-                    negExp, //-.
-                    parExp, //(.)
-                    eqExp, //.==.
-                    neqExp, //.!=.
-                    geqExp, //.>=.
-                    leqExp, //.<=.
-                    gtExp, //.>.
-                    ltExp,//.<.
-                    orExp,//.||.
-                    andExp, //.&&.
-                    andnotExp, //.&^.
-                    idExp,
-                    idblockExp, //Blocks of identifiers
-                    expblockExp, //Blocks of expressions 
-                    bitAndExp, //.&.
-                    bitOrExp, //.|.
-                    xorExp, //.^.
-                    lshiftExp, //.<<.
-                    rshiftExp, //.>>.
-                    indexExp, //[.]  e.g. arrays
-                    elementExp, //for arrays and slices, e.g. identifier[x]
-                    invocExp, //x.y
-                    appendExp, //built-in
-                    lenExp, //built-in
-                    capExp, //built-in
-		            uxorExp, // unary ^
-                    funcExp //function call
-                    };
+enum ExpressionKind{
+	emptyExp, //NULL
+	intExp, 
+	floatExp, 
+	strExp, 
+	rawstrExp,
+	boolExp, 
+	runeExp,
+	plusExp, //.+.
+	minusExp, //.-.
+	timesExp, //.*.
+	divExp, //./.
+	modExp, //.%.
+	notExp, //!.
+	posExp, //+.
+	negExp, //-.
+	parExp, //(.)
+	eqExp, //.==.
+	neqExp, //.!=.
+	geqExp, //.>=.
+	leqExp, //.<=.
+	gtExp, //.>.
+	ltExp,//.<.
+	orExp,//.||.
+	andExp, //.&&.
+	andnotExp, //.&^.
+	idExp,
+	idblockExp, //Blocks of identifiers
+	expblockExp, //Blocks of expressions 
+	bitAndExp, //.&.
+	bitOrExp, //.|.
+	xorExp, //.^.
+	lshiftExp, //.<<.
+	rshiftExp, //.>>.
+	indexExp, //[.]  e.g. arrays
+	elementExp, //for arrays and slices, e.g. identifier[x]
+	invocExp, //x.y
+	appendExp, //built-in
+	lenExp, //built-in
+	capExp, //built-in
+	uxorExp, // unary ^
+	funcExp //function call
+	};
 enum StatementKind{ emptyS, //NULL // UNUSED
                     assignS,
                     quickDeclS,
