@@ -244,12 +244,12 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 				s->lineno);
 				exit(1);
 			}
-			return false;
+			return foundNothing;
 			
 		// declaration statement
 		case declS:
 			weedDeclaration(s->val.declaration, s->lineno);
-			return false;
+			return foundNothing;
 			
 		// throw error
 		default:
