@@ -169,7 +169,7 @@ bool lookForDefaultCase, bool needReturn){
 		// while statement
 		case whileS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			return weedStatement(s->val.conditional.body, true, true, needReturn);	
+			return weedStatement(s->val.conditional.body, true, true, false, needReturn);	
 			
 		// print statement
 		case printS:
@@ -205,9 +205,9 @@ bool lookForDefaultCase, bool needReturn){
 					exit(1);
 				}
 				returnInBody = weedStatement(s->val.caseBody.body, 
-					true, allowContinue, false, false, needReturn);
+					true, allowContinue, false, needReturn);
 				returnNext = weedStatement(s->next, true, allowContinue, true, 
-					false, needReturn);
+					needReturn);
 				return returnInBody && returnNext;
 					
 				
@@ -215,9 +215,9 @@ bool lookForDefaultCase, bool needReturn){
 			weedExpression(s->val.caseBody.condition, 
 				s->lineno, false, false, true);
 
-			returnNext = weedStatement(s->next, true, allowContinue, lookForDefaultCase, false, needReturn);
+			returnNext = weedStatement(s->next, true, allowContinue, lookForDefaultCase, needReturn);
 
-			returnInBody =  weedStatement(s->val.caseBody.body, true, allowContinue, false, false, needReturn);
+			returnInBody =  weedStatement(s->val.caseBody.body, true, allowContinue, false, needReturn);
 			return returnNext && returnInBody;
 
 		// break statement
