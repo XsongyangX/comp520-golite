@@ -10,9 +10,9 @@ invalid constructs that the parser cannot detect easily. The
 checks are done by keeping track of temporary variables that 
 are recursively passed down the nodes.
 
-One challenge in this weeder design is the cryptic nature of the
-AST nodes. There might be some missing traversals because the
-AST is not a good abstraction of the parsed language.
+After annotating the tree header file by looking over the parser,
+I want to emphasize on the left-recursive nature of lists in 
+the grammar.
 
 The weeder checks for:
 	- Division by 0
