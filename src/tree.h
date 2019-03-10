@@ -171,6 +171,9 @@ struct DECLARATION{
 	// Use head recursion when traversing declaration lists.
 	// Similarly, the declaration chain is also backwards.
 	
+	// Note: these two should be inside a union since both
+	// of them are not used at the same time
+	
 	// used in top-level declarations and
     DECLARATION *next;
 	// used in distributed declarations 
