@@ -166,15 +166,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 		case quickDeclS:
 			weedExpression(s->val.assignment.identifier, s->lineno, false, false, true);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
-
-			if(s->val.assignment.identifier->kind != idExp)
-			{
-				
-				fprintf(stderr, 
-                "Error: (line %d) expecting identifier expression in assignment\n", 
-                s->lineno);
-				exit(1);
-			}
+			
 			
 			if (foundValues.foundBreak) return foundBreak;
 			
