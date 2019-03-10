@@ -164,7 +164,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 		
 		// quick declaration
 		case quickDeclS:
-			weedExpression(s->val.assignment.identifier, s->lineno, false, false, true);
+			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
 			
 			
