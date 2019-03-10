@@ -328,10 +328,10 @@ EXP *makeEXP_func(char *identifier, int size, DECLARATION *args)
     return e;
 }
 /*inserts a funcExp node into an existing tree*/
-void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
+EXP *makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
 {
     EXP *e = malloc(sizeof(EXP));
-    e->kind = funcExp;
+    e->kind = funcBlockExp;
     //make a dummy function struct to represent the function call
     FUNCTION *tmpf = malloc(sizeof(FUNCTION));
     tmpf->identifier = "";
@@ -340,8 +340,9 @@ void makeEXP_func_access(EXP *identifier, int size, DECLARATION *args)
     tmpf->body = NULL;
     tmpf->params = args;
     tmpf->returnt = NULL;
-    e->val.fn = tmpf;
-    identifier = makeEXP_invoc(identifier,e);
+    e->val.fnblock.fn = tmpf;
+    e->val.fnblock.identifier = identifier;
+    return e;
 }
 /*makes a declaration node with a rhs value
 the rhs value should be null in case of a type decl*/
@@ -429,6 +430,13 @@ FUNCTION *makeFCTN(int lineno, char *identifier, int size, DECLARATION *params, 
     f->body = body;
     f->returnt = returnType;
     return f;
+}
+STATEMENT *makeSTMT_empty()
+{
+    STATEMENT *s = malloc(sizeof(STATEMENT));
+    s->kind = emptyS;
+    s->next = NULL;
+    return s;
 }
 /*makes an assignment statement of the form exps = exps
 note that some variables may be declared in this*/
@@ -613,6 +621,7 @@ PROGRAM *makePROG(char* package, DECLARATION *declList)
 
 
 TYPE *makeTYPE(int gtype, int size, char *name, TYPE *ref){
+    
     TYPE *t = malloc(sizeof(TYPE));
     t->size = size;
     t->gType = gtype;
@@ -621,13 +630,14 @@ TYPE *makeTYPE(int gtype, int size, char *name, TYPE *ref){
     return t; 
 }
 
-// TYPE *makeTYPE_struct(int size, char *name, EXP *args){
-//     TYPE *t = malloc(sizeof(TYPE));
-//     t->gType = structType;
-//     t->name = name;
-//     t->val.args = args;
-//     return t; 
-// }
+TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args){
+    TYPE *t = malloc(sizeof(TYPE));
+    t->size = size;
+    t->gType = structType;
+    t->name = name;
+    t->val.args = args;
+    return t; 
+}
 
 /* A constructor for a block of identifiers
 Used e.g. in multiple assignments, or in function headers */
@@ -640,6 +650,7 @@ EXP *makeEXP_idblock(char *identifier, EXP *next){
 }
 /*used for exps*/
 EXP *makeEXP_expblock(EXP *e1, EXP *next){
+    
     EXP *e = malloc(sizeof(EXP));
     e->t = NULL;
     e->kind = expblockExp; // was set to 0 (?!?)
@@ -748,11 +759,11 @@ STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps){
     STATEMENT *s = malloc(sizeof(STATEMENT));
     if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
         s = makeSTMT_qdecl(lineno, ids->val.expblock.value, exps->val.expblock.value);
+        s->val.assignment.chain = NULL;
         return s;
     }
     else if(ids->val.expblock.next != NULL && exps->val.expblock.next != NULL){
-        STATEMENT *nextS = malloc(sizeof(STATEMENT));
-        nextS = makeSTMT_blockqassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
+        STATEMENT *nextS = makeSTMT_blockqassign(lineno, ids->val.expblock.next, exps->val.expblock.next);
         s = makeSTMT_qdecl(lineno, ids->val.expblock.value, exps->val.expblock.value);
         s->val.assignment.chain = nextS;
         return s;
