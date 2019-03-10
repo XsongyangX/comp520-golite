@@ -109,8 +109,8 @@ PUNCTUATION [?<>+-=,^$|&]
 "&&" {if(isToken){printf("tAND\n");} requiresIns = 0;return tAND;}
 "||" {if(isToken){printf("tOR\n");} requiresIns = 0;return tOR;}
 "<-" {if(isToken){printf("tLESSMINUS\n");} requiresIns = 0;return tLESSMINUS;}
-"++" {if(isToken){printf("tINCREMENT\n");} requiresIns = 1; return tINCREMENT;}
-"--" {if(isToken){printf("tDECREMENT\n");} requiresIns = 1; return tDECREMENT;}
+"++" {if(isToken){printf("tINCREMENT\n");} requiresIns = 1;BEGIN(EOFCHECK); return tINCREMENT;}
+"--" {if(isToken){printf("tDECREMENT\n");} requiresIns = 1;BEGIN(EOFCHECK); return tDECREMENT;}
 "==" {if(isToken){printf("tEQ\n");} requiresIns = 0;return tEQ;} 
 "<" {if(isToken){printf("tLESS\n");} requiresIns = 0;return '<';}
 ">" {if(isToken){printf("tGREATER\n");} requiresIns = 0;return '>';}
@@ -122,11 +122,11 @@ PUNCTUATION [?<>+-=,^$|&]
 ":=" {if(isToken){printf("tCOLONASSIGN\n");} requiresIns = 0;return tCOLONASSIGN;} 
 "..." {if(isToken){printf("tDOTS\n");} requiresIns = 0;return tDOTS;} 
 "(" {if(isToken){printf("tLEFTPAREN\n");} requiresIns = 0;return '(';}
-")" {if(isToken){printf("tRIGHTPAREN\n");} requiresIns = 1; return ')';}
+")" {if(isToken){printf("tRIGHTPAREN\n");} requiresIns = 1;BEGIN(EOFCHECK); return ')';}
 "{" {if(isToken){printf("tLEFTBRACE\n");} requiresIns = 0;return '{';}
-"}" {if(isToken){printf("tRIGHTBRACE\n");} requiresIns = 1; return '}';}
+"}" {if(isToken){printf("tRIGHTBRACE\n");} requiresIns = 1;BEGIN(EOFCHECK); return '}';}
 "[" {if(isToken){printf("tLEFTBRACKET\n");} requiresIns = 0;return '[';}
-"]" {if(isToken){printf("tRIGHTBRACKET\n");} requiresIns = 1; return ']';}
+"]" {if(isToken){printf("tRIGHTBRACKET\n");} requiresIns = 1;BEGIN(EOFCHECK); return ']';}
 ":" {if(isToken){printf("tCOLON\n");} requiresIns = 0;return ':';} 
 ";" {if(isToken){printf("tSEMICOLON\n");} requiresIns = 0; return ';';} 
 "," {if(isToken){printf("tCOMMA\n");} requiresIns = 0;return ',';} 
@@ -134,15 +134,15 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 "break" { // KEYWORDS
-	if(isToken){printf("tBREAK\n");} requiresIns = 1; return tBREAK;}
+	if(isToken){printf("tBREAK\n");} requiresIns = 1; BEGIN(EOFCHECK); return tBREAK;}
 "case" {if(isToken){printf("tCASE\n");} requiresIns = 0;return tCASE;}
 "chan" {if(isToken){printf("tCHAN\n");} requiresIns = 0;return tCHAN;}
 "const" {if(isToken){printf("tCONST\n");} requiresIns = 0;return tCONST;}
-"continue" {if(isToken){printf("tCONTINUE\n");} requiresIns = 1; return tCONTINUE;}
+"continue" {if(isToken){printf("tCONTINUE\n");} requiresIns = 1; BEGIN(EOFCHECK); return tCONTINUE;}
 "default" {if(isToken){printf("tDEFAULT\n");} requiresIns = 0;return tDEFAULT;}
 "defer" {if(isToken){printf("tDEFER\n");} requiresIns = 0;return tDEFER;}
 "else" {if(isToken){printf("tELSE\n");} requiresIns = 0;return tELSE;}
-"fallthrough" {if(isToken){printf("tFALLTHROUGH\n");} requiresIns = 1; return tFALLTHROUGH;}
+"fallthrough" {if(isToken){printf("tFALLTHROUGH\n");} requiresIns = 1; BEGIN(EOFCHECK); return tFALLTHROUGH;}
 "for" {if(isToken){printf("tFOR\n");} requiresIns = 0;return tFOR;}
 "func" {if(isToken){printf("tFUNC\n");} requiresIns = 0;return tFUNC;}
 "go" {if(isToken){printf("tGO\n");} requiresIns = 0;return tGO;}
@@ -153,15 +153,20 @@ PUNCTUATION [?<>+-=,^$|&]
 "map" {if(isToken){printf("tMAP\n");} requiresIns = 0;return tMAP;}
 "package" {if(isToken){printf("tPACKAGE\n");} requiresIns = 0;return tPACKAGE;}
 "range" {if(isToken){printf("tRANGE\n");} requiresIns = 0;return tRANGE;}
-"return" {if(isToken){printf("tRETURN\n");} requiresIns = 1; return tRETURN;}
+"return" {if(isToken){printf("tRETURN\n");} requiresIns = 1; BEGIN(EOFCHECK); return tRETURN;}
 "select" {if(isToken){printf("tSELECT\n");} requiresIns = 0;return tSELECT;}
-"struct" {if(isToken){printf("tSTRUCT\n");} requiresIns = 0;return tSTRUCT;}
+"struct" {if(isToken){printf("tSTRUCT\n");}
+	yylval.identifier = malloc(10);
+	strcpy(yylval.identifier, "struct");
+	requiresIns = 0;return tSTRUCT;}
 "switch" {if(isToken){printf("tSWITCH\n");} requiresIns = 0;return tSWITCH;}
 "type" {if(isToken){printf("tTYPE\n");} requiresIns = 0;return tTYPE;}
 "print" {if(isToken){printf("tPRINT\n");} requiresIns = 0;return tPRINT;}
 "println" {if(isToken){printf("tPRINTLN\n");} requiresIns = 0;return tPRINTLN;}
 "var" {if(isToken){printf("tVAR\n");} requiresIns = 0;return tVAR;}
-
+"append" {if(isToken){printf("tAPPEND\n");} requiresIns = 0;return tAPPEND;}
+"len" {if(isToken){printf("tLEN\n");} requiresIns = 0;return tLEN;}
+"cap" {if(isToken){printf("tCAP\n");} requiresIns = 0;return tCAP;}
 
 "//"[^\n]* {/*line comments*/}
 	
@@ -178,6 +183,7 @@ PUNCTUATION [?<>+-=,^$|&]
 <IN_COMMENT>. 
 <EOFCHECK><<EOF>> {BEGIN(INITIAL); if(requiresIns){ requiresIns = 0; if(isToken){ printf("tSEMICOLON\n"); } return ';';	} }
 0|([1-9][0-9]*) { // INT
+	BEGIN(EOFCHECK);
 	//DECIMAL VALUE
     yylval.intval = atoi(yytext);
     if(isToken){
@@ -187,6 +193,7 @@ PUNCTUATION [?<>+-=,^$|&]
     return tINTLITERAL;
 }
 0[0-7]* {//OCTAL VALUE
+	BEGIN(EOFCHECK);
     yylval.intval = (int)strtol(yytext, NULL, 8);
     if(isToken){
         fprintf(stdout, "tINTLITERAL(%s = %ld)\n", yytext, strtol(yytext, NULL, 8));
@@ -194,7 +201,8 @@ PUNCTUATION [?<>+-=,^$|&]
     requiresIns = 1; 
     return tINTLITERAL;
 }
-0(x|X)[0-9a-fA-F]* {//HEXADECIMAL VALUE
+0(x|X)[0-9a-fA-F][0-9a-fA-F]* {//HEXADECIMAL VALUE
+	BEGIN(EOFCHECK);
     yylval.intval = (int)strtol(yytext, NULL, 0);
     if(isToken){
         fprintf(stdout, "tINTLITERAL(%s = %ld)\n", yytext, strtol(yytext, NULL, 0));
@@ -205,6 +213,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 ([0-9][0-9]*"."[0-9]*) { // FLOAT
+	BEGIN(EOFCHECK);
 	//LEFT of period
     yylval.floatval = atof(yytext);
     if(isToken){
@@ -214,6 +223,7 @@ PUNCTUATION [?<>+-=,^$|&]
     return tFLOATLITERAL;
 }
 ([1-9][0-9]*)*"."[0-9][0-9]* {//RIGHT of period
+	BEGIN(EOFCHECK);
     yylval.floatval = atof(yytext);
     if(isToken){
         fprintf(stdout, "tFLOATLITERAL(%s)\n", yytext);
@@ -224,6 +234,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 '([ a-zA-Z0-9~@#%*/_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\")|(\\'))' {//RUNE (CHAR)
+	BEGIN(EOFCHECK);
     yylval.runeval = strdup(yytext)[1];
     if(isToken){
         fprintf(stdout, "tRUNELITERAL(%s)\n", yytext);
@@ -234,6 +245,7 @@ PUNCTUATION [?<>+-=,^$|&]
 
 
 \"([ a-zA-Z0-9~@#%\*/'_`.:;!]|{PUNCTUATION}|\\\\|\{|\}|\[|\]|\(|\)|(\\a)|(\\b)|(\\f)|(\\n)|(\\r)|(\\t)|(\\v)|(\\\"))*\" {//STRING
+	BEGIN(EOFCHECK);
     yylval.strval = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tSTRINGLITERAL(%s)\n", yytext);
@@ -243,6 +255,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 `([ a-zA-Z0-9~@#%\*/'_.:;!]|{PUNCTUATION}|\\|\{|\}|\[|\]|\(|\)|(\"))*` {//RAW STRING
+	BEGIN(EOFCHECK);
     yylval.strval = malloc(sizeof(char)*yyleng*2);
     rawStringHelper(yylval.strval, yytext, yyleng);
     if(isToken){
@@ -254,6 +267,7 @@ PUNCTUATION [?<>+-=,^$|&]
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {//IDENTIFIERS
+	BEGIN(EOFCHECK);
     yylval.identifier = strdup(yytext);
     if(isToken){
         fprintf(stdout, "tIDENTIFIER(%s)\n", yytext);

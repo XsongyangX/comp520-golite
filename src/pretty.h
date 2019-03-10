@@ -5,8 +5,8 @@
 
 void prettyPROG(PROGRAM *my_prog);
 void prettyFctn(FUNCTION *fn, int t);
-void prettyFctnDecl(DECLARATION *sd, int printComma);
-void prettyType(TYPE *t);
+void prettyFctnDecl(DECLARATION *sd, int printComma, int t);
+void prettyType(TYPE *t, int tabs);
 void prettyDecl(DECLARATION  *d, int t, int isInStruct);
 void prettySDecl(STATEMENT  *d);
 void prettySDeclId(STATEMENT  *d);
