@@ -79,7 +79,7 @@ void weedFunction(FUNCTION *f){
 	
 	// function declaration
 	// no return statement, and not void
-	if ( !weedStatement(f->body, false, false, false, false, true)
+	if ( !weedStatement(f->body, false, false, false, true)
 		&& f->returnt->gType != nilType){
 		fprintf(stderr, 
 		"Error: (line %d) expecting a return statement in all control flows\n",
@@ -141,7 +141,7 @@ bool lookForDefaultCase, bool needReturn){
 		case elifS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 			// return value ignored
-			weedStatement(s->val.conditional.optDecl, false, false, false, true, false);
+			weedStatement(s->val.conditional.optDecl, false, false, false, false);
 			
 			returnInElsePart = 
 				weedStatement(s->val.conditional.elif, allowBreak, allowContinue, 
@@ -160,7 +160,7 @@ bool lookForDefaultCase, bool needReturn){
 		// for statement
 		case forS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			weedStatement(s->val.conditional.optDecl, false, false, false, true, false);
+			weedStatement(s->val.conditional.optDecl, false, false, false, false);
 			returnInBody = 
 				weedStatement(s->val.conditional.body, true, true, false,
 				needReturn);
@@ -169,8 +169,7 @@ bool lookForDefaultCase, bool needReturn){
 		// while statement
 		case whileS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			return weedStatement(s->val.conditional.body, true, true, false,
-				needReturn);	
+			return weedStatement(s->val.conditional.body, true, true, needReturn);	
 			
 		// print statement
 		case printS:
@@ -190,10 +189,10 @@ bool lookForDefaultCase, bool needReturn){
 		
 		// switch statement
 		case switchS:
-			weedStatement(s->val.switchBody.optDecl, false, false, false, true, false);
+			weedStatement(s->val.switchBody.optDecl, false, false, false, false);
 			weedExpression(s->val.switchBody.condition, s->lineno, false, false, true);
 			return weedStatement(s->val.switchBody.cases, 
-				allowBreak, allowContinue, false, false, needReturn);
+				allowBreak, allowContinue, false, needReturn);
 			
 		// case statement
 		case caseS:
