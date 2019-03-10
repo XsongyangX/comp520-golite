@@ -25,6 +25,14 @@ struct symTable {
     symTable *next;
 };
 
+enum SymbolKind{
+	nullSym, 
+	varSym, 
+	funcSym, 
+	typeSym, 
+	structSym
+};
+
 enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
 int Hash(char *str);
 symTable *initSymbolTable();

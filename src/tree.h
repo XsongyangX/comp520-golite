@@ -92,14 +92,6 @@ enum DeclarationType{
 	funcCall
 };
 
-enum SymbolKind{
-	nullSym, 
-	varSym, 
-	funcSym, 
-	typeSym, 
-	structSym
-};
-
 
 /*By convention, simple values have size 1.
 Slices start with size 0.
