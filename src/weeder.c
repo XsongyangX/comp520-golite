@@ -545,7 +545,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	
 	case funcExp:
 		weedDeclaration(e->val.fn->params, lineno);
-		weedFnCall(e->val.fn, lineno);
+		//weedFnCall(e->val.fn, lineno);
 		return;
 	case funcBlockExp:
 		weedDeclaration(e->val.fnblock.fn->params, lineno);
@@ -557,7 +557,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 		exit(1);
 	}
 }
-
+/*
 void weedFnCall(FUNCTION *fn, int lineno)
 {
 	EXP *tmp = fn->params->val.fnCallBlock;
@@ -568,7 +568,7 @@ void weedFnCall(FUNCTION *fn, int lineno)
 		count ++;
 	}
 	
-}
+}*/
 /* Print an error because it was expecting a function call as an expression */
 void notFuncExp(int lineno){
 	fprintf(stderr, "Error: (line %d) optional declaration as an expression must be a function call\n", lineno);

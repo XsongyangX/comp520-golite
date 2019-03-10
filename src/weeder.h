@@ -21,7 +21,7 @@ Traversal weedStatement(STATEMENT *statement,
 void weedExpression(EXP *expression, 
 	int lineno, bool divBy0, bool funcExpOnly, 
 	bool lookForBlankId);
-void weedFnCall(FUNCTION *fn, int lineno);
+//void weedFnCall(FUNCTION *fn, int lineno);
 
 void notFuncExp(int lineno);
 #endif
