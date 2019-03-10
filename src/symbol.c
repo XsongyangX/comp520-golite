@@ -225,7 +225,7 @@ char *lookupType(symTable *t, char* identifier, int lineno, int doesExit)
         return lookupType(t->next, identifier, lineno, doesExit);       
     }
     else if(doesExit){
-        fprintf(stderr, "Error: (line %d) identifier \"%s\" not declared\n", lineno, identifier);
+        fprintf(stderr, "Error: (line %d) type \"%s\" not declared\n", lineno, identifier);
         exit(1);
     }
     return "";
@@ -494,52 +494,98 @@ char *getName(TYPE *t)
 }
 void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
 {
-            SYMBOL *tmp = makeSymbol(decl->identifier, typeSym, 1);
             char *parentname = getName(decl->t);
-            SYMBOL *parent = getSymbol(table, parentname, typeSym);
-            //printf("Parent of %s is %s.\n", decl->identifier, parentname);
-            if(parent == NULL)
+            if(strcmp(parentname, "struct") != 0)
             {
-                fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
-                exit(1);
+                SYMBOL *tmp = makeSymbol(decl->identifier, typeSym, 1);
+                SYMBOL *parent = getSymbol(table, parentname, typeSym);
+                //printf("Parent of %s is %s.\n", decl->identifier, parentname);
+                if(parent == NULL)
+                {
+                    fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
+                    exit(1);
+                }
+                tmp->val.parentType = parent;
+                tmp->t = decl->t;
+                putType(tmp, table, decl->lineno);
+                if(symbolPrint == 1)
+                {
+                    prettyTabs(depth);
+                    printf("%s[type] = %s -> %s\n", decl->identifier, decl->identifier, lookupType(table, decl->identifier, decl->lineno, 1));
+                }
             }
-            tmp->val.parentType = parent;
-            tmp->t = decl->t;
-            putType(tmp, table, decl->lineno);
-            if(symbolPrint == 1)
-            {
-                prettyTabs(depth);
-                printf("%s[type] = %s -> %s\n", decl->identifier, decl->identifier, lookupType(table, decl->identifier, decl->lineno, 1));
+            else{
+                SYMBOL *tmp = makeSymbol(decl->identifier, structSym, 1);
+                //SYMBOL *parent = getSymbol(table, parentname, typeSym);
+                //printf("Parent of %s is %s.\n", decl->identifier, parentname);
+                SYMBOL *bodyList = symStructHelper(decl->t->val.args, table);
+                tmp->val.structFields = bodyList;
+                putType(tmp, table, decl->lineno);
+                if(symbolPrint == 1)
+                {
+                    prettyTabs(depth);
+                    printf("%s[type] = %s -> ", decl->identifier, decl->identifier);
+                    printType(decl->t);
+                    printf("{ ");
+                    printStructFields(table, bodyList);
+                    printf("}\n");
+                }
+                tmp->t = decl->t;
             }
+            
 }
 void symVarDecl(DECLARATION *decl, symTable *table, int depth)
 {
-            SYMBOL *tmp = makeSymbol(decl->identifier, varSym, 1);
             char *parentname = getName(decl->t);
-            SYMBOL *parent = getSymbol(table, parentname, typeSym);
-            if(parent == NULL && strlen(parentname) > 0)
+            if(strcmp(parentname, "struct") != 0)
             {
-                fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
-                exit(1);
-            }
-            tmp->val.parentType = parent;
-            tmp->t = decl->t;
-            putVar(tmp, table, decl->lineno);
-            if(symbolPrint == 1)
-            {
-                prettyTabs(depth);
-                printf("%s[variable] = ", decl->identifier);
-                char *type = lookupVar(table, decl->identifier, decl->lineno, 1);
-                if(strcmp(type, " ") == 0)
+                SYMBOL *tmp = makeSymbol(decl->identifier, varSym, 1);
+                SYMBOL *parent = getSymbol(table, parentname, typeSym);
+                if(parent == NULL && strlen(parentname) > 0)
                 {
-                    strcpy(type, "<infer>");
+                    fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
+                    exit(1);
                 }
-                printf("%s\n", type);
+                tmp->val.parentType = parent;
+                tmp->t = decl->t;
+                putVar(tmp, table, decl->lineno);
+                if(symbolPrint == 1)
+                {
+                    prettyTabs(depth);
+                    printf("%s[variable] = ", decl->identifier);
+                    char *type = lookupVar(table, decl->identifier, decl->lineno, 1);
+                    if(strcmp(type, " ") == 0)
+                    {
+                        strcpy(type, "<infer>");
+                    }
+                    printf("%s\n", type);
+                }
+                if(decl->val.right != NULL)
+                {
+                    symExp(decl->val.right, table, decl->lineno);
+                }
             }
-            if(decl->val.right != NULL)
-            {
-                symExp(decl->val.right, table, decl->lineno);
+            else{
+                SYMBOL *tmp = makeSymbol(decl->identifier, varSym, 1);
+                tmp->t = decl->t;
+                SYMBOL *bodyList = symStructHelper(decl->t->val.args, table);
+                tmp->val.structFields = bodyList;
+                putVar(tmp, table, decl->lineno);
+                if(symbolPrint == 1)
+                {
+                    prettyTabs(depth);
+                    printf("%s[variable] = ", decl->identifier);
+                    printType(decl->t);
+                    printf("{");
+                    printStructFields(table, bodyList);
+                    printf("}\n");
+                }
+                if(decl->val.right != NULL)
+                {
+                    symExp(decl->val.right, table, decl->lineno);
+                }
             }
+            
 }
 void symStructDecl(DECLARATION *decl, symTable *table, int depth)
 {
@@ -655,11 +701,14 @@ void printType(TYPE *t)
         {
             printf("[]");
         }
-        else{
+        else if (tmp->name != NULL){
             if(strcmp(tmp->name, " ") == 0)
             {    printf("void"); }
             else
             {    printf("%s", tmp->name); }
+        }
+        else{
+            break;
         }
         tmp = tmp->val.arg;
     }
@@ -738,6 +787,7 @@ void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
                     {
+                        cur = cur->val.assignment.chain;
                         continue;
                     }
                 }
@@ -758,6 +808,7 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
                     {//ignore blank identifier
+                        cur = cur->val.assignment.chain;
                         continue;
                     }
                     else if(strlen(lookupVarLocal(table, cur->val.assignment.identifier->val.identifier, stmt->lineno)) == 0)
@@ -1060,10 +1111,7 @@ void symExp(EXP *exp, symTable *table, int lineno)
             if(strlen(lookupFunc(table, exp->val.fn->identifier, lineno, 0)) == 0)//function 
             {
             
-                if(strcmp(exp->val.fn->identifier, "cap") == 0) {}
-                else if(strcmp(exp->val.fn->identifier, "len") == 0) {}
-                else if(strcmp(exp->val.fn->identifier, "append") == 0) {}
-                else if(strlen(lookupType(table,exp->val.fn->identifier, lineno, 0)) != 0) {}
+                if(strlen(lookupType(table,exp->val.fn->identifier, lineno, 0)) != 0) {}
                 else{
                     fprintf(stderr, "Error: (line %d) undefined function %s.\n", lineno, exp->val.fn->identifier);
                     exit(1);
@@ -1075,12 +1123,47 @@ void symExp(EXP *exp, symTable *table, int lineno)
             symExp(exp->val.expblock.next, table, lineno);
             symExp(exp->val.expblock.value, table, lineno);
             break;
+        case funcBlockExp:
+            funcBlockHelper(exp, table, lineno);
+            symExp(exp->val.fnblock.fn->params->val.fnCallBlock, table, lineno);
+            break;
+        case appendExp:
+            symExp(exp->val.binary.lhs, table, lineno);
+            symExp(exp->val.binary.rhs, table, lineno);
+            break;
+        case lenExp:
+        case capExp:
+            symExp(exp->val.binary.rhs, table, lineno);
+            break;
         default:
             fprintf(stderr, "Unrecognized expression kind %d", exp->kind);
             exit(1);
     }
 }
 
+void funcBlockHelper(EXP *exp, symTable *table, int lineno)
+{
+    EXP *tmp = exp->val.fnblock.identifier;
+    while(tmp->kind == parExp)
+    {
+        tmp = tmp->val.binary.rhs;
+    }
+    if(tmp->kind != idExp)
+    {
+        fprintf(stderr,"Error: (line %d) function call id not an identifier.\n", lineno);
+    }
+    else{
+        if(strlen(lookupFunc(table, tmp->val.identifier, lineno, 0)) == 0)//function 
+            {
+            
+                if(strlen(lookupType(table,tmp->val.identifier, lineno, 0)) != 0) {}
+                else{
+                    fprintf(stderr, "Error: (line %d) undefined function %s.\n", lineno, tmp->val.identifier);
+                    exit(1);
+                }
+            }
+    }
+}
  
 // ----- The following should be in another file
 
