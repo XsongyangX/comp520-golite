@@ -5,7 +5,6 @@ typedef struct SYMBOL SYMBOL;
 typedef struct STATEMENT STATEMENT;
 typedef struct FUNCTION FUNCTION;
 typedef struct DECLARATION DECLARATION;
-//typedef struct SHORT_DECL SDecl;
 typedef struct PROGRAM PROGRAM;
 typedef struct TYPE TYPE;
 #define HASHSIZE 317
@@ -93,12 +92,16 @@ enum DeclarationType{
 };
 
 
-/* By convention, simple values have size 1.
-Slices start with size 0.
+/* 
+By convention, simple values have size 1. Slices start with size 0.
 Name is NULL unless the type is user-defined, in which case it reflects
 the user-specified name of the type.
-If the type is just a rename of another type, the val is one arg with a pointer to that type.
-If the type is a struct, the val is a linked list of Exps representing the members of the struct.*/
+
+If the type is just a rename of another type, the val is one arg with a pointer 
+to that type.
+If the type is a struct, the val is a linked list of Exps representing the 
+members of the struct.
+*/
 struct TYPE{
     int size;
     char *name;
@@ -109,9 +112,11 @@ struct TYPE{
     }val;
 };
 
-/* The expression nodes are have no side-effects in the parser.
+/* 
+The expression nodes are have no side-effects in the parser.
 They are all well-assigned in the tree.c file. No need to worry 
-about things like $$->next here. */
+about things like $$->next here. 
+*/
 struct EXP{
     enum ExpressionKind kind;
     TYPE *t;
@@ -141,7 +146,8 @@ struct EXP{
     }val;
 };
 
-/* Compound declarations should be broken down into individual declarations
+/* 
+Compound declarations should be broken down into individual declarations
 */
 struct DECLARATION{
     enum DeclarationType d;
@@ -154,14 +160,22 @@ struct DECLARATION{
         FUNCTION *f;
         DECLARATION *body;
     }val;
-    DECLARATION *next;    DECLARATION *chain;
+	
+	// Left-recursion in grammar, the list is backwards!
+	// Use head recursion when traversing declaration lists.
+	// Similarly, the declaration chain is also backwards.
+	
+	// used in top-level declarations and
+    DECLARATION *next;
+	// used in distributed declarations 
+	DECLARATION *chain;
 };
-// struct SHORT_DECL{//Struct for function declaration parameters for space efficiency
-//     EXP *identifier;
-//     TYPE *t;
-//     SDECLARATION *next;
-// };
-struct FUNCTION{//parameters are referred to as a list of declarations where the 'right' field will be nil
+
+/* 
+Parameters are referred to as a list of declarations 
+where the 'right' field will be nil.
+*/
+struct FUNCTION{
     int lineno;
     symTable *localScope;
     char *identifier;
@@ -170,22 +184,62 @@ struct FUNCTION{//parameters are referred to as a list of declarations where the
     TYPE *returnt;
     STATEMENT *body;
 };
+
+
 struct STATEMENT{
     enum StatementKind kind;
     int lineno;
     symTable *localScope;
     union{
-        struct{EXP *identifier; EXP *value; STATEMENT *chain;} assignment;
-        struct{EXP *condition; STATEMENT *optDecl; STATEMENT *body; STATEMENT *elif;} conditional;//IF(,ELIF,ELSE) and FOR
-        struct{EXP *value; int hasNewLine;} iostmt;//PRINT
-        DECLARATION *declaration;
+        
+		struct{
+			EXP *identifier; 
+			EXP *value; 
+			STATEMENT *chain;
+		} assignment;
+        
+		//IF(,ELIF,ELSE) and FOR
+		struct{
+			EXP *condition; 
+			STATEMENT *optDecl; 
+			STATEMENT *body; 
+			STATEMENT *elif;
+		} conditional;
+		
+		// PRINT
+        struct{
+			EXP *value; 
+			int hasNewLine;
+		} iostmt;
+        
+		DECLARATION *declaration;
         STATEMENT *body;
-        EXP *expression;//used for return stmts and expr stmts
-        struct{EXP *condition; STATEMENT *optDecl; STATEMENT *cases;} switchBody;
-        struct{EXP *condition; STATEMENT *body;} caseBody;//null condition represents default
+        
+		//used for return stmts and expr stmts
+		EXP *expression;
+        
+		// switch statement
+		struct{
+			EXP *condition; 
+			STATEMENT *optDecl; 
+			STATEMENT *cases;
+		} switchBody;
+        
+		// case statement and default statement
+		// null condition means default
+		struct{
+			EXP *condition; 
+			STATEMENT *body;
+		} caseBody;
+		
     } val;
+	
+	// As with declarations, the list is backwards.
+	// Use head recursion.
     STATEMENT *next;
 };
+
+/* Only one per file */
 struct PROGRAM{
     char *package;
     symTable *globalScope;
@@ -241,7 +295,6 @@ DECLARATION *makeDECL(int isVar, char *identifier, TYPE *t, EXP *rhs, int lineno
 DECLARATION *makeDECL_norhs(int isVar, char *identifier, TYPE *t, int lineno);
 DECLARATION *makeDECL_notype(int isVar, char *identifier, int gtype, int arraysize,  EXP *rhs, int lineno);
 DECLARATION *makeDECL_struct( char *identifier, DECLARATION *body, int lineno);
-//SDECLARATION *makeSDecl(EXP *e, char* declType, int gtype, int arraysize);
 DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps);
 DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t);
 DECLARATION *makeDECL_type(char *identifier, TYPE *typeNode, int lineno);
