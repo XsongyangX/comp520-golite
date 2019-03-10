@@ -16,8 +16,7 @@ AST is not a good abstraction of the parsed language.
 
 The weeder checks for:
 	- Division by 0
-	- Missing return statement
-	- Unreachable return statements
+	- Terminating statements (return)
 	- Too many default cases
 	- Break and continue validity
 	- If, switch, for: short declaration
