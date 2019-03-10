@@ -98,7 +98,7 @@ Return statement
 */
 // Return value is true if the statement and its decendents have a return statement
 bool weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, 
-bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
+bool lookForDefaultCase, bool needReturn){
 	
 	// check for null
 	if (s == NULL) return false;
@@ -124,16 +124,16 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
 			
 			returnChain = weedStatement(s->val.assignment.chain, allowBreak, 
-				allowContinue, false, encounteredReturn, needReturn);
+				allowContinue, false, needReturn);
 			returnNext = weedStatement(s->next, allowBreak, allowContinue,
-				false, encounteredReturn, needReturn);
+				false, needReturn);
 			return returnChain || returnNext;
 			
 		// statement block
 		case blockS:
 			returnNext = weedStatement(s->next, allowBreak, allowContinue,
-				false, encounteredReturn, needReturn);
-			returnInBody = weedStatement(s->val.body, allowBreak, allowContinue, false, encounteredReturn, needReturn);	       
+				false, needReturn);
+			returnInBody = weedStatement(s->val.body, allowBreak, allowContinue, false, needReturn);	       
 			return returnNext || returnInBody;
 			
 		// if and else-if statement
@@ -145,17 +145,17 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			
 			returnInElsePart = 
 				weedStatement(s->val.conditional.elif, allowBreak, allowContinue, 
-				false, encounteredReturn, needReturn);
+				false, needReturn);
 				
 			returnInBody = 
 				weedStatement(s->val.conditional.body, allowBreak, allowContinue, 
-				false, encounteredReturn, needReturn);
+				false, needReturn);
 			return returnInElsePart && returnInBody;
 			
 		// else statement
 		case elseS:
 			return weedStatement(s->val.conditional.body, allowBreak, allowContinue, 
-				false, encounteredReturn, needReturn);
+				false, needReturn);
 			
 		// for statement
 		case forS:
@@ -163,14 +163,14 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			weedStatement(s->val.conditional.optDecl, false, false, false, true, false);
 			returnInBody = 
 				weedStatement(s->val.conditional.body, true, true, false,
-				encounteredReturn, needReturn);
+				needReturn);
 			return returnInBody;
 			
 		// while statement
 		case whileS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 			return weedStatement(s->val.conditional.body, true, true, false,
-				encounteredReturn, needReturn);	
+				needReturn);	
 			
 		// print statement
 		case printS:
@@ -184,10 +184,7 @@ bool lookForDefaultCase, bool encounteredReturn, bool needReturn){
 			
 		// return statement
 		case returnS:
-			if (encounteredReturn) {
-				fprintf(stderr, "Error: (line %d) too many return statements\n", s->lineno);
-				exit(1);
-			}
+			
 			weedExpression(s->val.expression, s->lineno, false, false, true);
 			return true;
 		
