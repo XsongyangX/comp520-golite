@@ -53,59 +53,51 @@ enum ExpressionKind{
 	capExp, //built-in
 	uxorExp, // unary ^
 	funcExp //function call
-	};
-enum StatementKind{ emptyS, //NULL // UNUSED
-                    assignS,
-                    quickDeclS,
-                    blockS, //{...}
-                    ifS,
-                    elifS,
-                    elseS,
-                    forS,
-                    whileS,
-                    printS,
-                    exprS,
-                    returnS,
-                    switchS,
-                    caseS,
-                    breakS,
-                    continueS,
-                    declS
-                    };
-
-enum GroupingType{  nilType,
-                    baseType,
-                    arrayType,
-                    sliceType,
-                    structType,
-                    userType,
-                    };
-enum DeclarationType{typeDecl,
-					varDecl,
-					structDecl,
-					funcDecl,
-					funcCall
-					};
-
-enum SymbolKind{nullSym, varSym, funcSym, typeSym, structSym};
-struct SYMBOL{
-    char *name;
-    enum SymbolKind kind;
-    TYPE *t;
-    int wasRedefined; //used to deal with int redeclerations, for instance
-    union{
-        SYMBOL *parentType;
-        SYMBOL *returnType;
-        SYMBOL *structFields;
-        struct {SYMBOL *funcParams; SYMBOL *returnTypeRef;} func;
-    } val;
-    struct SYMBOL *next;
 };
-struct symTable {
-    SYMBOL *varTable[HASHSIZE];
-    SYMBOL *typeTable[HASHSIZE];
-    SYMBOL *funcTable[HASHSIZE];
-    symTable *next;
+
+enum StatementKind{ 
+	emptyS, //NULL // UNUSED
+	assignS,
+	quickDeclS,
+	blockS, //{...}
+	ifS,
+	elifS,
+	elseS,
+	forS,
+	whileS,
+	printS,
+	exprS,
+	returnS,
+	switchS,
+	caseS,
+	breakS,
+	continueS,
+	declS
+};
+
+enum GroupingType{  
+	nilType,
+	baseType,
+	arrayType,
+	sliceType,
+	structType,
+	userType,
+};
+
+enum DeclarationType{
+	typeDecl,
+	varDecl,
+	structDecl,
+	funcDecl,
+	funcCall
+};
+
+enum SymbolKind{
+	nullSym, 
+	varSym, 
+	funcSym, 
+	typeSym, 
+	structSym
 };
 
 
