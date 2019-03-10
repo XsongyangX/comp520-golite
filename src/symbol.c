@@ -605,7 +605,7 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
                 prettyTabs(depth);
                 printf("}\n");
             }
-            decl->val.f->localScope = subtable;
+            decl->val.f->localScope = subTable;
 }
 void symDecl(DECLARATION *decl, symTable *table, int depth)
 {
