@@ -121,10 +121,23 @@ struct EXP{
         char runeLiteral;
         int intLiteral;
         float floatLiteral;
-        FUNCTION *fn;
-        struct{EXP *lhs; EXP *rhs;} binary;
-        struct{EXP *next; char *identifier;} idblock;
-        struct{EXP *next; EXP *value;} expblock; 
+        
+		FUNCTION *fn;
+        
+		struct{
+			EXP *lhs;
+			EXP *rhs;
+		} binary;
+        
+		struct{
+			EXP *next; 
+			char *identifier;
+		} idblock;
+		
+        struct{
+			EXP *next; 
+			EXP *value;
+		} expblock; 
     }val;
 };
 
