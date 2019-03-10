@@ -5,10 +5,10 @@
 #include <stdbool.h>
 
 typedef struct {
-	bool foundReturn,
-	bool foundDefault,
-	bool foundBreak
-}Traversal;
+	bool foundTerminating;
+	bool foundDefault;
+	bool foundBreak;
+} Traversal;
 
 void weedRoot(PROGRAM *root);
 void weedProgram(PROGRAM *program);

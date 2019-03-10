@@ -16,7 +16,7 @@ the grammar.
 
 The weeder checks for:
 	- Division by 0
-	- Terminating statements (return)
+	- Terminating statements (return and infinite for loop)
 	- Too many default cases
 	- Break and continue validity
 	- If, switch, for: short declaration
@@ -81,11 +81,11 @@ void weedFunction(FUNCTION *f){
 	
 	// function declaration
 	// no return statement, and not void
-	if ( !weedStatement(f->body, false, false, false, true)
+	if ( !weedStatement(f->body, false, false).foundTerminating
 		&& f->returnt->gType != nilType){
 		fprintf(stderr, 
-		"Error: (line %d) expecting a return statement\n",
-		f->lineno);
+		"Error: (line %d) function %s expecting a terminating statement\n",
+		f->lineno, f->identifier);
 		exit(1);
 	}
 	
@@ -103,23 +103,26 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 {
 	
 	// return values
-	Traversal foundNothing = {false, false, false};
-	Traversal foundReturn = {false, true, false};
-	Traversal foundDefault = {true, false, false};
-	Traversal foundBoth = {true, true, false};
-	Traversal foundBreak = {false, false, true};
+	const Traversal foundNothing = {false, false, false};
 	
 	// check for null, reached the end of a list of statements
 	// this is actually the beginning of the list
 	if (s == NULL) return foundNothing;
+	
+	const Traversal foundTerminating = {true, true, false};
+	const Traversal foundDefault = {false, true, false};
+	const Traversal foundTerminatingDefault = {true, true, false};
+	const Traversal foundBreak = {false, false, true};
+	const Traversal foundTerminatingBreak = {true, false, true};
 	
 	// head recursion
 	Traversal foundValues = weedStatement(s->next, allowBreak, 
 		allowContinue);
 	
 	// temporary values
-	bool returnInBody;
-	bool returnInElsePart;
+	Traversal returnInBody;
+	Traversal returnInElsePart;
+	Traversal temp;
 	
 	
 	switch (s->kind) {
@@ -134,6 +137,8 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 		case quickDeclS:
 			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
+			
+			if (foundValues.foundBreak) return foundBreak;
 			
 			return foundNothing;
 			
@@ -156,9 +161,14 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			
 			// no else part
 			// do not place this above because there are other weeding procedures
-			if (s->val.conditional.elif == NULL) return false;
+			if (s->val.conditional.elif == NULL) {
+				return returnInBody;
+			}
 			
-			return returnInElsePart.foundReturn && returnInBody.foundReturn;
+			temp.foundTerminating = returnInElsePart.foundTerminating && returnInBody.foundTerminating;
+			temp.foundDefault = false;
+			temp.foundBreak = returnInElsePart.foundBreak || returnInBody.foundBreak;
+			return temp;
 			
 		// else statement
 		case elseS:
@@ -169,41 +179,73 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 			weedStatement(s->val.conditional.optDecl, false, false);
 			 
-			return weedStatement(s->val.conditional.body, true, true);
+			// found nothing, because the break statement is confined to the
+			// for-loop context
+			return foundNothing;
 			
 		// while statement
 		case whileS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
-			return weedStatement(s->val.conditional.body, true, true);	
+			
+			// infinite loop without breaks
+			if (s->val.conditional.condition == NULL
+				&& !weedStatement(s->val.conditional.body, true, true)
+				.foundBreak)
+				
+				return foundTerminating;
+			
+			// found nothing, because the break statement is confined to the
+			// for-loop context
+			return foundNothing;	
 			
 		// print statement
 		case printS:
 			weedExpression(s->val.iostmt.value, s->lineno, false, false, true);
+			
+			if (foundValues.foundBreak) return foundBreak;
+			
 			return foundNothing;
 			
 		// expression statement
 		case exprS:
 			weedExpression(s->val.expression, s->lineno, false, true, true);
+			
+			if (foundValues.foundBreak) return foundBreak;
+			
 			return foundNothing;
 			
 		// return statement
 		case returnS:
 			
 			weedExpression(s->val.expression, s->lineno, false, false, true);
-			return foundReturn;
+			
+			if (foundValues.foundBreak) return foundTerminatingBreak;
+			
+			return foundTerminating;
 		
 		// switch statement
 		case switchS:
 			weedStatement(s->val.switchBody.optDecl, false, false);
 			weedExpression(s->val.switchBody.condition, s->lineno, false, false, true);
-			return weedStatement(s->val.switchBody.cases, 
+			temp = weedStatement(s->val.switchBody.cases, 
 				allowBreak, allowContinue);
+				
+			// no break, a default case, each case is terminating
+			if (temp.foundTerminating && temp.foundDefault && !temp.foundBreak) {
+				return foundTerminating;
+			}
+			
+			if (foundValues.foundBreak) return foundBreak;
+			
+			return foundNothing;
 			
 		// case statement
 		case caseS:
 			// default case
 			if (s->val.caseBody.condition == NULL) {
-				if (foundValues.foundDefault) { // second one seen so far
+				
+				// second one seen so far
+				if (foundValues.foundDefault) { 
 					fprintf(stderr, 
 					"Error: (line %d) multiple default cases in switch statement\n", 
 					s->lineno);
@@ -211,9 +253,9 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 				}
 				
 				if (weedStatement(s->val.caseBody.body, 
-					true, allowContinue, false, needReturn).
-					foundReturn)
-					return foundBoth;
+					true, allowContinue).
+					foundTerminating)
+					return foundTerminatingDefault;
 				
 				return foundDefault;
 					
@@ -221,10 +263,48 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			}
 			weedExpression(s->val.caseBody.condition, 
 				s->lineno, false, false, true);
-
-
-			return weedStatement(s->val.caseBody.body, true, allowContinue);
 			
+			returnInBody = weedStatement(s->val.caseBody.body, true, allowContinue);
+			
+			// previous case is terminating
+			if (foundValues.foundTerminating){
+				
+				// previous case is default
+				if (foundValues.foundDefault) {
+					
+					// previous case has a break
+					if (foundValues.foundBreak){
+						temp.foundTerminating = true;
+						temp.foundDefault = true;
+						temp.foundBreak = true;
+						return temp;
+					}
+					// no previous break
+					else {
+						temp.foundTerminating = true;
+						temp.foundDefault = true;
+						temp.foundBreak = returnInBody.foundBreak;
+						return temp;
+					}
+				}
+				// no default
+				else {
+					
+					// break present in previous
+					if (foundValues.foundBreak){
+						return foundTerminatingBreak;
+					}
+					// no previous break
+					else {
+						return returnInBody;
+					}
+				}
+				
+			}
+			// previous case is not terminating
+			else {
+				return foundNothing;
+			}
 
 		// break statement
 		case breakS:
@@ -234,7 +314,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 				s->lineno);
 				exit(1);
 			}
-			return foundNothing;
+			return foundBreak;
 			
 		// continue statement
 		case continueS:
@@ -244,11 +324,17 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 				s->lineno);
 				exit(1);
 			}
+			
+			if (foundValues.foundBreak) return foundBreak;
+			
 			return foundNothing;
 			
 		// declaration statement
 		case declS:
 			weedDeclaration(s->val.declaration, s->lineno);
+			
+			if (foundValues.foundBreak) return foundBreak;
+			
 			return foundNothing;
 			
 		// throw error
