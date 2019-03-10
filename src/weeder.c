@@ -158,8 +158,8 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 		// assignment
 		case assignS:
       
-      // return values ignored, and the field is not used in grammar
-      weedStatement(s->val.assignment.chain, allowBreak, 
+			// return values ignored, and the field is not used in grammar
+			weedStatement(s->val.assignment.chain, allowBreak, 
 				allowContinue); 
 		
 		// quick declaration
@@ -201,7 +201,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			// no else part
 			// do not place this above because there are other weeding procedures
 			if (s->val.conditional.elif == NULL) {
-        returnInBody.foundTerminating = false;
+				returnInBody.foundTerminating = false;
 				return returnInBody;
 			}
 			
@@ -223,10 +223,10 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			returnInBody = 
 				weedStatement(s->val.conditional.body, true, true);
 			
-      weedStatement(s->val.conditional.elif, false, false);
+			weedStatement(s->val.conditional.elif, false, false);
 			
-      // action field in a for loop, e.g. for ;;i++{}
-      if(s->val.conditional.elif != NULL){
+			// action field in a for loop, e.g. for ;;i++{}
+			if(s->val.conditional.elif != NULL){
 				if(s->val.conditional.elif->kind == exprS)
 				{
 					if (s->val.conditional.elif->val.expression->kind == funcExp)
@@ -283,7 +283,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 		case exprS:
 			weedExpression(s->val.expression, s->lineno, false, true, true);
       
-      // the following may be redundant, but weedExpression does not check for funcBlockExp
+			// the following may be redundant, but weedExpression does not check for funcBlockExp
 			if(s->val.expression->kind == funcExp || s->val.expression->kind == funcBlockExp)
 			{
 				//OK
