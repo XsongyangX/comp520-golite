@@ -4,7 +4,7 @@ package main
 func main(){}
 
 func foo(x float64) float64 {
-	switch x {
+	switch {
 	case x > 0.0:
 	case x < 0.0:
 	default: 
