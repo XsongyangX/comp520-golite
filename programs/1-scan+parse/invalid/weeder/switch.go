@@ -5,8 +5,8 @@ func main(){}
 
 func foo(x float64) float64 {
 	switch x {
-	case x > 0:
-	case x < 0:
+	case x > 0.0:
+	case x < 0.0:
 	default: 
 	}
 }
