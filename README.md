@@ -15,7 +15,10 @@ There are many scripts from the instructor and some come purely from us:
 * `test.sh`: Automatically runs your compiler against test programs in the programs directory and checks the output
 * `test-solution.sh`: Automatically runs your compiler against **Milestone 1 solution test programs** given by the instructor
 * `testScan.sh`: Automatically runs the scanner against test programs in the `1-scan+parse` directory. You should use the `tokens` argument with this Bash script to make the scanner run on the **entire** program. Otherwise, no arguments given just builds the scanner and runs it for one token.
-* `testPretty.sh`: Automatically runs the pretty printer against test programs in the `1-scan+parse` directory. The test is divided in 2 phases: pretty printing twice and comparison with the reference pretty printer and pretty identity. To run the second phase too, use the `compare` argument. 
+* `testPretty.sh`: Automatically runs the pretty printer against test programs in the `1-scan+parse` directory. The test is divided in 2 phases: pretty printing twice and comparison with the reference pretty printer and pretty identity. To run the second phase, use the `compare` argument. The script will create a directory called `pretty` in the same directory. It contains the following sub-directories. All these directories are ignored by `git`.
+  * `first`: Contains the first pretty printed output of valid `.go` files
+  * `reference`: Contains the pretty printed output from the reference compiler of the same valid `.go` files
+  * `second`: Contains the second pretty printed output of valid `.go` files. Requires the first pretty printed output be successfully printed.
 
 Comments found in both files provide more details as to the requirements. Since a large portion of grading is performed automatically, please ensure to follow the input/output specifications **exactly**. You must be able to run the provided scripts on the SOCS Trottier machines.
 
