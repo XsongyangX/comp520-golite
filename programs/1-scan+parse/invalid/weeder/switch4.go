@@ -11,4 +11,5 @@ func foo(x float64) float64 {
 	default:
 		break
 		return 1.0
+	}
 }
