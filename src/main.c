@@ -59,6 +59,7 @@ int main(int argc, char** argv)
 		prettyPROG(my_prog); 
 		return 0;
 	}
+#ifndef PRETTY_TEST
 	else if ( 0 == strcmp(argv[1], "symbol"))
 	{
 		isToken = 0;
@@ -89,6 +90,7 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	*/
+#endif
 	else 
 	{
 		fprintf(stderr, 
