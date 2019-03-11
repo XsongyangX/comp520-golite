@@ -1,4 +1,4 @@
-/* An infinite for-loop with a break inside is not a terminating statement */
+/* An usual for-loop is not a terminating statement */
 package main
 
 func main(){}
