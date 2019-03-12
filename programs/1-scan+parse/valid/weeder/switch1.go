@@ -12,4 +12,5 @@ func foo(r float64) float64 {
 		return r+1.0
 	default:
 		return 0.0
+	}
 }
