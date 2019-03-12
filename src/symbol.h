@@ -79,6 +79,7 @@ void symQDecl(STATEMENT *cur, symTable *table);
 void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 
 void symExp(EXP *exp, symTable *table, int lineno);
+void funcBlockHelper(EXP *exp, symTable *table, int lineno);
 
 /* The following four functions will be in separate .h and .c files. */
 bool typeCheckProgam(PROGRAM *prog);

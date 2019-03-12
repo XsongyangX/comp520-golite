@@ -204,9 +204,6 @@ exp             : '+' exp %prec UNARY {$$ = makeEXP_pos($2);}
                 | exp '-' trm  {$$ = makeEXP_minus($1, $3);}
                 | exp '|' trm  {$$ = makeEXP_bor($1, $3);}
                 | exp '^' trm  {$$ = makeEXP_xor($1, $3);}
-                | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
-                | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
-                | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
                 | trm {$$ = $1;}
                 ;
 
@@ -231,6 +228,9 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
 		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
                 | access {$$ = $1;}
+                | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
+                | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
+                | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
                 ;
                 
 access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
