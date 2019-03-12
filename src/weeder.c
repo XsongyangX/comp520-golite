@@ -135,9 +135,9 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 	if (s == NULL) return foundNothing;
 	
 	const Traversal foundTerminating = {true, false, false};
-	const Traversal foundDefault = {false, true, false};
 	const Traversal foundTerminatingDefault = {true, true, false};
 	const Traversal foundBreak = {false, false, true};
+	const Traversal foundDefault = {false, true, false};
 	const Traversal foundTerminatingBreak = {true, false, true};
 	
 	// head recursion
@@ -311,13 +311,16 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 				return foundTerminating;
 			}
 			
+			// carry previous breaks
 			if (foundValues.foundBreak) return foundBreak;
 			
+			// not terminating and no break to carry
 			return foundNothing;
 			
 		// case statement
 		case caseS:
-			// default case
+		
+			// 1. default case
 			if (s->val.caseBody.condition == NULL) {
 				
 				// second one seen so far
@@ -328,59 +331,54 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 					exit(1);
 				}
 				
-				if (weedStatement(s->val.caseBody.body, 
-					true, allowContinue).
-					foundTerminating)
-					return foundTerminatingDefault;
+				// weed the statement body
+				returnInBody = weedStatement(s->val.caseBody.body, 
+					true, allowContinue);
 				
-				return foundDefault;
-					
+				// previous case does not terminate
+				if (!foundValues.foundTerminating) return foundDefault;
+				
+				// default body does not terminate
+				if (!returnInBody.foundTerminating) return foundDefault;
+				
+				// previous case breaks or default case breaks
+				if (foundValues.foundBreak || returnInBody.foundBreak){
+					temp.foundTerminating = true;
+					temp.foundDefault = true;
+					temp.foundBreak = true;
+					return temp;
+				}
+				
+				// previous case terminates, has no multiple default and
+				// does not break
+				// default case terminates and has no break 
+				return foundTerminatingDefault;
 				
 			}
+			
+			// 2. normal cases
+			
+			// weed the condition
 			weedExpression(s->val.caseBody.condition, 
 				s->lineno, false, false, true);
 			
+			// weed the statement body
 			returnInBody = weedStatement(s->val.caseBody.body, true, allowContinue);
 			
-			// previous case is terminating
-			if (foundValues.foundTerminating){
-				
-				// previous case is default
-				if (foundValues.foundDefault) {
-					
-					// previous case has a break
-					if (foundValues.foundBreak){
-						temp.foundTerminating = true;
-						temp.foundDefault = true;
-						temp.foundBreak = true;
-						return temp;
-					}
-					// no previous break
-					else {
-						temp.foundTerminating = true;
-						temp.foundDefault = true;
-						temp.foundBreak = returnInBody.foundBreak;
-						return temp;
-					}
-				}
-				// no default
-				else {
-					
-					// break present in previous
-					if (foundValues.foundBreak){
-						return foundTerminatingBreak;
-					}
-					// no previous break
-					else {
-						return returnInBody;
-					}
-				}
-				
-			}
-			// previous case is not terminating
-			else {
-				return foundNothing;
-			}
+			// previous does not terminate 
+			if (!foundValues.foundTerminating) return foundNothing;
+			
+			// previous breaks
+			if (foundValues.foundBreak) return foundBreak;
+			
+			// case body does not terminate
+			if (!returnInBody.foundTerminating) return foundNothing;
+			
+			// case body breaks
+			if (returnInBody.foundBreak) return foundBreak;
+			
+			// all up to now terminate, do not break
+			return foundTerminating;
 
 		// break statement
 		case breakS:
