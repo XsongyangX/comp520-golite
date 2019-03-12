@@ -11,4 +11,4 @@ then
 fi
 
 # generate test programs
-python3 scope.py generate
+
