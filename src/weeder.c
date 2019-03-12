@@ -335,14 +335,26 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 				returnInBody = weedStatement(s->val.caseBody.body, 
 					true, allowContinue);
 				
-				// previous case does not terminate
-				if (!foundValues.foundTerminating) return foundDefault;
+				// check if this is not the first case, 
+				// if so look at previous
+				if (s->next != NULL) {
+					// previous does not terminate 
+					if (!foundValues.foundTerminating) return foundDefault;
+				
+					// previous breaks
+					if (foundValues.foundBreak) {
+						temp.foundTerminating = true;
+						temp.foundDefault = true;
+						temp.foundBreak = true;
+						return temp;
+					}
+				}
 				
 				// default body does not terminate
 				if (!returnInBody.foundTerminating) return foundDefault;
 				
-				// previous case breaks or default case breaks
-				if (foundValues.foundBreak || returnInBody.foundBreak){
+				// default case breaks
+				if (returnInBody.foundBreak){
 					temp.foundTerminating = true;
 					temp.foundDefault = true;
 					temp.foundBreak = true;
@@ -365,11 +377,15 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			// weed the statement body
 			returnInBody = weedStatement(s->val.caseBody.body, true, allowContinue);
 			
-			// previous does not terminate 
-			if (!foundValues.foundTerminating) return foundNothing;
+			// check if this is not the first case, 
+			// if so look at previous
+			if (s->next != NULL) {
+				// previous does not terminate 
+				if (!foundValues.foundTerminating) return foundNothing;
 			
-			// previous breaks
-			if (foundValues.foundBreak) return foundBreak;
+				// previous breaks
+				if (foundValues.foundBreak) return foundBreak;
+			}
 			
 			// case body does not terminate
 			if (!returnInBody.foundTerminating) return foundNothing;
