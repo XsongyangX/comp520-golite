@@ -68,16 +68,17 @@ int main(int argc, char** argv)
 		weedRoot(my_prog);
 		checkProg(my_prog);
 		return 0;
-	}/*
+	}
 	else if ( 0 == strcmp(argv[1], "typecheck"))
 	{
 		isToken = 0;
-		g_symbols = 0;
+		symbolPrint = 0;
 		yyparse();
-		symbolFromProgramStart(root);
+		weedRoot(my_prog);
+		checkProg(my_prog);
 		printf("OK\n");
 		return 0;
-	}
+	}/*
 	else if ( 0 == strcmp(argv[1], "codegen"))
 	{
 		isToken = 0;
