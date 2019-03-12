@@ -496,7 +496,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	// identifier, look for blank
 	case idExp:
 		if (lookForBlankId && 0 == strcmp(e->val.identifier, "_")){
-			fprintf(stderr, "Error: (line %d) blank identifier used in an expression\n", lineno);
+			fprintf(stderr, "Error: (line %d) blank identifier used in an expression or field access\n", lineno);
 			exit(1);
 		}
 		return;
@@ -528,7 +528,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	// struct member invoke
 	case invocExp:
 		weedExpression(e->val.binary.lhs, lineno, false, false, false);
-		weedExpression(e->val.binary.rhs, lineno, false, false, false);
+		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	
 	// built-in
