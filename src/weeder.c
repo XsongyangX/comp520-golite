@@ -543,7 +543,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	
 	case funcExp:
 		weedDeclaration(e->val.fn->params, lineno);
-		//weedFnCall(e->val.fn, lineno);
+		
 		return;
 	case funcBlockExp:
 		weedDeclaration(e->val.fnblock.fn->params, lineno);
