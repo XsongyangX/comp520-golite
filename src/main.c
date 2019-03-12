@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 		return 0;
 	}
 #endif
-#if !defined(PRETTY_TEST) || !defined(SCAN_TEST)
+#if !defined(SCAN_TEST) && !defined(PRETTY_TEST)
 	else if ( 0 == strcmp(argv[1], "symbol"))
 	{
 		isToken = 0;
