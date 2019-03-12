@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 		while (yylex()) {}
 		return 0;
 	}
-	
+#ifndef SCAN_TEST
 	else if ( 0 == strcmp(argv[1], "parse"))
 	{
 		isToken = 0;
@@ -59,7 +59,8 @@ int main(int argc, char** argv)
 		prettyPROG(my_prog); 
 		return 0;
 	}
-#ifndef PRETTY_TEST
+#endif
+#if !defined(PRETTY_TEST) || !defined(SCAN_TEST)
 	else if ( 0 == strcmp(argv[1], "symbol"))
 	{
 		isToken = 0;

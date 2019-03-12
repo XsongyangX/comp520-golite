@@ -38,7 +38,7 @@ mainPrettyTest:
 
 # scan option only uses bison to generate the token headers
 scan: emptyParser.o
-	gcc -o minic main.c y.tab.c lex.yy.c y.tab.h -lfl
+	gcc -o minic main.c y.tab.c lex.yy.c y.tab.h -lfl -DSCAN_TEST
 
 emptyParser.o:
 	bison --yacc -d --verbose empty.y
