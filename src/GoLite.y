@@ -60,7 +60,7 @@ void yyerror(const char *s) {
 %type <funcval> funcdef 
 %type <decval> progdefs topdecl dec blockidents decdistributed typelist typedec typedistributed vardec
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr access exps explist idents funccall
+%type <expval> exp trm ftr exps explist idents funccall
 %type <typeval> type opttype
 
 %token tINT
@@ -227,22 +227,15 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
 		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
-                | access {$$ = $1;}
                 | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
                 | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
                 | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
-                ;
-                
-access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | funccall %prec UNARY {$$ = $1;}
-                | '(' access ')' %prec UNARY {$$ = makeEXP_par($2);}
-                | tIDENTIFIER %prec NONUNARY {$$ = makeEXP_id($1);}
+                | ftr '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
+                | ftr '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
+                | ftr '(' explist ')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
+                | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
-funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
-                | access '(' explist ')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
-                ;
 explist         : exps {$$ = $1;}
                 | {$$ = NULL;}
                 ;
