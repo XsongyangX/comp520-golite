@@ -3,7 +3,7 @@ package main
 
 
 func functionToGraph(x float64)float64{
-	return 3*x*x*x - 4*x + 2.0;
+	return 3.0*x*x*x - 4.0*x + 2.0;
 }
 
 
