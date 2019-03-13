@@ -123,7 +123,7 @@ Break and continue
 If, switch, for short declaration
 Return statement
 */
-// Return value is true if the statement and its decendents are terminating
+// Return value is a struct of 3 booleans, {foundTerminating, foundBreak, foundDefault}
 Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 {
 	
@@ -161,12 +161,26 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			// return values ignored, and the field is not used in grammar
 			weedStatement(s->val.assignment.chain, allowBreak, 
 				allowContinue); 
-		
-		// quick declaration
-		case quickDeclS:
 			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
 			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
 			
+			
+			if (foundValues.foundBreak) return foundBreak;
+			
+			return foundNothing;
+
+		// quick declaration
+		case quickDeclS:
+			weedStatement(s->val.assignment.chain, allowBreak, 
+				allowContinue); 
+
+			weedExpression(s->val.assignment.identifier, s->lineno, false, false, false);
+			weedExpression(s->val.assignment.value, s->lineno, false, false, true);
+			if(s->val.assignment.identifier->kind != idExp)
+			{
+				fprintf(stderr, "Error: (line %d) lhs of quick assignment must be an id expression.\n", s->lineno);
+				exit(1);
+			}
 			
 			if (foundValues.foundBreak) return foundBreak;
 			
