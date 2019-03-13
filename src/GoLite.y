@@ -58,9 +58,9 @@ void yyerror(const char *s) {
  */
 %type <progval> prgrm
 %type <funcval> funcdef 
-%type <decval> progdefs topdecl dec blockidents decdistributed typelist typedec typedistributed vardec
+%type <decval> progdefs topdecl dec blockidents decdistributed typedec typedistributed vardec parameters parameter
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr access exps explist idents funccall
+%type <expval> exp trm ftr exps explist idents
 %type <typeval> type opttype
 
 %token tINT
@@ -226,23 +226,16 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tBOOLLITERAL {$$ = makeEXP_bool($1);}
                 | tRUNELITERAL {$$ = makeEXP_rune($1);}
                 | tSTRINGLITERAL {$$ = makeEXP_str($1);}
-		| tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
-                | access {$$ = $1;}
+		        | tRAWSTRINGLITERAL {$$ = makeEXP_rawstr($1);}
                 | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
                 | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
                 | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
-                ;
-                
-access          : access '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | access '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | funccall %prec UNARY {$$ = $1;}
-                | '(' access ')' %prec UNARY {$$ = makeEXP_par($2);}
-                | tIDENTIFIER %prec NONUNARY {$$ = makeEXP_id($1);}
+                | ftr '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
+                | ftr '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
+                | ftr '(' explist ')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
+                | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
-funccall        : tIDENTIFIER '(' explist ')' %prec UNARY {  $$ = makeEXP_func($1, 0, makeDECL_fnCallArgs($3));}
-                | access '(' explist ')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
-                ;
 explist         : exps {$$ = $1;}
                 | {$$ = NULL;}
                 ;
@@ -290,16 +283,19 @@ typedistributed : typedistributed tIDENTIFIER type ';' { $$ = makeDECL_type($2, 
                 ;
 
 /* function definitions */
-funcdef         : tFUNC tIDENTIFIER '(' typelist ')' opttype '{' stmts '}' ';'
+funcdef         : tFUNC tIDENTIFIER '(' parameters ')' opttype '{' stmts '}' ';'
                     {$$ = makeFCTN(yylineno, $2, 0, $4, $6, $8);}
-		|  tFUNC tIDENTIFIER '(' ')' opttype '{' stmts '}' ';'
+		        |  tFUNC tIDENTIFIER '(' ')' opttype '{' stmts '}' ';'
                     {$$ = makeFCTN(yylineno, $2, 0, NULL, $5, $7);}
                 ;
 
-/* Defines the syntax for types in function headers */
-typelist        : typelist ',' typelist {$$ = $3; findBottomDECL($$)->next = $1;}
+/* List of parameters of function declaration signatures */
+parameters      : parameters ',' parameter {$$ = $3; $$->next = $1;}
+                | parameter {$$ = $1; $$->next = NULL;}
+                ;
+
+parameter       : tIDENTIFIER type {$$ = makeDECL_norhs(1, $1, $2, yylineno);}
                 | idents type {$$ = makeDECL_blocknorhs(yylineno, $1, $2);}
-                | tIDENTIFIER type {$$ = makeDECL_norhs(1, $1, $2, yylineno);}
                 ;
 
 opttype         : type {$$ = $1;}

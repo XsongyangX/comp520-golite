@@ -15,7 +15,7 @@ There are many scripts from the instructor and some come purely from us:
 * `test.sh`: Automatically runs your compiler against test programs in the programs directory and checks the output
 * `test-solution.sh`: Automatically runs your compiler against **Milestone 1 solution test programs** given by the instructor
 * `testScan.sh`: Automatically runs the scanner against test programs in the `1-scan+parse` directory. You should use the `tokens` argument with this Bash script to make the scanner run on the **entire** program. Otherwise, no arguments given just builds the scanner and runs it for one token.
-* `testPretty.sh`: Automatically runs the pretty printer against test programs in the `1-scan+parse` directory. The test is divided in 2 phases: pretty printing twice and comparison with the reference pretty printer and pretty identity. To run the second phase, use the `compare` argument. The script will create a directory called `pretty` in the same directory. It contains the following sub-directories. All these directories are ignored by `git`.
+* `testPretty.sh`: Automatically runs the pretty printer against test programs in the given argument `$1` directory. The test is divided in 2 phases: pretty printing twice and comparison with the reference pretty printer and pretty identity. To run the second phase, use the `compare` argument as `$2`. The script will create a directory called `pretty` in the same directory. It contains the following sub-directories. All these directories are ignored by `git` and are destroyed upon using `testPretty.sh` again.
   * `first`: Contains the first pretty printed output of valid `.go` files
   * `reference`: Contains the pretty printed output from the reference compiler of the same valid `.go` files
   * `second`: Contains the second pretty printed output of valid `.go` files. Requires the first pretty printed output be successfully printed.
@@ -37,3 +37,5 @@ Assignment description: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone2.
 Specifications: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone2_Specifications.pdf
 
 Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone2_Rubric.pdf
+
+Report Google doc: https://docs.google.com/document/d/1LOxscfPnuSVjlCml0N6HCuIO17D91X-Ot_sBorizRGI/edit?ts=5c869eb9

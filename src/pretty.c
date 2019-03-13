@@ -708,6 +708,8 @@ void prettyExp(EXP *e)
             break;
         case appendExp:
             printf("append(");
+	    prettyExp(e->val.binary.lhs);
+	    printf(", ");
             prettyExp(e->val.binary.rhs);
             printf(")\n ");
             break;

@@ -2,12 +2,20 @@
 
 # this file performs a rigorous test of the pretty printer
 # using 2 phases
-# 	phase 1: Check for validity with reference compiler
+# 	phase 1: Check for ability to pretty print again 
 #	phase 2: Check for the pretty identity
 
-# arguments: $1 (optional)
-# 	if $1 is "compare", the python compare script will be called
+# arguments: $1 (mandatory) $2 (optional) 
+#	$1: the path to a directory of valid .go files 	
+#	If $2 is "compare", the python compare script will be called
 #   otherwise, the script will only attempt to pretty print
+
+# check arguments
+if [[ $# == 0 || $# > 2 ]]
+then
+	echo "Correct usage: ./testPretty.sh [path to valid .go folder] [optional argument: 'compare']"
+	exit 1
+fi
 
 # check for build script existence
 if [ ! -f build.sh ]
@@ -39,29 +47,21 @@ then
 	exit 1
 fi
 
-# check for test directory for pretty printer
-if [ ! -d pretty ]
+# make test directory for pretty printer
+if [ -d pretty ]
 then
-	mkdir pretty
+	rm pretty -rf
 fi
-# check for the output directory for the pretty printer (1st pass)
-if [ ! -d pretty/first ]
-then
-	mkdir pretty/first
-fi
-# check for the output directory for the reference compiler
-if [ ! -d pretty/reference ]
-then
-	mkdir pretty/reference
-fi
-# check for the output directory for the pretty printer (2nd pass)
-if [ ! -d pretty/second ]
-then
-	mkdir pretty/second
-fi
+mkdir pretty
+# make the output directory for the pretty printer (1st pass)
+mkdir pretty/first
+# make the output directory for the reference compiler
+mkdir pretty/reference
+# make for the output directory for the pretty printer (2nd pass)
+mkdir pretty/second
 
 # generate files
-for file in programs/1-scan+parse/valid/*.go
+for file in $1/*.go
 do
 	name=$(basename $file)
 	cat $file | ~cs520/golitec pretty > pretty/reference/$name
@@ -82,7 +82,7 @@ do
 done
 
 # if the 'compare' argument is given
-if [[ $1 == "compare" ]]
+if [[ $2 == "compare" ]]
 then
 	# compare files
 	
