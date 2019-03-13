@@ -1164,38 +1164,4 @@ void funcBlockHelper(EXP *exp, symTable *table, int lineno)
             }
     }
 }
- 
-// ----- The following should be in another file
-
-bool typeProgram(PROGRAM *prog)
-{//the goal of this call is to make sure variables are used properly within the program
-
-}
-bool typeCheckDeclaration(DECLARATION *decl)
-{//transmit the call to stmts in function bodies
-
-}
-/*  -assignments, make sure lhs and rhs match in type
-    -quick declareations, make sure the lhs and rhs match, need to also infer the type of new vars
-        and make sure they have the same type if they were declared in a higher scope   
-    -conditionals, condition should have bool type, optDecl should be valid (see above 2) or a function call;
-        for loops: make sure the post statement (stored in elif) is a valid post statement (either an assignment, quick decl, or fn call)
-    -switch: the "condition" should have the same type as the case statement conditions
-        remember that a null condition in a case stmt represents the default keyword
-    -expr: should be a fn call
-    -decl: just propagate the type checking call
-    -print: not sure about this one
-    */
-bool typeCheckStatement(STATEMENT *stmt)
-{
-
-}
-/*verify the type of expression, might need to make this return the type.
-See shortTypeStr, longTypeStr, and lookup methods to do this.
-Arguments passed to function calls must be verified.
-Accessing struct elements should be verified as well. */
-bool typeCheckExpression(EXP *exp)
-{
-
-}
 
