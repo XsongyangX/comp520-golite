@@ -123,7 +123,7 @@ Break and continue
 If, switch, for short declaration
 Return statement
 */
-// Return value is true if the statement and its decendents are terminating
+// Return value is a struct of 3 booleans, {foundTerminating, foundBreak, foundDefault}
 Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 {
 	
