@@ -82,7 +82,7 @@ do
 done
 
 # if the 'compare' argument is given
-if [[ $1 == "compare" ]]
+if [[ $2 == "compare" ]]
 then
 	# compare files
 	
