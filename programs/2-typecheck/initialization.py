@@ -45,7 +45,7 @@ def output(assignmentStatement, fileName, isValid = True):
 		
 		file.write("\n")
 		file.write("}")
-
+	return
 # valid test files
 def valid(destroy=False):
 	
