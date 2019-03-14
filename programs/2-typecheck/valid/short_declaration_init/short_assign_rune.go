@@ -2,5 +2,6 @@
 package main
 
 func main(){
-	magic rune := '3'
+	magic := '3'
+	magic = '3'
 }

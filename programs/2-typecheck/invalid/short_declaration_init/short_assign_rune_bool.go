@@ -2,5 +2,6 @@
 package main
 
 func main(){
-	magic rune := false
+	magic := '3'
+	magic = false
 }

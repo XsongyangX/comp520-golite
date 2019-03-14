@@ -2,5 +2,6 @@
 package main
 
 func main(){
-	magic float64 := "hello world"
+	magic := 10.32
+	magic = "hello world"
 }

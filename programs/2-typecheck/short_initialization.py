@@ -51,8 +51,8 @@ def valid(destroy=False):
 	
 	for baseType in constants.BASE:
 		
-		assignmentStatement = "magic " \
-			+ baseType + " := " + str(constants.LITERALS[baseType])
+		assignmentStatement = "magic := " + str(constants.LITERALS[baseType])\
+			+ "\n\tmagic = " + str(constants.LITERALS[baseType])
 		
 		if not destroy:
 			output(assignmentStatement, \
@@ -72,8 +72,8 @@ def invalid(destroy=False):
 			if literalType == baseType:
 				continue
 				
-			assignmentStatement = "magic " \
-				+ baseType + " := " + str(constants.LITERALS[literalType])
+			assignmentStatement = "magic := " + str(constants.LITERALS[baseType])\
+			+ "\n\tmagic = " + str(constants.LITERALS[literalType])
 				
 			if not destroy:
 				output(assignmentStatement, \

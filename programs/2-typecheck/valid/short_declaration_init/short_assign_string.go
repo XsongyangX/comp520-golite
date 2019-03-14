@@ -2,5 +2,6 @@
 package main
 
 func main(){
-	magic string := "hello world"
+	magic := "hello world"
+	magic = "hello world"
 }

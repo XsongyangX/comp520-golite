@@ -2,5 +2,6 @@
 package main
 
 func main(){
-	magic bool := '3'
+	magic := false
+	magic = '3'
 }
