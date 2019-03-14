@@ -61,7 +61,7 @@ def valid(destroy=False):
 	
 	for baseType in constants.BASE:
 		
-		assignmentStatement = "var magic " + str(constants.LITERALS[baseType])\
+		assignmentStatement = "var magic " + baseType\
 			+ "\n\tmagic = " + str(constants.LITERALS[baseType])
 		
 		if not destroy:
