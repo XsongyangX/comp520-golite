@@ -4,7 +4,7 @@ from constants import main
 import os
 """
 This file generates test files for initialization with var, like
-	var magin int = 3
+	var magic int = 3
 
 """
 
