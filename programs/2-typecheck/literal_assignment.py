@@ -55,3 +55,42 @@ def output(assignmentStatement, fileName, isValid = True):
 		file.write("}")
 	
 	return
+	
+# valid test files
+def valid(destroy=False):
+	
+	for baseType in constants.BASE:
+		
+		assignmentStatement = "var magic " + str(constants.LITERALS[baseType])\
+			+ "\n\tmagic = " + str(constants.LITERALS[baseType])
+		
+		if not destroy:
+			output(assignmentStatement, \
+				FILE_NAME_BASE + baseType + ".go", isValid=True)
+		else:
+			os.remove(VALID_PATH + FILE_NAME_BASE + baseType + ".go")
+	return
+	
+# invalid test files
+def invalid(destroy=False):
+	
+	for baseType in constants.BASE:
+	
+		for literalType in constants.LITERALS.keys():
+			
+			# don't take valid assignments
+			if literalType == baseType:
+				continue
+				
+			assignmentStatement = "var magic " + baseType\
+			+ "\n\tmagic = " + str(constants.LITERALS[literalType])
+				
+			if not destroy:
+				output(assignmentStatement, \
+					FILE_NAME_BASE + baseType + "_" + literalType + ".go",
+					isValid=False)
+			else:
+				os.remove(INVALID_PATH + FILE_NAME_BASE + baseType + "_" + literalType + ".go")
+	return 
+	
+main(VALID_PATH, INVALID_PATH, valid, invalid)
