@@ -150,11 +150,14 @@ void yyerror(const char *s) {
 %left tEQ tNEQ 
 %left tGEQ tLEQ '>' '<'
 %left '+' '-'
-%left '*' '/' '%' NONUNARY
+%left '*' '/' '%' 
 %left UNARY
+%left '.' // struct field access
+%left '['
+%left '('
 
 /* Unused tokens, only for precedence directives */
-%token UNARY NONUNARY
+%token UNARY 
 
 /* Start token (by default if this is missing it takes the first production */
 %start prgrm
@@ -222,9 +225,10 @@ exp             : '+' exp %prec UNARY {$$ = makeEXP_pos($2);}
                 | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
                 | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
                 | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
-                | exp '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | exp '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | exp '(' exps')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
+                | exp '.' tIDENTIFIER {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
+                | exp '[' exp ']' {$$ = makeEXP_element($1, makeEXP_index($3));}
+                | exp '(' exps ')' { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
+				| exp '(' ')' { $$ = makeEXP_func_access($1, 0, NULL); }
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
@@ -308,6 +312,8 @@ A potential issue is having returnstmt in here. Should you be able to return fro
 stmt            : simplestmt ';' {$$ = $1;}
                 | tPRINT '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
                 | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
+				| tPRINT '(' ')' ';' {$$ = makeSTMT_print(yylineno, NULL, 0 );}
+				| tPRINTLN '(' ')' {$$ = makeSTMT_print(yylineno, NULL, 1);}
                 | tBREAK ';' {$$ = makeSTMT_break(yylineno);}
                 | tCONTINUE ';' {$$ = makeSTMT_continue(yylineno);}
                 | '{' stmts '}' ';' {$$ = makeSTMT_block(yylineno, $2);}
