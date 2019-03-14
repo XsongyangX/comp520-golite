@@ -2,18 +2,18 @@
 import constants
 from constants import main
 import os, sys
-"""
-This file generates test files for initialization with var, like
-	var magin int = 3
 
 """
+This file generates test programs for short declarations, like
+	a := 3
+"""
 
-FOLDER = "initialization/"
+FOLDER = "short_declaration_init/"
 VALID_PATH = "valid/" + FOLDER
 INVALID_PATH = "invalid/" + FOLDER
-COMMENT_VALID = "/* The file contains correct var initialization types. */"
-COMMENT_INVALID = "/* The file contains incorrect var initialization types. */"
-FILE_NAME_BASE = "var_assign_"
+COMMENT_VALID = "/* The file contains correct short declaration initialization types. */"
+COMMENT_INVALID = "/* The file contains incorrect short declaration initialization types. */"
+FILE_NAME_BASE = "short_assign_"
 
 # output function
 def output(assignmentStatement, fileName, isValid = True):
@@ -51,8 +51,8 @@ def valid(destroy=False):
 	
 	for baseType in constants.BASE:
 		
-		assignmentStatement = "var magic " \
-			+ baseType + " = " + str(constants.LITERALS[baseType])
+		assignmentStatement = "magic := " + str(constants.LITERALS[baseType])\
+			+ "\n\tmagic = " + str(constants.LITERALS[baseType])
 		
 		if not destroy:
 			output(assignmentStatement, \
@@ -72,8 +72,8 @@ def invalid(destroy=False):
 			if literalType == baseType:
 				continue
 				
-			assignmentStatement = "var magic " \
-				+ baseType + " = " + str(constants.LITERALS[literalType])
+			assignmentStatement = "magic := " + str(constants.LITERALS[baseType])\
+			+ "\n\tmagic = " + str(constants.LITERALS[literalType])
 				
 			if not destroy:
 				output(assignmentStatement, \
