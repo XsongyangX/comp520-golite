@@ -1,5 +1,6 @@
 #!/bin/python3
 import constants
+from constants import main
 import os, sys
 """
 This file generates test files for initialization operations
@@ -84,30 +85,5 @@ def invalid(destroy=False):
 			else:
 				os.remove(INVALID_PATH + FILE_NAME_BASE + baseType + "_" + literalType + ".go")
 	return 
-	
-def main():
-	
-	# check for directories
-	if not os.path.isdir(VALID_PATH):
-		os.mkdir(VALID_PATH)
-	
-	if not os.path.isdir(INVALID_PATH):
-		os.mkdir(INVALID_PATH)
-	
-	# first command-line argument is absent
-	if len(sys.argv) == 1:
-		# generate
-		valid()
-		invalid()
-		
-	# first command-line argument is "destroy"
-	elif sys.argv[1] == "destroy":
-		# destroy
-		valid(destroy=True)
-		invalid(destroy=True)
-		
-	return
 
-if __name__ is "__main__":
-	main()
-main()
+main(VALID_PATH, INVALID_PATH, valid, invalid)
