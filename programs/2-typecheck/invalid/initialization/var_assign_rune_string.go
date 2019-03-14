@@ -2,5 +2,5 @@
 package main
 
 func main(){
-	var magic rune = hello world
+	var magic rune = "hello world"
 }

@@ -2,5 +2,5 @@
 package main
 
 func main(){
-	var magic float64 = hello world
+	var magic float64 = "hello world"
 }

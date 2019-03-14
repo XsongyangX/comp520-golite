@@ -2,5 +2,5 @@
 package main
 
 func main(){
-	var magic bool = hello world
+	var magic bool = "hello world"
 }
