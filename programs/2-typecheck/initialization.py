@@ -38,6 +38,7 @@ def output(assignmentStatement, fileName, isValid = True):
 		file.write(constants.MAIN)
 		file.write("\n")
 		file.write("{")
+		file.write("\n")
 		
 		file.write("\t" + assignmentStatement)
 		
