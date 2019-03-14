@@ -188,9 +188,34 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 
 			
 		// statement block
-		case blockS:
-			return weedStatement(s->val.body, allowBreak, allowContinue);	       
+		case blockS: 
+			returnInBody = weedStatement(s->val.body, allowBreak, allowContinue);	       
+			// if block breaks
+			if (returnInBody.foundBreak) {
+				
+				// if block terminates
+				if (returnInBody.foundTerminating) return foundTerminatingBreak;
+				else return foundBreak;
+			}
+			// if block does not break
+			else {
+				// if block terminates
+				if (returnInBody.foundTerminating) {
+					
+					// previous statement breaks
+					if (foundValues.foundBreak) return foundTerminatingBreak;
+					else return foundTerminating;
+				}
+				// if block does not terminate nor break
+				else {
+					
+					// previous statement breaks
+					if (foundValues.foundBreak) return foundBreak;
+					else return foundNothing;
+				}
+			}
 			
+
 		// if and else-if statement
 		case ifS: 
 		case elifS:

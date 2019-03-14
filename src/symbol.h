@@ -21,10 +21,10 @@ struct SYMBOL{
     TYPE *t;
     int wasRedefined; //used to deal with int redeclerations, for instance
     union{
-        SYMBOL *parentType;
+        SYMBOL *parentSym;
         SYMBOL *returnType;
         SYMBOL *structFields;
-        struct {SYMBOL *funcParams; SYMBOL *returnTypeRef;} func;
+        struct {SYMBOL *funcParams; SYMBOL *returnSymRef;} func;
     } val;
     struct SYMBOL *next;
 };
@@ -34,6 +34,8 @@ struct symTable {
     SYMBOL *funcTable[HASHSIZE];
     symTable *next;
 };
+
+SYMBOL *INT_SYMBOL, *FLOAT_SYMBOL, *RUNE_SYMBOL, *STR_SYMBOL, *BOOL_SYMBOL;
 
 int Hash(char *str);
 symTable *initSymbolTable();
@@ -82,10 +84,10 @@ void symExp(EXP *exp, symTable *table, int lineno);
 void funcBlockHelper(EXP *exp, symTable *table, int lineno);
 
 /* The following four functions will be in separate .h and .c files. */
-bool typeCheckProgam(PROGRAM *prog);
-bool typeCheckDeclaration(DECLARATION *decl);
-bool typeCheckStatement(STATEMENT *stmt);
-bool typeCheckExpression(EXP *exp);
+// bool typeCheckProgam(PROGRAM *prog);
+// bool typeCheckDeclaration(DECLARATION *decl);
+// bool typeCheckStatement(STATEMENT *stmt);
+// bool typeCheckExpression(EXP *exp);
 
 
 
