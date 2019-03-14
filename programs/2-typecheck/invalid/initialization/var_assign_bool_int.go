@@ -1,2 +1,5 @@
-/* The file contains incorrect var initialization types. */package main
-func main(){	var magic bool = 300}
+/* The file contains incorrect var initialization types. */
+package main
+func main()
+{	var magic bool = 300
+}
