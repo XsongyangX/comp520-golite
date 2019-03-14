@@ -12,3 +12,5 @@ fi
 
 # generate test programs
 
+# initialization
+python3 initialization.py
