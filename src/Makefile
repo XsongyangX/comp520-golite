@@ -1,6 +1,9 @@
 
-all: main.o lex.yy.o y.tab.o tree.o pretty.h pretty.o weeder.o symbol.o
-	gcc -o minic main.o lex.yy.o y.tab.o tree.o pretty.o weeder.o symbol.o -lfl  
+all: main.o lex.yy.o y.tab.o tree.o pretty.h pretty.o weeder.o symbol.o typecheck.o
+	gcc -o minic main.o lex.yy.o y.tab.o tree.o pretty.o weeder.o symbol.o typecheck.o -lfl  
+
+typecheck.o:
+	gcc -c typecheck.c typecheck.h -g
 
 symbol.o:
 	gcc -c symbol.c symbol.h -g

@@ -8,6 +8,7 @@ Main file of the GoLite compiler
 #include "pretty.h"
 #include "weeder.h"
 #include "symbol.h"
+#include "typecheck.h"
 
 void yyparse();
 int yylex();

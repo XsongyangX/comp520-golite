@@ -147,20 +147,20 @@ char *longTypeStr(SYMBOL *tmp)
         {//move up hierarchy
             if(cursym->kind == funcSym)
             {
-                cursym = cursym->val.func.returnTypeRef;
+                cursym = cursym->val.func.returnSymRef;
                 cur = cursym->t;
             }
             else{
-                if(strcmp(cursym->val.parentType->name, " ") == 0){
+                if(strcmp(cursym->val.parentSym->name, " ") == 0){
                     //next is the base type, end recursion now
                     strcat(typename, cursym->name);
                     return typename;
                 }
-                if(cursym->val.parentType->kind == structSym){
+                if(cursym->val.parentSym->kind == structSym){
                     strcat(typename, cursym->name);
                     return typename;
                 }
-                cursym = cursym->val.parentType;
+                cursym = cursym->val.parentSym;
                 cur = cursym->t;
             }
             continue;
@@ -240,7 +240,7 @@ char *lookupVarLocal(symTable *t, char* identifier, int lineno)
     {
         if (strcmp(tmp->name, identifier) == 0)
         {
-            return shortTypeStr(tmp->val.parentType);
+            return shortTypeStr(tmp->val.parentSym);
         }
         else
         {
@@ -371,49 +371,54 @@ void addPredefinitions(symTable *s)
     char *name = malloc(sizeof(char)*10);
     strcpy(name, "int");
     SYMBOL *tmp = makeSymbol(name, typeSym, 0);
-    tmp->val.parentType = base;
+    tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s, 0);
+    INT_SYMBOL = tmp;
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "float64");
     tmp = makeSymbol(name, typeSym, 0);
-    tmp->val.parentType = base;
+    tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
-    
+    FLOAT_SYMBOL = tmp;
+
     name = malloc(sizeof(char)*10);
     strcpy(name, "bool");
     tmp = makeSymbol(name, typeSym, 0);
-    tmp->val.parentType = base;
+    tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
-    
+    BOOL_SYMBOL = tmp;
+
     name = malloc(sizeof(char)*10);
     strcpy(name, "string");
     tmp = makeSymbol(name, typeSym, 0);
-    tmp->val.parentType = base;
+    tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
-    
+    STR_SYMBOL = tmp;
+
     name = malloc(sizeof(char)*10);
     strcpy(name, "rune");
     tmp = makeSymbol(name, typeSym, 0);
-    tmp->val.parentType = base;
+    tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
+    RUNE_SYMBOL = tmp;
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "true");
     tmp = makeSymbol(name, varSym, 0);
-    tmp->val.parentType = getSymbol(s, "bool", typeSym);
+    tmp->val.parentSym = getSymbol(s, "bool", typeSym);
     tmp->t = makeTYPE(baseType, 0, "bool", NULL);
     putVar(tmp,s,0);
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "false");
     tmp = makeSymbol(name, varSym, 0);
-    tmp->val.parentType = getSymbol(s, "bool", typeSym);
+    tmp->val.parentSym = getSymbol(s, "bool", typeSym);
     tmp->t = makeTYPE(baseType, 0, "bool", NULL);
     putVar(tmp,s,0);
     
@@ -505,7 +510,7 @@ void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
                     fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
                     exit(1);
                 }
-                tmp->val.parentType = parent;
+                tmp->val.parentSym = parent;
                 tmp->t = decl->t;
                 putType(tmp, table, decl->lineno);
                 if(symbolPrint == 1)
@@ -546,7 +551,7 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
                     fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
                     exit(1);
                 }
-                tmp->val.parentType = parent;
+                tmp->val.parentSym = parent;
                 tmp->t = decl->t;
                 putVar(tmp, table, decl->lineno);
                 if(symbolPrint == 1)
@@ -613,7 +618,7 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
             }
             SYMBOL *paramList = symFuncHelper(decl->val.f->params, table);
             tmp->val.func.funcParams = paramList;
-            tmp->val.func.returnTypeRef = typeref;
+            tmp->val.func.returnSymRef = typeref;
             tmp->t = decl->val.f->returnt;
             putFunc(tmp, table, decl->lineno);
 
@@ -758,7 +763,7 @@ SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
     SYMBOL *next = symStructHelper(body->next, table);
     SYMBOL *tmp = makeSymbol(body->identifier, varSym, 1);
     SYMBOL *parent = getSymbol(table, getName(body->t), varSym);
-    tmp->val.parentType = parent;
+    tmp->val.parentSym = parent;
     tmp->next = next;
     tmp->t = body->t;
     return tmp;
@@ -773,7 +778,7 @@ SYMBOL *symFuncHelper(DECLARATION *params, symTable *table)
     SYMBOL *next = symStructHelper(params->next, table);
     SYMBOL *tmp = makeSymbol(params->identifier, varSym, 1);
     SYMBOL *parent = getSymbol(table, getName(params->t), varSym);
-    tmp->val.parentType = parent;
+    tmp->val.parentSym = parent;
     tmp->next = next;
     tmp->t = params->t;
     return tmp;
@@ -1051,7 +1056,7 @@ void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth)
 void symQDecl(STATEMENT *cur, symTable *table)
 {
     SYMBOL *tmp = makeSymbol(cur->val.assignment.identifier->val.identifier, varSym, 1);
-    tmp->val.parentType = NULL;
+    tmp->val.parentSym = NULL;
     tmp->t = makeTYPE(nilType, 0, " ", NULL);
     putVar(tmp, table, cur->lineno);
 }
