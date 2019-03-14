@@ -1,5 +1,6 @@
 /* The file contains incorrect var initialization types. */
 package main
-func main()
-{	var magic int = hello world
+
+func main(){
+	var magic int = hello world
 }

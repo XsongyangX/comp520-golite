@@ -33,10 +33,9 @@ def output(assignmentStatement, fileName, isValid = True):
 			file.write(COMMENT_INVALID)
 		file.write("\n")
 		file.write(constants.PACKAGE)
-		file.write("\n")
+		file.write("\n\n")
 		
 		file.write(constants.MAIN)
-		file.write("\n")
 		file.write("{")
 		file.write("\n")
 		
