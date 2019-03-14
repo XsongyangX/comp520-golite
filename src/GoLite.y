@@ -228,7 +228,7 @@ exp             : '+' exp %prec UNARY {$$ = makeEXP_pos($2);}
                 | exp '.' tIDENTIFIER {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
                 | exp '[' exp ']' {$$ = makeEXP_element($1, makeEXP_index($3));}
                 | exp '(' exps ')' { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
-				| exp '(' ')' { $$ = makeEXP_func_access($1, 0, NULL); }
+				| exp '(' ')' { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs(NULL)); }
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
                 ;
 
