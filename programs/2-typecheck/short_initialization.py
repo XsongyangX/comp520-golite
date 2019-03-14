@@ -8,11 +8,11 @@ This file generates test programs for short declarations, like
 	a := 3
 """
 
-FOLDER = "short_declaration_init/"
+FOLDER = "short_declaration_assign/"
 VALID_PATH = "valid/" + FOLDER
 INVALID_PATH = "invalid/" + FOLDER
-COMMENT_VALID = "/* The file contains correct short declaration initialization types. */"
-COMMENT_INVALID = "/* The file contains incorrect short declaration initialization types. */"
+COMMENT_VALID = "/* The file contains correct initial short declaration type and follow-up assignment type. */"
+COMMENT_INVALID = "/* Type infered to the short declaration is different from the assignment type. */"
 FILE_NAME_BASE = "short_assign_"
 
 # output function
