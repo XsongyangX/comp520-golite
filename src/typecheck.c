@@ -670,8 +670,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                         exit(1);
                     }
                     dummy2 = typecheckExp(expList->val.expblock.value,table, lineno);
-                    if( checkDefaultCasts(dummy1, dummy2) ){}
-                    else{SubTypes(dummy1, dummy2, lineno);}
+                    checkDefaultCasts(dummy1, dummy2, lineno);
                     exp->t = dummy1->t;
                     return dummy1;
                 }
@@ -973,8 +972,68 @@ void investigateTypePrint(TYPE *t, int lineno)
     }
 }
 
-bool checkDefaultCasts(SYMBOL *s1, SYMBOL *s2)
+bool checkDefaultCasts(SYMBOL *sym1, SYMBOL *sym2, int lineno)
 {
+    SYMBOL *s1, *s2;
+    s1 = sym1;
+    s2 = sym2;
+    TYPE *tmpType = sym1->t;
+    if(sym1->kind == structSym || sym2->kind == structSym)
+    {
+        fprintf(stderr, "Error: (line %d) expecting base types for type cast.\n", lineno);
+        exit(1);
+    }
+    while(tmpType != NULL)
+    {
+        if(tmpType->gType == sliceType || tmpType->gType == arrayType || tmpType->gType == structType)
+        {
+            fprintf(stderr, "Error: (line %d) expecting base types for type cast.\n", lineno);
+            exit(1);
+        }
+        else{
+            tmpType = tmpType->val.arg;
+            if(tmpType == NULL || tmpType->gType == nilType) 
+            {
+                if(s1->kind != structSym && s1->val.parentSym == BLANK_SYMBOL)
+                    break;
+                if(s1->kind != structSym)
+                {    s1 = s1->val.parentSym;
+                    tmpType = s1->t;
+                }
+                else{
+                    fprintf(stderr, "Error: (line %d) First argument of append must have slice type.\n", lineno);
+                    exit(1);
+                }
+            }    
+
+        }
+    }
+    tmpType = s2->t;
+    while(tmpType != NULL)
+    {
+        if(tmpType->gType == sliceType || tmpType->gType == arrayType || tmpType->gType == structType)
+        {
+            fprintf(stderr, "Error: (line %d) expecting base types for type cast.\n", lineno);
+            exit(1);
+        }
+        else{
+            tmpType = tmpType->val.arg;
+            if(tmpType == NULL || tmpType->gType == nilType) 
+            {
+                if(s2->kind != structSym && s2->val.parentSym == BLANK_SYMBOL)
+                    break;
+                if(s2->kind != structSym)
+                {    s2 = s2->val.parentSym;
+                    tmpType = s2->t;
+                }
+                else{
+                    fprintf(stderr, "Error: (line %d) First argument of append must have slice type.\n", lineno);
+                    exit(1);
+                }
+            }    
+
+        }
+    }
     if(MatchingTypes(s1, INT_SYMBOL, 0, false))
     {
         if(MatchingTypes(s2, INT_SYMBOL, 0, false) ||
@@ -1018,7 +1077,8 @@ bool checkDefaultCasts(SYMBOL *s1, SYMBOL *s2)
             return true;
         }
     }
-    return false;
+    fprintf(stderr, "Error: (line %d) invalid type cast.\n", lineno);
+    exit(1);
 }
 
 SYMBOL *structAccessHelper(SYMBOL *sym, char *id, int lineno)
