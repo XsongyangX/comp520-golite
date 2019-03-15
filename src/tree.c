@@ -451,6 +451,24 @@ STATEMENT *makeSTMT_assmt(int lineno, EXP *identifier, EXP *val)
     s->next = NULL;
     return s;
 }
+STATEMENT *makeSTMT_increment(int lineno, EXP *identifier)
+{
+    STATEMENT *s = malloc(sizeof(STATEMENT));
+    s->lineno = lineno;
+    s->kind = incrementS;
+    s->val.expression = identifier;
+    s->next = NULL;
+    return s;
+}
+STATEMENT *makeSTMT_decrement(int lineno, EXP *identifier)
+{
+    STATEMENT *s = malloc(sizeof(STATEMENT));
+    s->lineno = lineno;
+    s->kind = decrementS;
+    s->val.expression = identifier;
+    s->next = NULL;
+    return s;
+}
 /*makes an assignment statement of the form exps := exps
 note that some variables should be declared in this*/
 STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val)
@@ -674,7 +692,7 @@ DECLARATION *makeDECL_type(char* identifier, TYPE *typeNode, int lineno){
 Takes the linked list of identifiers and makes each of them into a declaration statement,
 propogating the TYPE to all statements*/
 DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
-    DECLARATION *d = malloc(sizeof(DECLARATION));
+    DECLARATION *d;
     if(ids == NULL)
     {
         d = NULL;
@@ -702,7 +720,7 @@ DECLARATION *makeDECL_blocknorhs(int lineno, EXP *ids, TYPE *t){
 As makeDECL_blocknorhs(), but each dec actually assigns too.
 Throws an error if there is an unequal number of ids and exps on either side.*/
 DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
-    DECLARATION *d = malloc(sizeof(DECLARATION));
+    DECLARATION *d;
     if(ids->val.idblock.next == NULL && exps->val.expblock.next == NULL){
         d = makeDECL(varDecl, ids->val.idblock.identifier, t, exps->val.expblock.value, lineno);
         return d;
@@ -720,7 +738,7 @@ DECLARATION *makeDECL_block(int lineno, EXP *ids, TYPE *t, EXP *exps){
 }
 
 DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps){
-    DECLARATION *d = malloc(sizeof(DECLARATION));
+    DECLARATION *d;
     if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
         d = makeDECL_notype(varDecl, ids->val.idblock.identifier, 0, 0, exps->val.expblock.value, lineno);
         return d;
@@ -738,7 +756,7 @@ DECLARATION *makeDECL_blocknotype(int lineno, EXP *ids, EXP *exps){
 }
 /*A similar function to block declarations, but for STMTs*/
 STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps){
-    STATEMENT *s = malloc(sizeof(STATEMENT));
+    STATEMENT *s;
     if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
         s = makeSTMT_assmt(lineno, ids->val.expblock.value, exps->val.expblock.value);
         return s;
@@ -756,7 +774,7 @@ STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps){
 }
 /*Used for quick := declarations*/
 STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps){
-    STATEMENT *s = malloc(sizeof(STATEMENT));
+    STATEMENT *s;
     if(ids->val.expblock.next == NULL && exps->val.expblock.next == NULL){
         s = makeSTMT_qdecl(lineno, ids->val.expblock.value, exps->val.expblock.value);
         s->val.assignment.chain = NULL;

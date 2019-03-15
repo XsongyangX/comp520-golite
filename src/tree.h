@@ -72,7 +72,9 @@ enum StatementKind{
 	caseS,
 	breakS,
 	continueS,
-	declS
+	declS,
+	incrementS,
+	decrementS
 };
 
 enum GroupingType{  
@@ -332,6 +334,8 @@ STATEMENT *makeSTMT_return(int lineno, EXP *expression);
 STATEMENT *makeSTMT_blockassign(int lineno, EXP *ids, EXP *exps);
 STATEMENT *makeSTMT_qdecl(int lineno, EXP *identifier, EXP *val);
 STATEMENT *makeSTMT_blockqassign(int lineno, EXP *ids, EXP *exps);
+STATEMENT *makeSTMT_increment(int lineno, EXP *identifier);
+STATEMENT *makeSTMT_decrement(int lineno, EXP *identifier);
 
 TYPE *makeTYPE(int gtype, int size, char *name, TYPE *ref);
 TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args);

@@ -78,6 +78,7 @@ int main(int argc, char** argv)
 		yyparse();
 		weedRoot(my_prog);
 		checkProg(my_prog);
+		typeProgram(my_prog);
 		printf("OK\n");
 		return 0;
 	}/*

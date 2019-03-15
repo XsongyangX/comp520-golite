@@ -11,12 +11,24 @@
 
 bool typeProgram(PROGRAM *prog);
 void typeCheckDeclaration(DECLARATION *decl, symTable *table);
-void typeCheckStatement(STATEMENT *stmt, symTable *table);
+void typeCheckStatement(STATEMENT *stmt, SYMBOL *func);
 SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno);
-bool MatchingTypes(SYMBOL *s1, SYMBOL *s2, int lineno);
+bool MatchingTypes(SYMBOL *s1, SYMBOL *s2, int lineno, bool isVerbose);
 bool SubTypes(SYMBOL *s1, SYMBOL *s2, int lineno);
-bool ArrayTypes(SYMBOL *s1, SYMBOL *s2, int lineno);
-bool InDepthTypeCheck(SYMBOL *sym, char *target);
+bool sliceTypes(SYMBOL *s1, SYMBOL *s2, int lineno);
+void investigateType(TYPE *t, int lineno);
+void investigateTypePrint(TYPE *t, int lineno);
+void switchHelper(STATEMENT *stmt, SYMBOL *func);
+void caseHelper(STATEMENT *stmt, SYMBOL *func, SYMBOL *key);
+bool checkDefaultCasts(SYMBOL *s1, SYMBOL *s2);
+SYMBOL *structAccessHelper(SYMBOL *sym, char *id, int lineno);
+void capHelper(SYMBOL *sym, int lineno);
+SYMBOL *elementHelper(SYMBOL *sym, int lineno);
+void incdecHelper(SYMBOL *sym, int lineno);
+void lenHelper(SYMBOL *sym, int lineno);
+
+
+//bool InDepthTypeCheck(SYMBOL *sym, char *target);
 
 
 

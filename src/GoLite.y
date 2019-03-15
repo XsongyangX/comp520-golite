@@ -290,8 +290,8 @@ funcdef         : tFUNC tIDENTIFIER '(' parameters ')' opttype '{' stmts '}' ';'
                 ;
 
 /* List of parameters of function declaration signatures */
-parameters      : parameters ',' parameter {$$ = $3; $$->next = $1;}
-                | parameter {$$ = $1; $$->next = NULL;}
+parameters      : parameters ',' parameter {$$ = $3; findBottomDECL($$)->next = $1;}
+                | parameter {$$ = $1;}
                 ;
 
 parameter       : tIDENTIFIER type {$$ = makeDECL_norhs(1, $1, $2, yylineno);}
@@ -334,10 +334,8 @@ stmt            : simplestmt ';' {$$ = $1;}
 /* A subset of statements that can be used in certain extra contexts,
 such as before the conditional expressions of if statements */
 simplestmt      : exp  {$$ = makeSTMT_exp(yylineno, $1);} 
-                | exp tDECREMENT  {EXP *ident = $1; EXP *one = makeEXP_int(1); 
-                    EXP *identMinus = makeEXP_minus(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identMinus);}
-                | exp tINCREMENT  {EXP *ident = $1; EXP *one = makeEXP_int(1); 
-                    EXP *identPlus = makeEXP_plus(ident, one);  $$ = makeSTMT_assmt(yylineno, ident, identPlus);}
+                | exp tDECREMENT  {EXP *ident = $1; $$ = makeSTMT_decrement(yylineno, ident);}
+                | exp tINCREMENT  {EXP *ident = $1; $$ = makeSTMT_increment(yylineno, ident);}
                 | asnexps {$$ = $1;}
                 ;
 
