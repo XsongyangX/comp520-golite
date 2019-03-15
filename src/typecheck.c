@@ -115,7 +115,13 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
         case elifS:
             typeCheckStatement(stmt->val.conditional.optDecl, func);
             symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
-            if(MatchingTypes(symLHS, BOOL_SYMBOL, stmt->lineno, false))
+            symRHS = resolveBaseType(symLHS);
+            if(symRHS == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) expecting boolean typed conditional in if/elif statement. Got %s.\n", stmt->lineno, shortTypeStr(symLHS));
+                exit(1);
+            }
+            if(MatchingTypes(symRHS, BOOL_SYMBOL, stmt->lineno, false))
             {
                 typeCheckStatement(stmt->val.conditional.body, func);
                 typeCheckStatement(stmt->val.conditional.elif, func);
@@ -134,7 +140,14 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             if(stmt->val.conditional.condition != NULL)
             {
                 symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
-                if(MatchingTypes(symLHS, BOOL_SYMBOL, stmt->lineno, false))
+                
+                symRHS = resolveBaseType(symLHS);
+                if(symRHS == NULL)
+                {
+                    fprintf(stderr,"Error: (line %d) expecting boolean typed conditional in for statement. Got %s.\n", stmt->lineno, shortTypeStr(symLHS));
+                    exit(1);
+                }
+                if(MatchingTypes(symRHS, BOOL_SYMBOL, stmt->lineno, false))
                 {
                     typeCheckStatement(stmt->val.conditional.body, func);
                     typeCheckStatement(stmt->val.conditional.elif, func);
@@ -154,7 +167,14 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             if(stmt->val.conditional.condition != NULL)
             {
                 symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
-                if(MatchingTypes(symLHS, BOOL_SYMBOL, stmt->lineno, false))
+                
+                symRHS = resolveBaseType(symLHS);
+                if(symRHS == NULL)
+                {
+                    fprintf(stderr,"Error: (line %d) expecting boolean typed conditional in for statement. Got %s.\n", stmt->lineno, shortTypeStr(symLHS));
+                    exit(1);
+                }
+                if(MatchingTypes(symRHS, BOOL_SYMBOL, stmt->lineno, false))
                 {
                     typeCheckStatement(stmt->val.conditional.body, func);
                 }
@@ -182,8 +202,24 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
                     expList = expList->val.expblock.next;
                     continue;
                 }
-                symRHS = typecheckExp(expList->val.expblock.value, stmt->localScope, stmt->lineno);
-                investigateTypePrint(symRHS->t, stmt->lineno);
+                symLHS = typecheckExp(expList->val.expblock.value, stmt->localScope, stmt->lineno);
+                
+                symRHS = resolveBaseType(symLHS);
+                if(symRHS == NULL)
+                {
+                    fprintf(stderr,"Error: (line %d) expecting base types in print statement. Got %s.\n", stmt->lineno, shortTypeStr(symLHS));
+                    exit(1);
+                }
+                if(!(MatchingTypes(symRHS, INT_SYMBOL, 0, false) || 
+                    MatchingTypes(symRHS, BOOL_SYMBOL, 0, false) || 
+                    MatchingTypes(symRHS, FLOAT_SYMBOL, 0, false) || 
+                    MatchingTypes(symRHS, RUNE_SYMBOL, 0, false) || 
+                    MatchingTypes(symRHS, STR_SYMBOL, 0, false)))
+                    {
+                        fprintf(stderr,"Error: (line %d) expecting base types in print statement. Got %s.\n", stmt->lineno, shortTypeStr(symLHS));
+                        exit(1);
+                    }
+
                 expList = expList->val.expblock.next;
             }
             break;
@@ -221,42 +257,20 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
 void incdecHelper(SYMBOL *sym, int lineno)
 {
             SYMBOL *refParent = sym;
-            if(MatchingTypes(refParent, INT_SYMBOL, lineno, false) || MatchingTypes(refParent, FLOAT_SYMBOL, lineno, false) || MatchingTypes(refParent, RUNE_SYMBOL, lineno, false))
-                return;
-            if( sym->kind != structSym) 
-                refParent = sym->val.parentSym;
-            TYPE *tmpType = sym->t;
-            while(tmpType != NULL)
+            
+            refParent = resolveBaseType(sym);
+            if(refParent == NULL)
             {
-                if(tmpType->gType == structType || tmpType->gType == sliceType || tmpType->gType == arrayType)
-                {
-                    fprintf(stderr, "Error: (line %d) type %s incremented/decremented. Expecting (int), (float64), (rune).\n", lineno, shortTypeStr(sym));
-                    exit(1);
-                }
-                else if(MatchingTypes(refParent, INT_SYMBOL, lineno, false) || MatchingTypes(refParent, FLOAT_SYMBOL, lineno, false) || MatchingTypes(refParent, RUNE_SYMBOL, lineno, false))
-                {
-                    return;
-                }
-                else{
-                    tmpType = tmpType->val.arg;
-                    if(tmpType == NULL || tmpType->gType == nilType) 
-                    {
-                        tmpType = refParent->t;
-                        if(refParent != NULL && refParent->kind != structSym)
-                        {
-                            tmpType = refParent->t;
-                            refParent = refParent->val.parentSym;
-                        }
-                        else
-                        {
-                            fprintf(stderr, "Error: (line %d) type %s incremented/decremented. Expecting (int), (float64), (rune).\n", lineno, shortTypeStr(sym));
-                            exit(1);
-                        }
-                    }    
-                }
+                fprintf(stderr, "Error: (line %d) type %s incremented/decremented. Expecting (int), (float64), (rune).\n", lineno, shortTypeStr(sym));
+                exit(1);
             }
-            fprintf(stderr, "Error: (line %d) type %s incremented/decremented. Expecting (int), (float64), (rune).\n", lineno, shortTypeStr(sym));
-            exit(1);
+            if(!(MatchingTypes(refParent, INT_SYMBOL, 0, false) || 
+                    MatchingTypes(refParent, FLOAT_SYMBOL, 0, false) || 
+                    MatchingTypes(refParent, RUNE_SYMBOL, 0, false)))
+                    {
+                       fprintf(stderr, "Error: (line %d) type %s incremented/decremented. Expecting (int), (float64), (rune).\n", lineno, shortTypeStr(sym));
+                        exit(1);
+                    }
 }
 void switchHelper(STATEMENT *stmt, SYMBOL *func)
 {
@@ -319,10 +333,16 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
             MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false)||
-                MatchingTypes(dummy1, FLOAT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, STR_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
+                MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, STR_SYMBOL, lineno, false))
             {
                 exp->t = dummy1->t;
                 return dummy1; 
@@ -335,9 +355,15 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
             MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false)||
-                MatchingTypes(dummy1, FLOAT_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for - operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
+                MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false))
             {
                  exp->t = dummy1->t;
                  return dummy1; 
@@ -350,10 +376,15 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
             MatchingTypes(dummy1, dummy2, lineno, true);
-            name = longTypeStr(dummy1);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false)||
-                MatchingTypes(dummy1, FLOAT_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for * operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
+                MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false))
             {
                  exp->t = dummy1->t;
                  return dummy1; 
@@ -365,11 +396,15 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case divExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);
-            name = longTypeStr(dummy1);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false)||
-                MatchingTypes(dummy1, FLOAT_SYMBOL, lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for / operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
+                MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false))
             {
                  exp->t = dummy1->t;
                  return dummy1; 
@@ -381,10 +416,15 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case modExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) || 
-            MatchingTypes(dummy1, RUNE_SYMBOL,  lineno, false) ||
-            MatchingTypes(dummy1, FLOAT_SYMBOL,  lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for %% operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || 
+            MatchingTypes(dummy2, RUNE_SYMBOL,  lineno, false) ||
+            MatchingTypes(dummy2, FLOAT_SYMBOL,  lineno, false))
             {
                  exp->t = dummy1->t;
                  return dummy1; 
@@ -397,11 +437,16 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case neqExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL,  lineno, false) || 
-                MatchingTypes(dummy1, RUNE_SYMBOL,  lineno, false)||
-                MatchingTypes(dummy1, FLOAT_SYMBOL,  lineno, false) || 
-                MatchingTypes(dummy1, STR_SYMBOL,  lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for equality operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL,  lineno, false) || 
+                MatchingTypes(dummy2, RUNE_SYMBOL,  lineno, false)||
+                MatchingTypes(dummy2, FLOAT_SYMBOL,  lineno, false) || 
+                MatchingTypes(dummy2, STR_SYMBOL,  lineno, false))
             {
                 exp->t = BOOL_SYMBOL->t;
                 return BOOL_SYMBOL; 
@@ -436,11 +481,16 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case ltExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false)||
-                MatchingTypes(dummy1, FLOAT_SYMBOL, lineno, false) || 
-                MatchingTypes(dummy1, STR_SYMBOL, lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for comparable operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
+                MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false) || 
+                MatchingTypes(dummy2, STR_SYMBOL, lineno, false))
             {
                 exp->t = BOOL_SYMBOL->t;
                 return BOOL_SYMBOL; 
@@ -453,11 +503,16 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case andExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);
-            if ( MatchingTypes(dummy1, BOOL_SYMBOL, lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
             {
-                exp->t = BOOL_SYMBOL->t;
-                return BOOL_SYMBOL; 
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if ( MatchingTypes(dummy2, BOOL_SYMBOL, lineno, false))
+            {
+                exp->t = dummy1->t;
+                return dummy1; 
             }
             else{
                 fprintf(stderr,"Error: (line %d) unexpected type %s in boolean expression. Expecting (bool).\n", lineno, dummy1->name);
@@ -470,7 +525,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
             MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) || MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for bitwise operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
                 exp->t = dummy1->t;
                 return dummy1; 
@@ -483,8 +544,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case rshiftExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) || MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
                 exp->t = dummy1->t;
                 return dummy1; 
@@ -539,9 +605,15 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case posExp:
         case negExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, FLOAT_SYMBOL, lineno, false) ||
-                MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy1);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false) ||
+                MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
                 exp->t = dummy1->t;
                 return dummy1;
@@ -551,7 +623,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             exit(1);
         case uxorExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            if (MatchingTypes(dummy1, INT_SYMBOL, lineno, false) || MatchingTypes(dummy1, RUNE_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy1);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
                 exp->t = dummy1->t;
                 return dummy1;
@@ -566,7 +644,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             return dummy1;
         case indexExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            if(MatchingTypes(dummy1, INT_SYMBOL, lineno, false) )
+            dummy2 = resolveBaseType(dummy1);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if(MatchingTypes(dummy2, INT_SYMBOL, lineno, false) )
             {
                     exp->t = dummy1->t;
                     return dummy1;
@@ -1264,6 +1348,42 @@ SYMBOL *elementHelper(SYMBOL *sym, int lineno)
             }
             fprintf(stderr, "Error: (line %d) type %s cannot be indexed.\n", lineno, shortTypeStr(sym));
             exit(1);
+}
+
+SYMBOL *resolveBaseType(SYMBOL *sym1)
+{
+    SYMBOL *s1;
+    s1 = sym1;
+    TYPE *tmpType = sym1->t;
+    if(sym1->kind == structSym)
+    {
+        return NULL;
+    }
+    while(tmpType != NULL)
+    {
+        if(tmpType->gType == sliceType || tmpType->gType == arrayType || tmpType->gType == structType)
+        {
+            return NULL;
+        }
+        else{
+            tmpType = tmpType->val.arg;
+            if(tmpType == NULL || tmpType->gType == nilType) 
+            {
+                if(s1->kind != structSym && s1->val.parentSym == BLANK_SYMBOL)
+                    break;
+                if(s1->kind != structSym)
+                {    s1 = s1->val.parentSym;
+                    tmpType = s1->t;
+                }
+                else{
+                    return NULL;
+                }
+            }    
+
+        }
+    }
+    return s1;
+
 }
 // //checks that a type is a basic type "target"
 // bool InDepthTypeCheck(SYMBOL *sym, char *target){

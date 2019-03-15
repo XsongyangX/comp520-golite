@@ -26,6 +26,7 @@ void capHelper(SYMBOL *sym, int lineno);
 SYMBOL *elementHelper(SYMBOL *sym, int lineno);
 void incdecHelper(SYMBOL *sym, int lineno);
 void lenHelper(SYMBOL *sym, int lineno);
+SYMBOL *resolveBaseType(SYMBOL *sym1);
 
 
 //bool InDepthTypeCheck(SYMBOL *sym, char *target);
