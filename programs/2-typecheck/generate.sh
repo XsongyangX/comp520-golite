@@ -12,7 +12,8 @@ fi
 
 # generate test programs
 
-# initialization
 python3 initialization.py
 
 python3 short_initialization.py
+
+python3 literal_assignment.py

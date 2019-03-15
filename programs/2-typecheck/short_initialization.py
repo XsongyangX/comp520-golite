@@ -1,7 +1,7 @@
 #!/bin/python3
 import constants
 from constants import main
-import os, sys
+import os
 
 """
 This file generates test programs for short declarations, like
@@ -45,7 +45,7 @@ def output(assignmentStatement, fileName, isValid = True):
 		
 		file.write("\n")
 		file.write("}")
-
+	return
 # valid test files
 def valid(destroy=False):
 	

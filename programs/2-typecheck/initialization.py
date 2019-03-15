@@ -1,10 +1,10 @@
 #!/bin/python3
 import constants
 from constants import main
-import os, sys
+import os
 """
 This file generates test files for initialization with var, like
-	var magin int = 3
+	var magic int = 3
 
 """
 
@@ -45,7 +45,7 @@ def output(assignmentStatement, fileName, isValid = True):
 		
 		file.write("\n")
 		file.write("}")
-
+	return
 # valid test files
 def valid(destroy=False):
 	
