@@ -60,7 +60,7 @@ void yyerror(const char *s) {
 %type <funcval> funcdef 
 %type <decval> progdefs topdecl dec blockidents decdistributed typedec typedistributed vardec parameters parameter
 %type <stmtval> stmts stmt ifstmt elsestmt switchstmt switchbody forstmt asnexps returnstmt simplestmt
-%type <expval> exp trm ftr exps explist idents
+%type <expval> exp exps idents
 %type <typeval> type opttype
 
 %token tINT
@@ -114,7 +114,6 @@ void yyerror(const char *s) {
 %token tAND
 %token tOR
 %token tPACKAGE
-%token UNARY
 %token tCHAN
 %token tCONST
 %token tSELECT
@@ -151,8 +150,14 @@ void yyerror(const char *s) {
 %left tEQ tNEQ 
 %left tGEQ tLEQ '>' '<'
 %left '+' '-'
-%left '*' '/' '%' NONUNARY
+%left '*' '/' '%' 
 %left UNARY
+%left '.' // struct field access
+%left '['
+%left '('
+
+/* Unused tokens, only for precedence directives */
+%token UNARY 
 
 /* Start token (by default if this is missing it takes the first production */
 %start prgrm
@@ -186,8 +191,7 @@ topdecl         : dec { $$ = $1;}
                 | funcdef { $$ = makeDECL_fn(NULL, $1, yylineno); }
                 ;
 
-/* Expressions of all kinds. Expands to trm for precedence reasons. Other predecence
-is to be solved using directives. */
+/* Expressions of all kinds. */
 exp             : '+' exp %prec UNARY {$$ = makeEXP_pos($2);}
                 | '-' exp %prec UNARY {$$ = makeEXP_neg($2);}
                 | '!' exp %prec UNARY {$$ = makeEXP_not($2);} 
@@ -200,27 +204,18 @@ exp             : '+' exp %prec UNARY {$$ = makeEXP_pos($2);}
                 | exp tLEQ exp {$$ = makeEXP_leq($1, $3);}
                 | exp tAND exp {$$ = makeEXP_and($1, $3);}
                 | exp tOR exp  {$$ = makeEXP_or($1, $3);}
-                | exp '+' trm  {$$ = makeEXP_plus($1, $3);}
-                | exp '-' trm  {$$ = makeEXP_minus($1, $3);}
-                | exp '|' trm  {$$ = makeEXP_bor($1, $3);}
-                | exp '^' trm  {$$ = makeEXP_xor($1, $3);}
-                | trm {$$ = $1;}
-                ;
-
-/* Expansion of exp for precedence. Expands to ftr */
-trm             : trm '*' ftr {$$ = makeEXP_times($1, $3);}
-                | trm '/' ftr {$$ = makeEXP_div($1, $3);}
-                | trm '%' ftr {$$ = makeEXP_mod($1, $3);}
-                | trm tLEFTSHIFT ftr {$$ = makeEXP_lshift($1, $3);}
-                | trm tRIGHTSHIFT ftr {$$ = makeEXP_rshift($1, $3);}
-                | trm '&' ftr {$$ = makeEXP_band($1, $3);}
-                | trm tANDNOT ftr {$$ = makeEXP_andnot($1, $3);}
-                | ftr {$$ = $1;}
-                ;
-
-/* The final expansion of exp. Can expand back to exp with parentheses. Also handles literals
- and function calls. */
-ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
+                | exp '+' exp  {$$ = makeEXP_plus($1, $3);}
+                | exp '-' exp  {$$ = makeEXP_minus($1, $3);}
+                | exp '|' exp  {$$ = makeEXP_bor($1, $3);}
+                | exp '^' exp  {$$ = makeEXP_xor($1, $3);}
+                | exp '*' exp {$$ = makeEXP_times($1, $3);}
+                | exp '/' exp {$$ = makeEXP_div($1, $3);}
+                | exp '%' exp {$$ = makeEXP_mod($1, $3);}
+                | exp tLEFTSHIFT exp {$$ = makeEXP_lshift($1, $3);}
+                | exp tRIGHTSHIFT exp {$$ = makeEXP_rshift($1, $3);}
+                | exp '&' exp {$$ = makeEXP_band($1, $3);}
+                | exp tANDNOT exp {$$ = makeEXP_andnot($1, $3);}
+                | '(' exp ')' {$$ = makeEXP_par($2);}
                 | tINTLITERAL {$$ = makeEXP_int($1);}
                 | tFLOATLITERAL {$$ = makeEXP_float($1);}
                 | tBOOLLITERAL {$$ = makeEXP_bool($1);}
@@ -230,14 +225,11 @@ ftr             : '(' exp ')' {$$ = makeEXP_par($2);}
                 | tAPPEND '(' exp ',' exp ')' {$$ = makeEXP_append($3, $5);}
                 | tLEN '(' exp ')' {$$ = makeEXP_len($3);}
                 | tCAP '(' exp ')' {$$ = makeEXP_cap($3);}
-                | ftr '.' tIDENTIFIER %prec UNARY {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
-                | ftr '[' exp ']' %prec UNARY {$$ = makeEXP_element($1, makeEXP_index($3));}
-                | ftr '(' explist ')' %prec UNARY { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
+                | exp '.' tIDENTIFIER {EXP *id = makeEXP_id($3); $$ = makeEXP_invoc($1, id);}
+                | exp '[' exp ']' {$$ = makeEXP_element($1, makeEXP_index($3));}
+                | exp '(' exps ')' { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs($3)); }
+				| exp '(' ')' { $$ = makeEXP_func_access($1, 0, makeDECL_fnCallArgs(NULL)); }
                 | tIDENTIFIER {$$ = makeEXP_id($1);}
-                ;
-
-explist         : exps {$$ = $1;}
-                | {$$ = NULL;}
                 ;
 
 /* an arbitrily long list of expressions, separated by commas */
@@ -318,8 +310,10 @@ stmts           : stmts stmt {$$ = $2; $$->next = $1;}
 /* Defines the kinds of statements that can be used in any context 
 A potential issue is having returnstmt in here. Should you be able to return from anywhere?*/
 stmt            : simplestmt ';' {$$ = $1;}
-                | tPRINT '(' explist ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
-                | tPRINTLN '(' explist ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
+                | tPRINT '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 0);}
+                | tPRINTLN '(' exps ')' ';' {$$ = makeSTMT_print(yylineno, $3, 1);}
+				| tPRINT '(' ')' ';' {$$ = makeSTMT_print(yylineno, NULL, 0 );}
+				| tPRINTLN '(' ')' {$$ = makeSTMT_print(yylineno, NULL, 1);}
                 | tBREAK ';' {$$ = makeSTMT_break(yylineno);}
                 | tCONTINUE ';' {$$ = makeSTMT_continue(yylineno);}
                 | '{' stmts '}' ';' {$$ = makeSTMT_block(yylineno, $2);}
