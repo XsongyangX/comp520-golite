@@ -154,7 +154,13 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 		
 		case emptyS:
 			return foundNothing;
+		
+		case incrementS:
+		case decrementS:
+			weedExpression(s->val.expression, s->lineno, false, false, false);
+			if (foundValues.foundBreak) return foundBreak;
 			
+			return foundNothing;
 		// assignment
 		case assignS:
       
@@ -270,7 +276,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 						exit(1);
 					}
 				}
-				else if(s->val.conditional.elif->kind == assignS)
+				else if(s->val.conditional.elif->kind == assignS || s->val.conditional.elif->kind == incrementS || s->val.conditional.elif->kind == decrementS)
 				{
 					//OK
 				}

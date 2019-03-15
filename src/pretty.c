@@ -82,7 +82,7 @@ void prettyType(TYPE *t, int tabs)
             printf("struct {\n");
             if(t->val.args != NULL)
             {
-                prettyDecl(t->val.args, tabs, 1);
+                prettyDecl(t->val.args, tabs+1, 1);
             }
             prettyTabs(tabs);
             printf("}");
@@ -104,6 +104,7 @@ void prettyDecl(DECLARATION *d, int t, int isInStruct)
     {
         prettyDecl(d->next, t, isInStruct);
     }
+    prettyTabs(t);
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
             printf("type %s ", d->identifier);
@@ -204,6 +205,16 @@ void prettyStmt(STATEMENT *s, int t)
     {
         case emptyS:
             break;
+        case incrementS:
+            prettyTabs(t);
+            prettyExp(s->val.expression);
+            printf("++\n");
+            break;
+        case decrementS:
+            prettyTabs(t);
+            prettyExp(s->val.expression);
+            printf("--\n");
+            break;
         case assignS:
             prettyAssign(s,t);
             break;
@@ -250,7 +261,6 @@ void prettyStmt(STATEMENT *s, int t)
             break;
         case declS:
             prettyDecl(s->val.declaration,t,0);
-	        printf("\n");
             break;
         case caseS://this should never be executed
             prettyCase(s,t);
@@ -376,6 +386,7 @@ void prettyFor(STATEMENT *s, int t)
     printf("; ");
     if(s->val.conditional.elif != NULL)
     {prettySDecl(s->val.conditional.elif);}//elif should be an expression stmt, typically an increment
+    prettyTabs(t);
     printf("{\n");
     prettyStmt(s->val.conditional.body, t+1);
     prettyTabs(t);
@@ -711,7 +722,7 @@ void prettyExp(EXP *e)
 	    prettyExp(e->val.binary.lhs);
 	    printf(", ");
             prettyExp(e->val.binary.rhs);
-            printf(")\n ");
+            printf(") ");
             break;
         case lenExp:
             printf("(len(");

@@ -35,7 +35,7 @@ struct symTable {
     symTable *next;
 };
 
-SYMBOL *INT_SYMBOL, *FLOAT_SYMBOL, *RUNE_SYMBOL, *STR_SYMBOL, *BOOL_SYMBOL;
+SYMBOL *INT_SYMBOL, *FLOAT_SYMBOL, *RUNE_SYMBOL, *STR_SYMBOL, *BOOL_SYMBOL, *BLANK_SYMBOL;
 
 int Hash(char *str);
 symTable *initSymbolTable();
@@ -53,6 +53,9 @@ void addPredefinitions(symTable *s);
 SYMBOL *getSymbol(symTable *t, char* identifier, enum SymbolKind kind);
 char *shortTypeStr(SYMBOL *tmp);
 char *longTypeStr(SYMBOL *tmp);
+char *getName(TYPE *t);
+
+SYMBOL *makeSymbolCopy(SYMBOL *template);
 
 void checkProg(PROGRAM *prog);
 void symProg(PROGRAM *prog);
