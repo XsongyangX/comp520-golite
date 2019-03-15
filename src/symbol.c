@@ -785,6 +785,10 @@ void printType(TYPE *t)
         else{
             break;
         }
+        if(tmp->gType == structType)
+        {
+            break;
+        }
         tmp = tmp->val.arg;
     }
     
