@@ -17,3 +17,5 @@ python3 initialization.py
 python3 short_initialization.py
 
 python3 literal_assignment.py
+
+python3 return.py
