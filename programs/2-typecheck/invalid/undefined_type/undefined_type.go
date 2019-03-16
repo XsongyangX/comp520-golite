@@ -3,4 +3,4 @@ package main
 
 func main(){}
 
-func fib() num {}
+func fib() num {return 1;}
