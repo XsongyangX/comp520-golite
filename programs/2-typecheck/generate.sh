@@ -21,3 +21,5 @@ python3 literal_assignment.py
 python3 return.py
 
 python3 call.py
+
+python3 assign.py
