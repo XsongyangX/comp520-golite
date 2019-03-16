@@ -245,7 +245,7 @@ idents          : idents ',' tIDENTIFIER %prec UNARY {$$ = makeEXP_idblock($3, $
 
 /* a block of lists of identifiers. Used in the distributed type () statements. */
 blockidents     : blockidents tIDENTIFIER type ';' {$$ = makeDECL_norhs(1, $2, $3, yylineno); $$->next = $1;}
-		        | blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); $$->next = $1;}
+		        | blockidents idents type ';' {$$ = makeDECL_blocknorhs(yylineno, $2, $3); findBottomDECL($$)->next = $1;}
                 | {$$ = NULL;}
                 ;
 

@@ -27,6 +27,7 @@ SYMBOL *elementHelper(SYMBOL *sym, int lineno);
 void incdecHelper(SYMBOL *sym, int lineno);
 void lenHelper(SYMBOL *sym, int lineno);
 SYMBOL *resolveBaseType(SYMBOL *sym1);
+bool isComparable(SYMBOL *sym, symTable *table, int lineno);
 
 
 //bool InDepthTypeCheck(SYMBOL *sym, char *target);
