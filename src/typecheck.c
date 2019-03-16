@@ -32,6 +32,16 @@ void typeCheckDeclaration(DECLARATION *decl, symTable *table)
             else
                 declSym->val.parentSym = declType->val.parentSym;
         }
+        else if(decl->val.right != NULL)
+        {
+            SYMBOL *declSym = getSymbol(table, decl->identifier, varSym);
+            SYMBOL *declVal = typecheckExp(decl->val.right, table, decl->lineno);
+            if(!MatchingTypes(declSym, declVal, decl->lineno, false))
+            {
+                fprintf(stderr, "Error: (line %d) trying to assign type %s to %s variable.\n", decl->lineno, shortTypeStr(declVal), shortTypeStr(declSym));
+                exit(1);
+            }
+        }
     }
 }
 /*  -assignments, make sure lhs and rhs match in type
@@ -61,6 +71,11 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             typeCheckStatement(stmt->val.assignment.chain, func);
             symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno);
             symLHS = typecheckExp(stmt->val.assignment.identifier, stmt->localScope, stmt->lineno);
+            if(symLHS->isConstant)
+            {
+                fprintf(stderr, "Error: (line %d) trying to assign to constant.\n", stmt->lineno);
+                exit(1);
+            }
             if(symLHS == BLANK_SYMBOL)
             {
                 //OK
@@ -82,24 +97,25 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             {
                 //OK
             }
-            else if(MatchingTypes(symLHS, symRHS, stmt->lineno, false))
+            else if(symLHS->t != nilType && MatchingTypes(symLHS, symRHS, stmt->lineno, false))
             {
                 //OK
             }
             else if(symLHS->t->gType == nilType)
             {
                 symLHS->t = symRHS->t;
-                if(stmt->localScope->next != NULL && getSymbol(stmt->localScope->next, stmt->val.assignment.identifier->val.identifier, varSym) != NULL)//check for type consistency across scopes
-                    MatchingTypes(symLHS, getSymbol(stmt->localScope->next, stmt->val.assignment.identifier->val.identifier, varSym), stmt->lineno, true);
+                // if(stmt->localScope->next != NULL && getSymbol(stmt->localScope->next, stmt->val.assignment.identifier->val.identifier, varSym) != NULL)//check for type consistency across scopes
+                //     MatchingTypes(symLHS, getSymbol(stmt->localScope->next, stmt->val.assignment.identifier->val.identifier, varSym), stmt->lineno, true); //HANDLED IN SYMBOL.C
                 if(symRHS->kind == typeSym || symRHS->kind == structSym)
                 {
                     symLHS->val.parentSym = symRHS;
                 }
                 else if(symRHS->kind == varSym)
                 {
-                    if(strcmp(getName(symRHS->t), "struct") == 0)
+                    if(symRHS->kind == varstructSym)
                     {
                         symLHS->val.structFields = symRHS->val.structFields;
+                        symLHS->kind = varstructSym;
                     }
                     else{
                         symLHS->val.parentSym = symRHS->val.parentSym;
@@ -137,7 +153,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             break;
         case forS:
             typeCheckStatement(stmt->val.conditional.optDecl, func);
-            if(stmt->val.conditional.condition != NULL)
+            if(stmt->val.conditional.condition != NULL && stmt->val.conditional.condition->kind != emptyExp)
             {
                 symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
                 
@@ -437,40 +453,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case neqExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
-            if(dummy2 == NULL)
-            {
-                fprintf(stderr,"Error: (line %d) Invalid types (%s) for equality operator\n", lineno, shortTypeStr(dummy1));
-                exit(1);
-            }
-            if (MatchingTypes(dummy2, INT_SYMBOL,  lineno, false) || 
-                MatchingTypes(dummy2, RUNE_SYMBOL,  lineno, false)||
-                MatchingTypes(dummy2, FLOAT_SYMBOL,  lineno, false) || 
-                MatchingTypes(dummy2, STR_SYMBOL,  lineno, false))
+            MatchingTypes(dummy1, dummy2, lineno, true);
+            if (isComparable(dummy1, table, lineno))
             {
                 exp->t = BOOL_SYMBOL->t;
                 return BOOL_SYMBOL; 
             }
-            else if(dummy1->kind==structSym && dummy2->kind==structSym){
-                if(dummy1 != dummy2)
-                {
-                    printf("Error: (line %d) incompatible struct types %s and %s.\n", lineno, dummy1->name, dummy2->name);
-                    exit(1);
-                }
-                else{
-                    exp->t = BOOL_SYMBOL->t;
-                    return BOOL_SYMBOL; 
-                }
-            }
-            else if(dummy1->t->gType==arrayType && dummy2->t->gType==arrayType){
-                exp->t = BOOL_SYMBOL->t;
-                return BOOL_SYMBOL; 
-            }
-            else if(dummy1->t->gType == sliceType && dummy2->t->gType == sliceType)
-            {
-                fprintf(stderr,"Error: (line %d) slice type is not a valid comparable.\n", lineno);
-                exit(1);
-            }
+            
             else{
                 fprintf(stderr,"Error: (line %d) invalid type %s for comparable.\n", lineno, dummy1->name);
                 exit(1);
@@ -484,7 +473,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
-                fprintf(stderr,"Error: (line %d) Invalid types (%s) for comparable operator\n", lineno, shortTypeStr(dummy1));
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for ordered operator\n", lineno, shortTypeStr(dummy1));
                 exit(1);
             }
             if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) ||
@@ -496,7 +485,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 return BOOL_SYMBOL; 
             }
             else{
-                fprintf(stderr,"Error: (line %d) unexpected type %s in comparison expression. Expecting (int), (float64), (rune), (str).\n", lineno, dummy1->name);
+                fprintf(stderr,"Error: (line %d) unexpected type %s in oredered expression. Expecting (int), (float64), (rune), (str).\n", lineno, dummy1->name);
                 exit(1);
             }
         case orExp:
@@ -1168,7 +1157,7 @@ bool checkDefaultCasts(SYMBOL *sym1, SYMBOL *sym2, int lineno)
 SYMBOL *structAccessHelper(SYMBOL *sym, char *id, int lineno)
 {
             SYMBOL *refParent = sym;
-            if( sym->kind != structSym) 
+            if( sym->kind != structSym && sym->kind != varstructSym) 
                 refParent = sym->val.parentSym;
             TYPE *tmpType = sym->t;
             while(tmpType != NULL)
@@ -1225,7 +1214,7 @@ void lenHelper(SYMBOL *sym, int lineno)
             SYMBOL *refParent = sym;
             if(MatchingTypes(sym, STR_SYMBOL, lineno, false))
                 return;
-            if( sym->kind != structSym) 
+            if( sym->kind != structSym && sym->kind != varstructSym) 
                 refParent = sym->val.parentSym;
             TYPE *tmpType = sym->t;
             while(tmpType != NULL)
@@ -1245,7 +1234,7 @@ void lenHelper(SYMBOL *sym, int lineno)
                     if(tmpType == NULL || tmpType->gType == nilType) 
                     {
                         tmpType = refParent->t;
-                        if(refParent != NULL && refParent->kind != structSym)
+                        if(refParent != NULL && refParent->kind != structSym && refParent->kind != varstructSym)
                         {
                             tmpType = refParent->t;
                             refParent = refParent->val.parentSym;
@@ -1267,7 +1256,7 @@ void lenHelper(SYMBOL *sym, int lineno)
 void capHelper(SYMBOL *sym, int lineno)
 {
             SYMBOL *refParent = sym;
-            if( sym->kind != structSym) 
+            if( sym->kind != structSym && sym->kind != varstructSym) 
                 refParent = sym->val.parentSym;
             TYPE *tmpType = sym->t;
             while(tmpType != NULL)
@@ -1286,7 +1275,7 @@ void capHelper(SYMBOL *sym, int lineno)
                     if(tmpType == NULL || tmpType->gType == nilType) 
                     {
                         tmpType = refParent->t;
-                        if(refParent != NULL && refParent->kind != structSym)
+                        if(refParent != NULL && refParent->kind != structSym && refParent->kind != varstructSym)
                         {
                             tmpType = refParent->t;
                             refParent = refParent->val.parentSym;
@@ -1308,7 +1297,7 @@ void capHelper(SYMBOL *sym, int lineno)
 SYMBOL *elementHelper(SYMBOL *sym, int lineno)
 {
             SYMBOL *refParent = sym;
-            if( sym->kind != structSym) 
+            if( sym->kind != structSym && sym->kind != varstructSym) 
                 refParent = sym->val.parentSym;
             TYPE *tmpType = sym->t;
             while(tmpType != NULL)
@@ -1320,7 +1309,7 @@ SYMBOL *elementHelper(SYMBOL *sym, int lineno)
                 }
                 else if(tmpType->gType == sliceType || tmpType->gType == arrayType)
                 {
-                    SYMBOL *returnSym = makeSymbol(" ", varSym, 1);
+                    SYMBOL *returnSym = makeSymbol(" ", varSym);
                     returnSym->val.parentSym = refParent;
                     returnSym->t = tmpType->val.arg;
                     return returnSym;
@@ -1330,7 +1319,7 @@ SYMBOL *elementHelper(SYMBOL *sym, int lineno)
                     if(tmpType == NULL || tmpType->gType == nilType) 
                     {
                         tmpType = refParent->t;
-                        if(refParent != NULL && refParent->kind != structSym)
+                        if(refParent != NULL && refParent->kind != structSym && refParent->kind != varstructSym)
                         {
                             tmpType = refParent->t;
                             refParent = refParent->val.parentSym;
@@ -1355,7 +1344,7 @@ SYMBOL *resolveBaseType(SYMBOL *sym1)
     SYMBOL *s1;
     s1 = sym1;
     TYPE *tmpType = sym1->t;
-    if(sym1->kind == structSym)
+    if(sym1->kind == structSym || sym1->kind == varstructSym)
     {
         return NULL;
     }
@@ -1369,9 +1358,9 @@ SYMBOL *resolveBaseType(SYMBOL *sym1)
             tmpType = tmpType->val.arg;
             if(tmpType == NULL || tmpType->gType == nilType) 
             {
-                if(s1->kind != structSym && s1->val.parentSym == BLANK_SYMBOL)
+                if(s1->kind != structSym && s1->kind != varstructSym && s1->val.parentSym == BLANK_SYMBOL)
                     break;
-                if(s1->kind != structSym)
+                if(s1->kind != structSym && s1->kind != varstructSym)
                 {    s1 = s1->val.parentSym;
                     tmpType = s1->t;
                 }
@@ -1384,6 +1373,66 @@ SYMBOL *resolveBaseType(SYMBOL *sym1)
     }
     return s1;
 
+}
+
+bool isComparable(SYMBOL *sym, symTable *table, int lineno)
+{
+    SYMBOL *s1;
+    s1 = sym;
+    TYPE *tmpType = sym->t;
+    if(sym->kind == structSym || sym->kind == varstructSym)
+    {
+        s1 = sym->val.structFields;
+        while(s1 != NULL)
+        {
+            if(!isComparable(s1, table, lineno))
+            {
+                return false;
+            }
+            s1 = s1->next;
+        }
+        return true;
+    }
+
+    while(tmpType != NULL)
+    {
+        if(tmpType->gType == arrayType)
+        {
+            tmpType = tmpType->val.arg;
+        }
+        else if(tmpType->gType == sliceType)
+        {
+            fprintf(stderr, "Error: (line %d) expected comparable not slice %s.\n", lineno, shortTypeStr(s1));
+            exit(1);
+        }
+        else{
+            if(tmpType->name != NULL) 
+            {
+                if(s1->kind == structSym || s1->kind == varstructSym)
+                {
+                    s1 = s1->val.structFields;
+                    while(s1 != NULL)
+                    {
+                        if(!isComparable(s1, table, lineno))
+                        {
+                            return false;
+                        }
+                        s1 = s1->next;
+                    }
+                    return true;
+                }
+
+                if(s1->val.parentSym == BLANK_SYMBOL)
+                {
+                    return (s1 == INT_SYMBOL || s1 == FLOAT_SYMBOL || s1 == STR_SYMBOL || s1 == BOOL_SYMBOL || s1 == RUNE_SYMBOL);
+                }
+                s1 = s1->val.parentSym;
+                tmpType = s1->t;
+            }    
+
+        }
+    }
+    return true;
 }
 // //checks that a type is a basic type "target"
 // bool InDepthTypeCheck(SYMBOL *sym, char *target){

@@ -36,8 +36,7 @@ symTable *initScopeTable(symTable *parent)
 }
 void putVar(SYMBOL *s, symTable *t, int lineno)
 {
-    if(getSymbol(t, s->name, typeSym) != NULL || getSymbol(t, s->name, funcSym) != NULL)
-    {
+    if(strlen(lookupFuncLocal(t, s->name)) != 0 || strlen(lookupTypeLocal(t, s->name)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
     }
@@ -59,8 +58,7 @@ void putVar(SYMBOL *s, symTable *t, int lineno)
 /*used for types and structs*/
 void putType(SYMBOL *s, symTable *t, int lineno)
 {
-    if(getSymbol(t, s->name, varSym) != NULL || getSymbol(t, s->name, funcSym) != NULL)
-    {
+    if(strlen(lookupVarLocal(t, s->name)) != 0 || strlen(lookupFuncLocal(t, s->name)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
     }
@@ -71,11 +69,10 @@ void putType(SYMBOL *s, symTable *t, int lineno)
     while(tmp->kind != nullSym)
     {
         if(strcmp(tmp->name, s->name) == 0){//redeclaration
-            if(tmp->wasRedefined)
-            {
+            
                 fprintf(stderr, "Error: (line %d) redeclaration of type %s.\n", lineno, s->name);
                 exit(1);
-            }
+            
             prev->next = tmp->next;
             break;
         }
@@ -85,10 +82,20 @@ void putType(SYMBOL *s, symTable *t, int lineno)
 }
 void putFunc(SYMBOL *s, symTable *t, int lineno)
 {
-    if(getSymbol(t, s->name, typeSym) != NULL || getSymbol(t, s->name, varSym) != NULL)
-    {
+    if(strlen(lookupVarLocal(t, s->name)) != 0 || strlen(lookupTypeLocal(t, s->name)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
+    }
+    if(strcmp(s->name, "main") == 0 || strcmp(s->name, "init") == 0)
+    {
+        if(t->next != NULL)
+        {
+            if(t->next->next != NULL)
+            {
+                fprintf(stderr, "Error: (line %d) declaring function %s not at global scope.\n", lineno, s->name);
+                exit(1);
+            }
+        }
     }
     int cell = Hash(s->name);
     s->next = t->funcTable[cell];
@@ -248,7 +255,7 @@ char *lookupType(symTable *t, char* identifier, int lineno, int doesExit)
 }
 /*returns the type of var, only looks at the local scope,
 and does not exit, 0 length string means not found*/
-char *lookupVarLocal(symTable *t, char* identifier, int lineno)
+char *lookupVarLocal(symTable *t, char* identifier)
 {
     int cell = Hash(identifier);
     SYMBOL *tmp = t->varTable[cell];
@@ -267,10 +274,27 @@ char *lookupVarLocal(symTable *t, char* identifier, int lineno)
 }
 /*returns the mapping of the type identifier, only looks at the local scope, 
 and does not exit, 0 length string means not found*/
-char *lookupTypeLocal(symTable *t, char* identifier, int lineno)
+char *lookupTypeLocal(symTable *t, char* identifier)
 {
     int cell = Hash(identifier);
     SYMBOL *tmp = t->typeTable[cell];
+    while(tmp->kind != nullSym)
+    {
+        if (strcmp(tmp->name, identifier) == 0)
+        {
+            return shortTypeStr(tmp);
+        }
+        else
+        {
+            tmp = tmp->next;
+        }
+    }
+    return "";
+}
+char *lookupFuncLocal(symTable *t, char* identifier)
+{
+    int cell = Hash(identifier);
+    SYMBOL *tmp = t->funcTable[cell];
     while(tmp->kind != nullSym)
     {
         if (strcmp(tmp->name, identifier) == 0)
@@ -367,12 +391,12 @@ SYMBOL *getSymbol(symTable *t, char* identifier, enum SymbolKind kind)
         return NULL;
     }
 }
-SYMBOL *makeSymbol(char *name, enum SymbolKind kind, int wasRedefined)
+SYMBOL *makeSymbol(char *name, enum SymbolKind kind)
 {
     SYMBOL *tmp = malloc(sizeof(SYMBOL));
     tmp->name = name;
     tmp->kind = kind;
-    tmp->wasRedefined = wasRedefined;
+    tmp->isConstant = false;
     tmp->next = NULL;
     return tmp;
 }
@@ -381,7 +405,7 @@ SYMBOL *makeSymbolCopy(SYMBOL *template)
     SYMBOL *tmp = malloc(sizeof(SYMBOL));
     tmp->name = template->name;
     tmp->kind = template->kind;
-    tmp->wasRedefined = template->wasRedefined;
+    tmp->isConstant = false;
     tmp->val.parentSym = template->val.parentSym;
     tmp->t = template->t;
     tmp->next = NULL;
@@ -392,13 +416,13 @@ void addPredefinitions(symTable *s)
 //dummy type: if a type points to this, then we know it is the actual type, not a redefinition
     char *blankname = malloc(sizeof(char)*10);
     strcpy(blankname, " ");
-    SYMBOL *base = makeSymbol(blankname, typeSym, 0);
+    SYMBOL *base = makeSymbol(blankname, typeSym);
     base->t = NULL;
     BLANK_SYMBOL = base;
 
     char *name = malloc(sizeof(char)*10);
     strcpy(name, "int");
-    SYMBOL *tmp = makeSymbol(name, typeSym, 0);
+    SYMBOL *tmp = makeSymbol(name, typeSym);
     tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s, 0);
@@ -406,7 +430,7 @@ void addPredefinitions(symTable *s)
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "float64");
-    tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym);
     tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
@@ -414,7 +438,7 @@ void addPredefinitions(symTable *s)
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "bool");
-    tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym);
     tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
@@ -422,7 +446,7 @@ void addPredefinitions(symTable *s)
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "string");
-    tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym);
     tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
@@ -430,7 +454,7 @@ void addPredefinitions(symTable *s)
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "rune");
-    tmp = makeSymbol(name, typeSym, 0);
+    tmp = makeSymbol(name, typeSym);
     tmp->val.parentSym = base;
     tmp->t = makeTYPE(baseType, 0, name, NULL);
     putType(tmp,s,0);
@@ -438,16 +462,18 @@ void addPredefinitions(symTable *s)
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "true");
-    tmp = makeSymbol(name, varSym, 0);
+    tmp = makeSymbol(name, varSym);
     tmp->val.parentSym = getSymbol(s, "bool", typeSym);
     tmp->t = makeTYPE(baseType, 0, "bool", NULL);
+    tmp->isConstant = true;
     putVar(tmp,s,0);
 
     name = malloc(sizeof(char)*10);
     strcpy(name, "false");
-    tmp = makeSymbol(name, varSym, 0);
+    tmp = makeSymbol(name, varSym);
     tmp->val.parentSym = getSymbol(s, "bool", typeSym);
     tmp->t = makeTYPE(baseType, 0, "bool", NULL);
+    tmp->isConstant = true;
     putVar(tmp,s,0);
     
     // name = malloc(sizeof(char)*10);
@@ -503,7 +529,9 @@ void symProg(PROGRAM *prog)
         prettyTabs(1);
         printf("{\n");
     }
-    symDecl(prog->declList, prog->globalScope, 2);
+    symTable *subScope = initScopeTable(prog->globalScope);
+    prog->globalScope = subScope;
+    symDecl(prog->declList, subScope, 2);
     if(symbolPrint == 1)
     {
         prettyTabs(1);
@@ -536,7 +564,7 @@ void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
             char *parentname = getName(decl->t);
             if(strcmp(parentname, "struct") != 0)
             {
-                SYMBOL *tmp = makeSymbol(decl->identifier, typeSym, 1);
+                SYMBOL *tmp = makeSymbol(decl->identifier, typeSym);
                 SYMBOL *parent = getSymbol(table, parentname, typeSym);
                 //printf("Parent of %s is %s.\n", decl->identifier, parentname);
                 if(parent == NULL)
@@ -569,7 +597,7 @@ void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
                 }
             }
             else{
-                SYMBOL *tmp = makeSymbol(decl->identifier, structSym, 1);
+                SYMBOL *tmp = makeSymbol(decl->identifier, structSym);
                 //SYMBOL *parent = getSymbol(table, parentname, typeSym);
                 //printf("Parent of %s is %s.\n", decl->identifier, parentname);
                 tmp->t = decl->t;
@@ -602,7 +630,7 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
             char *parentname = getName(decl->t);
             if(strcmp(parentname, "struct") != 0)
             {
-                SYMBOL *tmp = makeSymbol(decl->identifier, varSym, 1);
+                SYMBOL *tmp = makeSymbol(decl->identifier, varSym);
                 SYMBOL *parent = getSymbol(table, parentname, typeSym);
                 if(parent == NULL && strlen(parentname) > 0)
                 {
@@ -629,7 +657,7 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
                 }
             }
             else{
-                SYMBOL *tmp = makeSymbol(decl->identifier, varSym, 1);
+                SYMBOL *tmp = makeSymbol(decl->identifier, varstructSym);
                 tmp->t = decl->t;
                 TYPE *structT;
                 structT = tmp->t;
@@ -660,7 +688,7 @@ void symStructDecl(DECLARATION *decl, symTable *table, int depth)
 {
             if(strcmp(decl->identifier,"_") == 0)
                 return;
-            SYMBOL *tmp = makeSymbol(decl->identifier, structSym, 1);
+            SYMBOL *tmp = makeSymbol(decl->identifier, structSym);
             SYMBOL *bodyList = symStructHelper(decl->val.body, table);
             tmp->val.structFields = bodyList;
             putType(tmp, table, decl->lineno);
@@ -674,7 +702,7 @@ void symStructDecl(DECLARATION *decl, symTable *table, int depth)
 }
 void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
 {
-            SYMBOL *tmp = makeSymbol(decl->val.f->identifier, funcSym, 1);
+            SYMBOL *tmp = makeSymbol(decl->val.f->identifier, funcSym);
             char *typename = getName(decl->val.f->returnt);
             SYMBOL *typeref = getSymbol(table, typename, typeSym);
             if(typeref == NULL && strlen(typename) != 0)
@@ -684,7 +712,7 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
             }
             SYMBOL *paramList = symFuncHelper(decl->val.f->params, table);
             tmp->val.func.funcParams = paramList;
-            tmp->val.func.returnSymRef = makeSymbol(" ", varSym, 1);
+            tmp->val.func.returnSymRef = makeSymbol(" ", varSym);
             tmp->val.func.returnSymRef->val.parentSym = typeref;
             tmp->val.func.returnSymRef->t = decl->val.f->returnt;
             tmp->t = decl->val.f->returnt;
@@ -824,6 +852,12 @@ void printStructFields(symTable *table, SYMBOL *fields)
         printStructFields(table, fields->next);
         printf("%s ", fields->name);
         printType(fields->t);
+        if(fields->kind == varstructSym)
+        {
+            printf("{ ");
+            printStructFields(table, fields->val.structFields);
+            printf("}; ");
+        }
         printf("; ");
     }
 }
@@ -835,12 +869,30 @@ SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
         return NULL;
     }
     SYMBOL *next = symStructHelper(body->next, table);
-    SYMBOL *tmp = makeSymbol(body->identifier, varSym, 1);
-    SYMBOL *parent = getSymbol(table, getName(body->t), typeSym);
-    tmp->val.parentSym = parent;
-    tmp->next = next;
-    tmp->t = body->t;
-    return tmp;
+    if(strcmp(getName(body->t),"struct") == 0)
+    {
+                SYMBOL *tmp = makeSymbol(body->identifier, varstructSym);
+                tmp->t = body->t;
+                TYPE *structT;
+                structT = tmp->t;
+                while(structT->name == NULL)
+                {
+                    structT = structT->val.arg;
+                }
+                SYMBOL *bodyList = symStructHelper(structT->val.args, table);
+                tmp->val.structFields = bodyList;
+                //putVar(tmp, table, body->lineno);
+                return tmp;
+    }
+    else{
+        SYMBOL *tmp = makeSymbol(body->identifier, varSym);
+        SYMBOL *parent = getSymbol(table, getName(body->t), typeSym);
+        tmp->val.parentSym = parent;
+        tmp->next = next;
+        tmp->t = body->t;
+        return tmp;
+
+    }
 }
 /*puts the function arguments in a reversed list of symbols*/
 SYMBOL *symFuncHelper(DECLARATION *params, symTable *table)
@@ -850,7 +902,7 @@ SYMBOL *symFuncHelper(DECLARATION *params, symTable *table)
         return NULL;
     }
     SYMBOL *next = symFuncHelper(params->next, table);
-    SYMBOL *tmp = makeSymbol(params->identifier, varSym, 1);
+    SYMBOL *tmp = makeSymbol(params->identifier, varSym);
     SYMBOL *parent = getSymbol(table, getName(params->t), typeSym);
     tmp->val.parentSym = parent;
     tmp->next = next;
@@ -862,6 +914,7 @@ void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
             STATEMENT *cur = stmt;
             while(cur != NULL)
             {
+                cur->localScope = table;
                 if(cur->val.assignment.identifier->kind == idExp)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
@@ -876,7 +929,6 @@ void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
                 symExp(cur->val.assignment.value, table, stmt->lineno);
                 cur = cur->val.assignment.chain;    
             }
-            stmt->localScope = table;
 }
 void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
 {
@@ -884,6 +936,7 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
             STATEMENT *cur = stmt;
             while(cur != NULL)
             {
+                cur->localScope = table;
                 if(cur->val.assignment.identifier->kind == idExp)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
@@ -892,7 +945,7 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
                         cur = cur->val.assignment.chain;
                         continue;
                     }
-                    else if(strlen(lookupVarLocal(table, cur->val.assignment.identifier->val.identifier, stmt->lineno)) == 0)
+                    else if(strlen(lookupVarLocal(table, cur->val.assignment.identifier->val.identifier)) == 0)
                     {//keep track of new declared variables
                         newLocals++;
                         
@@ -920,7 +973,7 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
             {
                 printQDeclHelper(table, stmt, depth);
             }
-            stmt->localScope = table;
+            
 }
 void symElifStmt(STATEMENT *stmt, symTable *table, int depth){
             symTable *subtable = initScopeTable(table);
@@ -1138,7 +1191,8 @@ void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth)
 /*called from QuickDecl assignments, adds new declarations to the scope*/
 void symQDecl(STATEMENT *cur, symTable *table)
 {
-    SYMBOL *tmp = makeSymbol(cur->val.assignment.identifier->val.identifier, varSym, 1);
+    SYMBOL *tmp;
+    tmp = makeSymbol(cur->val.assignment.identifier->val.identifier, varSym);
     tmp->val.parentSym = NULL;
     tmp->t = makeTYPE(nilType, 0, " ", NULL);
     putVar(tmp, table, cur->lineno);
@@ -1151,6 +1205,7 @@ void symExp(EXP *exp, symTable *table, int lineno)
     }
     switch(exp->kind)
     {
+        case emptyExp:
         case intExp:
         case floatExp:
         case strExp:

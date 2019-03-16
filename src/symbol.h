@@ -10,7 +10,8 @@ enum SymbolKind{
 	varSym, 
 	funcSym, 
 	typeSym, 
-	structSym
+	structSym,
+    varstructSym
 };
 
 enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
@@ -18,8 +19,8 @@ enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
 struct SYMBOL{
     char *name;
     enum SymbolKind kind;
+    bool isConstant;
     TYPE *t;
-    int wasRedefined; //used to deal with int redeclerations, for instance
     union{
         SYMBOL *parentSym;
         SYMBOL *returnType;
@@ -43,12 +44,13 @@ symTable *initScopeTable(symTable *parent);
 void putVar(SYMBOL *s, symTable *t, int lineno);
 void putType(SYMBOL *s, symTable *t, int lineno);
 void putFunc(SYMBOL *s, symTable *t, int lineno);
-SYMBOL *makeSymbol(char *name, enum SymbolKind kind, int wasRedefined);
+SYMBOL *makeSymbol(char *name, enum SymbolKind kind);
 char *lookupVar(symTable *t, char* identifier, int lineno, int doesExit);
 char *lookupType(symTable *t, char* identifier, int lineno, int doesExit);
-char *lookupVarLocal(symTable *t, char* identifier, int lineno);
-char *lookupTypeLocal(symTable *t, char* identifier, int lineno);
+char *lookupVarLocal(symTable *t, char* identifier);
+char *lookupTypeLocal(symTable *t, char* identifier);
 char *lookupFunc(symTable *t, char* identifier, int lineno, int doesExit);
+char *lookupFuncLocal(symTable *t, char* identifier);
 void addPredefinitions(symTable *s);
 SYMBOL *getSymbol(symTable *t, char* identifier, enum SymbolKind kind);
 char *shortTypeStr(SYMBOL *tmp);
