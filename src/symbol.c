@@ -86,6 +86,17 @@ void putFunc(SYMBOL *s, symTable *t, int lineno)
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
     }
+    if(strcmp(s->name, "main") == 0 || strcmp(s->name, "init") == 0)
+    {
+        if(t->next != NULL)
+        {
+            if(t->next->next != NULL)
+            {
+                fprintf(stderr, "Error: (line %d) declaring function %s not at global scope.\n", lineno, s->name);
+                exit(1);
+            }
+        }
+    }
     int cell = Hash(s->name);
     s->next = t->funcTable[cell];
     SYMBOL *tmp = s->next;
