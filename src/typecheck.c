@@ -869,6 +869,27 @@ bool MatchingTypes(SYMBOL *s1, SYMBOL *s2, int lineno, bool isVerbose){
         {fprintf(stderr, "Error: (line %d) type %s does not match with type %s.\n", lineno, s1->name, s2->name);
         exit(1);}
     }
+    else if(s1->kind == varstructSym && s2->kind == varstructSym)
+    {
+        SYMBOL *fields1, *fields2;
+        fields1 = s1->val.structFields;
+        fields2 = s2->val.structFields;
+        while(fields1 != NULL && fields2 != NULL)
+        {
+            if(MatchingTypes(fields1, fields2, lineno, false))
+            {
+                fields1 = fields1->next;
+                fields2 = fields2->next;
+            }
+            else{
+                if(isVerbose)
+                {fprintf(stderr, "Error: (line %d) field %s does not match with field %s in structs.\n", lineno, fields1->name, fields2->name);
+                exit(1);}
+                return false;
+            }
+        }
+        return (fields1 == NULL && fields2 == NULL);
+    }
     return false;
 }
 //determines if 2 types can be interchanged, when cast to the other
