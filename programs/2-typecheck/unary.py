@@ -2,7 +2,6 @@
 import constants
 from constants import main
 import os
-import itertools
 
 """
 This script generates test files for unary operations, like
@@ -72,19 +71,16 @@ def valid(destroy=False):
 				derivedTypes.append(numType)
 				
 				# for each pair of types in the hierarchy
-				for (magicType, xType) \
-				in itertools.product(derivedTypes, repeat=2):
+				for magicType in derivedTypes:
 					statement = "var magic " + magicType + "\n"\
-						+ "\tvar x " + xType + "\n"\
-						+ "\tmagic = " + op + "x"
+						+ "\tmagic = " + op + "magic"
 					
-
 					if not destroy:
 						output(statement, typedefs,\
-							FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + "_" + xType + ".go",\
+							FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go",\
 							isValid=True)
 					else:
-						os.remove(VALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + "_" + xType + ".go")					
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go")					
 	
 	return
 	
