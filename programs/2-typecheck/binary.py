@@ -91,41 +91,36 @@ def valid(destroy=False):
 				+ constants.HIERARCHY["float64"]\
 				+ constants.HIERARCHY["rune"]\
 				+ constants.HIERARCHY["int"]\
-				+ constants.HIERARCHY["string"])
+				+ constants.HIERARCHY["string"]\
+				+ constants.HIERARCHY["struct"]\
+				+ constants.HIERARCHY["array"])
 				
+			for base, derived in list(constants.NUMERIC_TYPE.items())\
+				+ list(constants.BOOL_TYPE.items())\
+				+ list(constants.STRING_TYPE.items())\
+				+ list(constants.STRUCT_TYPE.items())\
+				+ list(constants.ARRAY_TYPE.items()):
+				
+				for comparableType in [base] + derived:
+					
+					statement = "var x " + comparableType + "\n"\
+						+ "\tvar y " + comparableType + "\n"\
+						+ "\tvar magic bool\n"\
+						+ "\tmagic = x " + op + " y\n"
+						
+					if not destroy:
+					
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + comparableType + ".go",\
+							isValid=True)
+					
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + comparableType + ".go")
 				
 	return
-
-def invalidFilesForOp(op, typeRange, destroy=False):
-
-	for baseType in typeRange:
-		statement = "var magic " + baseType + "\n"\
-			+ "\tmagic = " + op + "magic"
-				
-		if not destroy:
-			output(statement, "",\
-				FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + baseType + ".go",\
-				isValid=False)
-		else:
-			os.remove(INVALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + baseType)
-
-	return 
 	
 def invalid(destroy=False):
 
-	for op in constants.UNARY_OP:
-	
-		if op == '+' or op == '-':
-			invalidFilesForOp(op, ['bool', 'string'], destroy=False)
-			
-		elif op == '!':
-			invalidFilesForOp(op, ['int', 'float64', 'rune', 'string'], destroy=False)
-		
-		elif op == '^':
-			invalidFilesForOp(op, ['float64', 'bool', 'string'], destroy=False)
-		
-		else:
-			raise Exception
-	return
+	return 
 	
 main(VALID_PATH, INVALID_PATH, valid, invalid)

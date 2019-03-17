@@ -18,8 +18,13 @@ HIERARCHY = {"int": ["type num int", "type count num", "type quantity count"],\
 	"float64": ["type real float64", "type positive real", "type non_zero positive"],\
 	"rune": ["type letter rune", "type character letter", "type symbol character"],\
 	"bool": ["type answer bool", "type safe answer", "type exist answer"],\
-	"string": ["type error string", "type log error", "type report log"]}
-
+	"string": ["type error string", "type log error", "type report log"],\
+	"struct": ["type compound struct { x int; y float64;}",\
+		"type composed struct { c compound; s string;}",\
+		"type group struct { c1 compound; c2 composed;}"],\
+	"array": ["type inbox [100]string", "type mailbox [3]inbox", "type postoffice [5]mailbox"],\
+	"slice": ["type ints []int", "type strings []strings", "type runecrafter []rune"]}
+	
 # dict = type : array of derived types
 NUMERIC_TYPE = {"int": ["num", "count", "quantity"],\
 	"float64" : ["real", "positive", "non_zero"],\
@@ -28,6 +33,9 @@ INTEGER_TYPE = {"int": ["num", "count", "quantity"],\
 	"rune" : ["letter", "character", "symbol"]}
 BOOL_TYPE = {"bool": ["answer", "safe", "exist"]}
 STRING_TYPE = {"string": ["error", "log", "report"]}
+STRUCT_TYPE = {"struct": ["compound", "composed", "group"]}
+ARRAY_TYPE = {"array": ["inbox", "mailbox", "postoffice"]}
+SLICE_TYPE = {"slice": ["ints", "strings", "runecrafter"]}
 
 UNARY_OP = ["+", "-", "!", "^"]
 UNARY_OP_TO_WORD = {"+":"plus", "-":"minus", "!":"not", "^":"bitneg"}
