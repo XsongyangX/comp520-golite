@@ -4,7 +4,7 @@ package main
 type truth bool
 
 func main(){
-
-	if truth {
+	var x truth
+	if x {
 	}
 }
