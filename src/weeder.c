@@ -467,6 +467,8 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 			case funcExp:
 			case funcBlockExp:
 			case parExp:
+				break;
+			default:
 				notFuncExp(lineno);
 		}
 	}
