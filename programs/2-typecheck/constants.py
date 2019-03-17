@@ -13,11 +13,12 @@ USER_TYPE = {"num":"type num int",\
 	"long": "type long float64",\
 	"Date": "type Date struct{ day string; month string; year int; }"}
 
-# typedefs for nested numeric type
+# typedefs for nested type
 HIERARCHY = {"int": ["type num int", "type count num", "type quantity count"],\
 	"float64": ["type real float64", "type positive real", "type non_zero positive"],\
 	"rune": ["type letter rune", "type character letter", "type symbol character"],\
-	"bool": ["type answer bool", "type safe answer", "type exist answer"]}
+	"bool": ["type answer bool", "type safe answer", "type exist answer"],\
+	"string": ["type error string", "type log error", "type report log"]}
 
 # dict = type : array of derived types
 NUMERIC_TYPE = {"int": ["num", "count", "quantity"],\
@@ -26,11 +27,17 @@ NUMERIC_TYPE = {"int": ["num", "count", "quantity"],\
 INTEGER_TYPE = {"int": ["num", "count", "quantity"],\
 	"rune" : ["letter", "character", "symbol"]}
 BOOL_TYPE = {"bool": ["answer", "safe", "exist"]}
+STRING_TYPE = {"string": ["error", "log", "report"]}
 
 UNARY_OP = ["+", "-", "!", "^"]
 UNARY_OP_TO_WORD = {"+":"plus", "-":"minus", "!":"not", "^":"bitneg"}
 BINARY_OP = ["||", "&&", "==", "!=", "<", "<=", ">", ">=",\
 	"+", "-", "*", "/", "%", "|", "&", "<<", ">>", "&^", "^"]
+BINARY_OP_TO_WORD = {"||":"or", "&&":"and", "==":"eq", "!=":"neq",\
+	"<":"less", "<=":"leq", ">":"greater", ">=": "geq",\
+	"+":"plus", "-":"minus", "*":"times", "/": "div", "%":"mod",\
+	"|": "bitor", "&": "bitand", "<<":"lshift", ">>":"rshift",\
+	"&^":"bitandnot", "^":"bitxor"}
 
 def main(VALID_PATH, INVALID_PATH, valid, invalid):
 	
