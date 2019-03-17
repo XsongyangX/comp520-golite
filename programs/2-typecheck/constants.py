@@ -14,9 +14,9 @@ USER_TYPE = {"num":"type num int",\
 	"Date": "type Date struct{ day string; month string; year int; }"}
 
 # typedefs for nested numeric type
-INT_HIERARCHY = ["type num int", "type count num", "type quantity count"]
-FLOAT_HIERARCHY = ["type real float64", "type positive real", "type non_zero positive"]
-RUNE_HIERARCHY = ["type letter rune", "type character letter", "type symbol character"]
+HIERARCHY = {"int": ["type num int", "type count num", "type quantity count"],\
+	"float64": ["type real float64", "type positive real", "type non_zero positive"],\
+	"rune": ["type letter rune", "type character letter", "type symbol character"]}
 
 # dict = type : array of derived types
 NUMERIC_TYPE = {"int": ["num", "count", "quantity"],\
@@ -26,6 +26,7 @@ INTEGER_TYPE = {"int": ["num", "count", "quantity"],\
 	"rune" : ["letter", "character", "symbol"]}
 
 UNARY_OP = ["+", "-", "!", "^"]
+UNARY_OP_TO_WORD = {"+":"plus", "-":"minus", "!":"not", "^":"bitneg"}
 BINARY_OP = ["||", "&&", "==", "!=", "<", "<=", ">", ">=",\
 	"+", "-", "*", "/", "%", "|", "&", "<<", ">>", "&^", "^"]
 
