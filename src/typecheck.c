@@ -412,7 +412,8 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case divExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            MatchingTypes(dummy1, dummy2, lineno, true);
+            dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
                 fprintf(stderr,"Error: (line %d) Invalid types (%s) for / operator\n", lineno, shortTypeStr(dummy1));
@@ -432,7 +433,8 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case modExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            MatchingTypes(dummy1, dummy2, lineno, true);
+            dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
                 fprintf(stderr,"Error: (line %d) Invalid types (%s) for %% operator\n", lineno, shortTypeStr(dummy1));
@@ -470,7 +472,8 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case ltExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            MatchingTypes(dummy1, dummy2, lineno, true);
+            dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
                 fprintf(stderr,"Error: (line %d) Invalid types (%s) for ordered operator\n", lineno, shortTypeStr(dummy1));
@@ -492,7 +495,8 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case andExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            MatchingTypes(dummy1, dummy2, lineno, true);
+            dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
                 fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
@@ -533,7 +537,8 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case rshiftExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            MatchingTypes(dummy1, dummy2, lineno, true);dummy2 = resolveBaseType(dummy2);
+            MatchingTypes(dummy1, dummy2, lineno, true);
+            dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
                 fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
@@ -581,7 +586,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             break;
         case notExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
-            if (MatchingTypes(dummy1, BOOL_SYMBOL, lineno, false))
+            dummy2 = resolveBaseType(dummy1);
+            if(dummy2 == NULL)
+            {
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                exit(1);
+            }
+            if (MatchingTypes(dummy2, BOOL_SYMBOL, lineno, false))
             {
                     exp->t = dummy1->t;
                     return dummy1;
