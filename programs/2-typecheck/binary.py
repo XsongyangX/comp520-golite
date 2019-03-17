@@ -236,7 +236,27 @@ def valid(destroy=False):
 	return
 	
 def invalid(destroy=False):
-
+	
+	for op in constants.BINARY_OP:
+	
+		if op in ['&&', '||']:
+			
+			typedefs = "\n".join(constants.HIERARCHY["bool"])
+			
+			for xType in constants.BOOL_TYPE["bool"]:
+				
+				statement = "var x " + xType + "\n"\
+					+ "\tvar y " + xType + "\n"\
+					+ "\tvar magic bool\n"\
+					+ "\tmagic = x " + op + " y\n"
+					
+				if not destroy:
+					output(statement, typedefs,\
+						FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_bool_" + xType + ".go",\
+						isValid=False)
+				else:
+					os.remove(INVALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_bool_" + xType + ".go") 
+			
 	return 
 	
 main(VALID_PATH, INVALID_PATH, valid, invalid)
