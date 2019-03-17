@@ -97,13 +97,13 @@ void prettyType(TYPE *t, int tabs)
 //prints a list of Declarations
 void prettyDecl(DECLARATION *d, int t, int isInStruct)
 {
-    if(d->chain != NULL){
-        prettyDecl(d->chain, t, isInStruct);
-    }
-    if(d->next != NULL)
+    if(d == NULL)
     {
-        prettyDecl(d->next, t, isInStruct);
+        return;
     }
+    prettyDecl(d->chain, t, isInStruct);
+    prettyDecl(d->next, t, isInStruct);
+    
     prettyTabs(t);
     switch(d->d){//apologies for this:switch on enum DeclarationType
         case typeDecl:
@@ -169,6 +169,16 @@ void prettySDecl(STATEMENT *d)
     else if(d->kind == exprS){
         prettyExp(d->val.expression);
     }
+    else if(d->kind == incrementS)
+    {
+            prettyExp(d->val.expression);
+            printf("++");
+    }
+    else if(d->kind == decrementS)
+    {
+            prettyExp(d->val.expression);
+            printf("--");
+    }
     else{
         prettyStmt(d,0);
     }
@@ -196,7 +206,7 @@ void prettySDeclVal(STATEMENT *d)
 void prettyStmt(STATEMENT *s, int t)
 {
     if(s == NULL)
-	return;
+	{   return;}
     if(s->next != NULL)
     {
         prettyStmt(s->next, t);
@@ -276,6 +286,7 @@ void prettyAssignHelper(STATEMENT *s)
         prettyAssignHelper(s->val.assignment.chain);
     }
     prettyExp(s->val.assignment.identifier);
+    printf(", ");
 }
 void prettyAssignHelper2(STATEMENT *s)
 {
@@ -284,17 +295,17 @@ void prettyAssignHelper2(STATEMENT *s)
         prettyAssignHelper2(s->val.assignment.chain);
     }
     prettyExp(s->val.assignment.value);
+    printf(",");
 }
 
 //prints an assign statement
 void prettyAssign(STATEMENT *s, int t)
 {
+        prettyTabs(t);
     if(s->val.assignment.chain != NULL)
     {
         prettyAssignHelper(s->val.assignment.chain);
     }
-    else{
-        prettyTabs(t);
         prettyExp(s->val.assignment.identifier);
         if(s->kind == assignS)
         {    printf(" = ");}
@@ -303,7 +314,7 @@ void prettyAssign(STATEMENT *s, int t)
             printf(" := ");
         }
         
-    }
+    
     if(s->val.assignment.chain != NULL)
     {
         prettyAssignHelper2(s->val.assignment.chain);
@@ -415,7 +426,7 @@ void prettyPrintHelper(EXP *e)
     if(e->val.expblock.next != NULL)
     {
         prettyPrintHelper(e->val.expblock.next);
-	printf(", ");
+	    printf(", ");
     }
     if(e->val.expblock.value != NULL)
     {
@@ -433,8 +444,9 @@ void prettyPrintS(STATEMENT *s, int t)
     else{
         printf("print(");
     }
-    
-    prettyPrintHelper(s->val.iostmt.value);
+    if(s->val.iostmt.value != NULL){
+        prettyPrintHelper(s->val.iostmt.value);
+    }
     printf(")\n");
 }
 
@@ -479,21 +491,22 @@ void prettySwitch(STATEMENT *s, int t)
 //prints a list of case statements
 void prettyCase(STATEMENT *s, int t)
 {
-    if(s->next != NULL)
+    if(s != NULL)
     {
         prettyCase(s->next, t);
+        prettyTabs(t);
+        if(s->val.caseBody.condition == NULL )
+        {
+            printf("default:\n");
+        }
+        else{
+            printf("case ");
+            prettyExpBlock(s->val.caseBody.condition);
+            printf(":\n");
+        }
+        prettyStmt(s->val.caseBody.body, t+1);
     }
-    prettyTabs(t);
-    if(s->val.caseBody.condition == NULL )
-    {
-        printf("default:\n");
-    }
-    else{
-        printf("case ");
-        prettyExpBlock(s->val.caseBody.condition);
-        printf(":\n");
-    }
-    prettyStmt(s->val.caseBody.body, t+1);
+    
 }
 void prettyRawStr(char *s)
 {
