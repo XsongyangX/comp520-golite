@@ -13,7 +13,25 @@ USER_TYPE = {"num":"type num int",\
 	"long": "type long float64",\
 	"Date": "type Date struct{ day string; month string; year int; }"}
 
-		
+# typedefs for nested numeric type
+HIERARCHY = {"int": ["type num int", "type count num", "type quantity count"],\
+	"float64": ["type real float64", "type positive real", "type non_zero positive"],\
+	"rune": ["type letter rune", "type character letter", "type symbol character"],\
+	"bool": ["type answer bool", "type safe answer", "type exist answer"]}
+
+# dict = type : array of derived types
+NUMERIC_TYPE = {"int": ["num", "count", "quantity"],\
+	"float64" : ["real", "positive", "non_zero"],\
+	"rune" : ["letter", "character", "symbol"]}
+INTEGER_TYPE = {"int": ["num", "count", "quantity"],\
+	"rune" : ["letter", "character", "symbol"]}
+BOOL_TYPE = {"bool": ["answer", "safe", "exist"]}
+
+UNARY_OP = ["+", "-", "!", "^"]
+UNARY_OP_TO_WORD = {"+":"plus", "-":"minus", "!":"not", "^":"bitneg"}
+BINARY_OP = ["||", "&&", "==", "!=", "<", "<=", ">", ">=",\
+	"+", "-", "*", "/", "%", "|", "&", "<<", ">>", "&^", "^"]
+
 def main(VALID_PATH, INVALID_PATH, valid, invalid):
 	
 	# check for directories
