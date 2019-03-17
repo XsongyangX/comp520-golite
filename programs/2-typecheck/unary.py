@@ -70,7 +70,7 @@ def valid(destroy=False):
 				
 				derivedTypes.append(numType)
 				
-				# for each pair of types in the hierarchy
+				# for each type in the hierarchy
 				for magicType in derivedTypes:
 					statement = "var magic " + magicType + "\n"\
 						+ "\tmagic = " + op + "magic"
@@ -81,7 +81,44 @@ def valid(destroy=False):
 							isValid=True)
 					else:
 						os.remove(VALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go")					
-	
+		
+		elif op == '!':
+			for boolType, derivedTypes in constants.BOOL_TYPE.items():
+				
+				typedefs = "\n".join(constants.HIERARCHY[boolType])
+				
+				derivedTypes.append(boolType)
+				
+				# for each type in the hierarchy
+				for magicType in derivedTypes:
+					statement = "var magic " + magicType + "\n"\
+						+ "\tmagic = " + op + "magic"
+					
+					if not destroy:
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go",\
+							isValid=True)
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go")
+			
+		elif op == '^':
+			for intType, derivedTypes in constants.INTEGER_TYPE.items():
+			
+				typedefs = "\n".join(constants.HIERARCHY[intType])
+				
+				derivedTypes.append(intType)
+				
+				# for each type in the hierarchy
+				for magicType in derivedTypes:
+					statement = "var magic " + magicType + "\n"\
+						+ "\tmagic = " + op + "magic"
+					
+					if not destroy:
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go",\
+							isValid=True)
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go")
 	return
 	
 def invalid(destroy=False):
