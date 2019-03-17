@@ -135,6 +135,30 @@ def valid(destroy=False):
 					
 					else:
 						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + comparableType + ".go")
+		
+		# ordered
+		elif op in ['<', '<=', '>', '>=']:
+		
+			for base, derived in list(constants.NUMERIC_TYPE.items())\
+				+ list(constants.STRING_TYPE.items()):
+				
+				for orderedType in [base] + derived:
+				
+					typedefs = "\n".join(constants.HIERARCHY[base])
+					
+					statement = "var x " + orderedType + "\n"\
+						+ "\tvar y " + orderedType + "\n"\
+						+ "\tvar magic bool\n"\
+						+ "\tmagic = x " + op + " y\n"
+					
+					if not destroy:
+						
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + orderedType + ".go",\
+							isValid=True)
+						
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + orderedType + ".go")
 	return
 	
 def invalid(destroy=False):
