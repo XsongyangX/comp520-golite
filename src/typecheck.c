@@ -906,6 +906,9 @@ bool MatchingTypes(SYMBOL *s1, SYMBOL *s2, int lineno, bool isVerbose){
         }
         return (fields1 == NULL && fields2 == NULL);
     }
+    if(isVerbose)
+        {fprintf(stderr, "Error: (line %d) type %s does not match with type %s.\n", lineno, type1, type2);
+        exit(1);}
     return false;
 }
 //determines if 2 types can be interchanged, when cast to the other
@@ -1261,7 +1264,7 @@ void lenHelper(SYMBOL *sym, int lineno)
                     fprintf(stderr, "Error: (line %d) type %s has no length.\n", lineno, shortTypeStr(sym));
                     exit(1);
                 }
-                else if((refParent != NULL && refParent->t->gType != nilType && MatchingTypes(refParent, STR_SYMBOL, lineno, false))
+                else if((refParent != NULL && refParent != BLANK_SYMBOL && refParent->t->gType != nilType && MatchingTypes(refParent, STR_SYMBOL, lineno, false))
                          || tmpType->gType == sliceType || tmpType->gType == arrayType)
                 {
                     return;
@@ -1271,7 +1274,7 @@ void lenHelper(SYMBOL *sym, int lineno)
                     if(tmpType == NULL || tmpType->gType == nilType) 
                     {
                         tmpType = refParent->t;
-                        if(refParent != NULL && refParent->kind != structSym && refParent->kind != varstructSym)
+                        if(refParent != NULL && refParent != BLANK_SYMBOL && refParent->kind != structSym && refParent->kind != varstructSym)
                         {
                             tmpType = refParent->t;
                             refParent = refParent->val.parentSym;
