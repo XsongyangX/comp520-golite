@@ -106,7 +106,7 @@ void weedFunction(FUNCTION *f){
 	
 	// function declaration
 	// no return statement, and not void
-	if ( !weedStatement(f->body, false, false).foundTerminating
+	if ( !weedStatement(f->body, false, false, false).foundTerminating
 		&& f->returnt->gType != nilType){
 		fprintf(stderr, 
 		"Error: (line %d) function %s expecting a terminating statement\n",
@@ -255,10 +255,10 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, bool 
 		case forS:
 			weedExpression(s->val.conditional.condition, s->lineno, false, false, true);
 
-			weedStatement(s->val.conditional.optDecl, false, false, false, false);
+			weedStatement(s->val.conditional.optDecl, false, false, false);
       
 			returnInBody = 
-				weedStatement(s->val.conditional.body, true, true);
+				weedStatement(s->val.conditional.body, true, true, false);
 			
 			weedStatement(s->val.conditional.elif, false, false, true);
 			
@@ -275,7 +275,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, bool 
 			
 			// infinite loop without breaks
 			if (s->val.conditional.condition == NULL
-				&& !weedStatement(s->val.conditional.body, true, true)
+				&& !weedStatement(s->val.conditional.body, true, true, false)
 				.foundBreak)
 				
 				return foundTerminating;
