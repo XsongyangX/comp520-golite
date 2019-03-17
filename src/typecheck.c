@@ -242,6 +242,11 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
         case returnS:
             if(stmt->val.expression != NULL)
                 symLHS = typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno);
+            if(func == NULL)//only occurs for _()
+            {
+                //OK?
+                return;
+            }
             else if(func->t->gType == nilType)
             {
                 //OK

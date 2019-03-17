@@ -116,6 +116,10 @@ void putFunc(SYMBOL *s, symTable *t, int lineno)
 lookup methods automatically call this method*/
 char *shortTypeStr(SYMBOL *tmp)
 {
+    if(tmp == NULL)
+    {
+        return " ";
+    }
     if(tmp->kind == structSym)
         return "struct";
     char *typename = malloc(128);
@@ -153,6 +157,10 @@ NOTE this method has not been tested
 can call this by first making a getSymbol call, then calling this*/
 char *longTypeStr(SYMBOL *tmp)
 {
+    if(tmp == NULL)
+    {
+        return " ";
+    }
     if(tmp->kind == structSym)
                 return "struct";
     char *typename = malloc(128);
@@ -501,7 +509,11 @@ void addPredefinitions(symTable *s)
 void checkProg(PROGRAM *prog)
 {
     prog->globalScope = initSymbolTable();
-
+    if(strcmp(prog->package, "_") == 0)
+    {
+        fprintf(stderr, "Error: (line 1) cannot use blank identifier for package declaration.\n");
+        exit(1);
+    }
     symProg(prog);
 
     //typeCheckProgram(prog);
