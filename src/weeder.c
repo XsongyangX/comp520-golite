@@ -461,6 +461,16 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	// null expression
 	if (e == NULL) return;
 	
+	// function call onlyFuncCallExp
+	if (funcExpOnly){
+		switch (e->kind){
+			case funcExp:
+			case funcBlockExp:
+			case parExp:
+				notFuncExp(lineno);
+		}
+	}
+	
 	switch (e->kind){
 	
 	// empty and literals
@@ -576,16 +586,10 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	
 	case funcExp:
 		
-		// no func exp allowed 
-		if (funcExpOnly) notFuncExp(lineno);
-		
 		weedDeclaration(e->val.fn->params, lineno);
 		
 		return;
 	case funcBlockExp:
-		
-		// no func exp allowed 
-		if (funcExpOnly) notFuncExp(lineno);
 	
 		weedDeclaration(e->val.fnblock.fn->params, lineno);
 		weedExpression(e->val.fnblock.identifier, lineno, false, false, true);
