@@ -22,6 +22,7 @@ type group struct { c1 compound; c2 composed;}
 type inbox [100]string
 type mailbox [3]inbox
 type postoffice [5]mailbox
+
 func main(){
 	var x positive
 	var y positive

@@ -47,7 +47,7 @@ def output(statement, typedefs, fileName, isValid=True):
 		file.write(constants.PACKAGE)
 		file.write("\n\n")
 		
-		file.write(typedefs + "\n")
+		file.write(typedefs + "\n\n")
 		
 		file.write(constants.MAIN)
 		file.write("{")
@@ -94,12 +94,11 @@ def valid(destroy=False):
 				+ constants.HIERARCHY["string"]\
 				+ constants.HIERARCHY["struct"]\
 				+ constants.HIERARCHY["array"])
-				
+			
+			# base types and derived
 			for base, derived in list(constants.NUMERIC_TYPE.items())\
 				+ list(constants.BOOL_TYPE.items())\
-				+ list(constants.STRING_TYPE.items())\
-				+ list(constants.STRUCT_TYPE.items())\
-				+ list(constants.ARRAY_TYPE.items()):
+				+ list(constants.STRING_TYPE.items()):
 				
 				for comparableType in [base] + derived:
 					
@@ -116,7 +115,26 @@ def valid(destroy=False):
 					
 					else:
 						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + comparableType + ".go")
+			
+			# structs and arrays
+			for base, derived in list(constants.STRUCT_TYPE.items())\
+				+ list(constants.ARRAY_TYPE.items()):
 				
+				for comparableType in derived:
+				
+					statement = "var x " + comparableType + "\n"\
+						+ "\tvar y " + comparableType + "\n"\
+						+ "\tvar magic bool\n"\
+						+ "\tmagic = x " + op + " y\n"
+						
+					if not destroy:
+					
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + comparableType + ".go",\
+							isValid=True)
+					
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + comparableType + ".go")
 	return
 	
 def invalid(destroy=False):
