@@ -262,32 +262,6 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			
 			weedStatement(s->val.conditional.elif, false, false);
 			
-			// action field in a for loop, e.g. for ;;i++{}
-			if(s->val.conditional.elif != NULL){
-				if(s->val.conditional.elif->kind == exprS)
-				{
-					if (s->val.conditional.elif->val.expression->kind == funcExp)
-					{
-						//do nothing
-					}
-					else{
-						fprintf(stderr, "Error: (line %d) expression statements in for-loop statements must be function calls\n", 
-                    s->lineno);
-						exit(1);
-					}
-				}
-				else if(s->val.conditional.elif->kind == assignS || s->val.conditional.elif->kind == incrementS || s->val.conditional.elif->kind == decrementS)
-				{
-					//OK
-				}
-				else{
-					fprintf(stderr, "Error: (line %d) for loop post calls must be assignments or function calls\n", 
-                  s->lineno);
-					exit(1);
-
-				}
-			}
-			
 			// found nothing, because the break statement is confined to the
 			// for-loop context
 			// but we signal that a for-loop was found
