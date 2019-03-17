@@ -8,7 +8,6 @@ typedef struct {
 	bool foundTerminating;
 	bool foundDefault;
 	bool foundBreak;
-	bool foundFor;
 } Traversal;
 
 void weedRoot(PROGRAM *root);
@@ -18,7 +17,8 @@ void weedFunction(FUNCTION *function);
 
 Traversal weedStatement(STATEMENT *statement, 
 	bool allowBreak, 
-	bool allowContinue);
+	bool allowContinue,
+	bool onlyFuncCallExp);
 void weedExpression(EXP *expression, 
 	int lineno, bool divBy0, bool funcExpOnly, 
 	bool lookForBlankId);
