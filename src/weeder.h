@@ -8,6 +8,7 @@ typedef struct {
 	bool foundTerminating;
 	bool foundDefault;
 	bool foundBreak;
+	bool foundFor;
 } Traversal;
 
 void weedRoot(PROGRAM *root);

@@ -134,11 +134,11 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 	// this is actually the beginning of the list
 	if (s == NULL) return foundNothing;
 	
-	const Traversal foundTerminating = {true, false, false};
-	const Traversal foundTerminatingDefault = {true, true, false};
-	const Traversal foundBreak = {false, false, true};
-	const Traversal foundDefault = {false, true, false};
-	const Traversal foundTerminatingBreak = {true, false, true};
+	const Traversal foundTerminating = {true, false, false,false};
+	const Traversal foundTerminatingDefault = {true, true, false, false};
+	const Traversal foundBreak = {false, false, true, false};
+	const Traversal foundDefault = {false, true, false, false};
+	const Traversal foundTerminatingBreak = {true, false, true, false};
 	
 	// head recursion
 	Traversal foundValues = weedStatement(s->next, allowBreak, 
@@ -290,7 +290,10 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			
 			// found nothing, because the break statement is confined to the
 			// for-loop context
-			return foundNothing;
+			// but we signal that a for-loop was found
+			temp = foundNothing;
+			temp.foundFor = true;
+			return temp;
 
 			
 		// while statement
@@ -318,17 +321,12 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			
 		// expression statement
 		case exprS:
-			weedExpression(s->val.expression, s->lineno, false, true, true);
-      
-			// the following may be redundant, but weedExpression does not check for funcBlockExp
-			if(s->val.expression->kind == funcExp || s->val.expression->kind == funcBlockExp)
-			{
-				//OK
-			}
-			else{
-				fprintf(stderr, "Error: (line %d) expression statements must be function calls.", s->lineno);
-					exit(1);
-			}
+			
+			// seen inside a for loop
+			if (foundValues.foundFor)
+				weedExpression(s->val.expression, s->lineno, false, true, true);
+			else
+				weedExpression(s->val.expression, s->lineno, false, false, true);
 			
 			if (foundValues.foundBreak) return foundBreak;
 			
