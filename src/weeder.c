@@ -134,11 +134,11 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 	// this is actually the beginning of the list
 	if (s == NULL) return foundNothing;
 	
-	const Traversal foundTerminating = {true, false, false};
-	const Traversal foundTerminatingDefault = {true, true, false};
-	const Traversal foundBreak = {false, false, true};
-	const Traversal foundDefault = {false, true, false};
-	const Traversal foundTerminatingBreak = {true, false, true};
+	const Traversal foundTerminating = {true, false, false,false};
+	const Traversal foundTerminatingDefault = {true, true, false, false};
+	const Traversal foundBreak = {false, false, true, false};
+	const Traversal foundDefault = {false, true, false, false};
+	const Traversal foundTerminatingBreak = {true, false, true, false};
 	
 	// head recursion
 	Traversal foundValues = weedStatement(s->next, allowBreak, 
@@ -262,35 +262,12 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			
 			weedStatement(s->val.conditional.elif, false, false);
 			
-			// action field in a for loop, e.g. for ;;i++{}
-			if(s->val.conditional.elif != NULL){
-				if(s->val.conditional.elif->kind == exprS)
-				{
-					if (s->val.conditional.elif->val.expression->kind == funcExp)
-					{
-						//do nothing
-					}
-					else{
-						fprintf(stderr, "Error: (line %d) expression statements in for-loop statements must be function calls\n", 
-                    s->lineno);
-						exit(1);
-					}
-				}
-				else if(s->val.conditional.elif->kind == assignS || s->val.conditional.elif->kind == incrementS || s->val.conditional.elif->kind == decrementS)
-				{
-					//OK
-				}
-				else{
-					fprintf(stderr, "Error: (line %d) for loop post calls must be assignments or function calls\n", 
-                  s->lineno);
-					exit(1);
-
-				}
-			}
-			
 			// found nothing, because the break statement is confined to the
 			// for-loop context
-			return foundNothing;
+			// but we signal that a for-loop was found
+			temp = foundNothing;
+			temp.foundFor = true;
+			return temp;
 
 			
 		// while statement
@@ -318,17 +295,12 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue)
 			
 		// expression statement
 		case exprS:
-			weedExpression(s->val.expression, s->lineno, false, true, true);
-      
-			// the following may be redundant, but weedExpression does not check for funcBlockExp
-			if(s->val.expression->kind == funcExp || s->val.expression->kind == funcBlockExp)
-			{
-				//OK
-			}
-			else{
-				fprintf(stderr, "Error: (line %d) expression statements must be function calls.", s->lineno);
-					exit(1);
-			}
+			
+			// seen inside a for loop
+			if (foundValues.foundFor)
+				weedExpression(s->val.expression, s->lineno, false, true, true);
+			else
+				weedExpression(s->val.expression, s->lineno, false, false, true);
 			
 			if (foundValues.foundBreak) return foundBreak;
 			
@@ -490,9 +462,6 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	// null expression
 	if (e == NULL) return;
 	
-	// look for function call only
-	if (funcExpOnly && (e->kind != funcExp && e->kind != funcBlockExp)) notFuncExp(lineno);
-	
 	switch (e->kind){
 	
 	// empty and literals
@@ -549,11 +518,15 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	case notExp:
 	case posExp:
 	case negExp:
-	case parExp: // parenthesized
 	case uxorExp:
 		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
-		
+	
+	// parenthesized
+	case parExp:
+		weedExpression(e->val.binary.rhs, lineno, false, funcExpOnly, lookForBlankId);
+		return;
+	
 	// identifier, look for blank
 	case idExp:
 		if (lookForBlankId && 0 == strcmp(e->val.identifier, "_")){
@@ -603,10 +576,18 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 		return;
 	
 	case funcExp:
+		
+		// no func exp allowed 
+		if (funcExpOnly) notFuncExp(lineno);
+		
 		weedDeclaration(e->val.fn->params, lineno);
 		
 		return;
 	case funcBlockExp:
+		
+		// no func exp allowed 
+		if (funcExpOnly) notFuncExp(lineno);
+	
 		weedDeclaration(e->val.fnblock.fn->params, lineno);
 		weedExpression(e->val.fnblock.identifier, lineno, false, false, true);
 		return;
