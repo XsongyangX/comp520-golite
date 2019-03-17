@@ -491,7 +491,7 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	if (e == NULL) return;
 	
 	// look for function call only
-	if (funcExpOnly && (e->kind != funcExp && e->kind != funcBlockExp)) notFuncExp(lineno);
+	if (funcExpOnly && (e->kind == funcExp || e->kind == funcBlockExp)) notFuncExp(lineno);
 	
 	switch (e->kind){
 	
@@ -549,11 +549,15 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 	case notExp:
 	case posExp:
 	case negExp:
-	case parExp: // parenthesized
 	case uxorExp:
 		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
-		
+	
+	// parenthesized
+	case parExp:
+		weedExpression(e->val.binary.rhs, lineno, false, funcExpOnly, lookForBlankId);
+		return;
+	
 	// identifier, look for blank
 	case idExp:
 		if (lookForBlankId && 0 == strcmp(e->val.identifier, "_")){
@@ -603,6 +607,9 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 		return;
 	
 	case funcExp:
+		
+		// no func exp allowed 
+	
 		weedDeclaration(e->val.fn->params, lineno);
 		
 		return;
