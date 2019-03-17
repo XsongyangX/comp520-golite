@@ -159,6 +159,80 @@ def valid(destroy=False):
 						
 					else:
 						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + orderedType + ".go")
+		
+		# plus
+		elif op == '+':
+			
+			for base, derived in list(constants.NUMERIC_TYPE.items())\
+				+ list(constants.STRING_TYPE.items()):
+				
+				for plusType in [base] + derived:
+				
+					typedefs = "\n".join(constants.HIERARCHY[base])
+					
+					statement = "var x " + plusType + "\n"\
+						+ "\tvar y " + plusType + "\n"\
+						+ "\tvar magic " + plusType + "\n"\
+						+ "\tmagic = x " + op + " y\n"
+					
+					if not destroy:
+						
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + plusType + ".go",\
+							isValid=True)
+						
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + plusType + ".go")
+		
+		# numeric
+		elif op in ['-', '*', '/']:
+		
+			for base, derived in constants.NUMERIC_TYPE.items():
+			
+				for numericType in [base] + derived:
+				
+					typedefs = "\n".join(constants.HIERARCHY[base])
+					
+					statement = "var x " + numericType + "\n"\
+						+ "\tvar y " + numericType + "\n"\
+						+ "\tvar magic " + numericType + "\n"\
+						+ "\tmagic = x " + op + "y\n"
+					
+					if not destroy:
+						
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + numericType + ".go",\
+							isValid=True)
+						
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + numericType + ".go")
+		
+		# integer
+		elif op in ['%', '|', '&', '<<', '>>', '&^', '^']:
+		
+			for base, derived in constants.INTEGER_TYPE.items():
+			
+				for intType in [base] + derived:
+				
+					typedefs = "\n".join(constants.HIERARCHY[base])
+					
+					statement = "var x " + intType + "\n"\
+						+ "\tvar y " + intType + "\n"\
+						+ "\tvar magic " + intType + "\n"\
+						+ "\tmagic = x " + op + "y\n"
+						
+					if not destroy:
+						
+						output(statement, typedefs,\
+							FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + intType + ".go",\
+							isValid=True)
+						
+					else:
+						os.remove(VALID_PATH + FILE_NAME_BASE + constants.BINARY_OP_TO_WORD[op] + "_" + intType + ".go")
+	
+		# other types
+		else:
+			raise Exception
 	return
 	
 def invalid(destroy=False):
