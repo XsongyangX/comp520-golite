@@ -119,10 +119,40 @@ def valid(destroy=False):
 							isValid=True)
 					else:
 						os.remove(VALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + magicType + ".go")
+		else:
+			raise Exception
 	return
+
+def invalidFilesForOp(op, typeRange, destroy=False):
+
+	for baseType in typeRange:
+		statement = "var magic " + baseType + "\n"\
+			+ "\tmagic = " + op + "magic"
+				
+		if not destroy:
+			output(statement, "",\
+				FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + baseType + ".go",\
+				isValid=False)
+		else:
+			os.remove(INVALID_PATH + FILE_NAME_BASE + constants.UNARY_OP_TO_WORD[op] + "_" + baseType)
+
+	return 
 	
 def invalid(destroy=False):
 
+	for op in constants.UNARY_OP:
+	
+		if op == '+' or op == '-':
+			invalidFilesForOp(op, ['bool', 'string'], destroy=False)
+			
+		elif op == '!':
+			invalidFilesForOp(op, ['int', 'float64', 'rune', 'string'], destroy=False)
+		
+		elif op == '^':
+			invalidFilesForOp(op, ['float64', 'bool', 'string'], destroy=False)
+		
+		else:
+			raise Exception
 	return
 	
 main(VALID_PATH, INVALID_PATH, valid, invalid)
