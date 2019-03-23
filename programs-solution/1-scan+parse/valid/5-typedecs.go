@@ -35,13 +35,10 @@ type t7 struct {
 
 // slices
 type t8 []int			// base type
-
 type t9 []t1			// type id
-
 type t10 []struct {		// composite type
 	a int
 }
-
 type t11 [][]float64		// matrix
 
 // arrays
