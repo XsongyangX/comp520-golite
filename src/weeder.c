@@ -31,7 +31,11 @@ void weedRoot(PROGRAM *root){
 void weedProgram(PROGRAM *p){
 	
 	if (p == NULL) return;
-	
+	if(strcmp(p->package, "_") == 0)
+	{
+		fprintf(stderr, "Error: (line 1) cannot use blank identifier in package declaration.\n");
+		exit(1);
+	}
 	weedDeclaration(p->declList, 1);
 }
 
@@ -157,7 +161,7 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, bool 
 		
 		case incrementS:
 		case decrementS:
-			weedExpression(s->val.expression, s->lineno, false, false, false);
+			weedExpression(s->val.expression, s->lineno, false, false, true);
 			if (foundValues.foundBreak) return foundBreak;
 			
 			return foundNothing;
@@ -261,7 +265,11 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, bool 
 				weedStatement(s->val.conditional.body, true, true, false);
 			
 			weedStatement(s->val.conditional.elif, false, false, true);
-			
+			if(s->val.conditional.elif != NULL && s->val.conditional.elif->kind == quickDeclS)
+			{
+				fprintf(stderr, "Error: (line %d) unexpected quick declaration in for loop update statement.\n", s->lineno);
+				exit(1);
+			}
 			// found nothing, because the break statement is confined to the
 			// for-loop context
 			// but we signal that a for-loop was found
@@ -296,10 +304,10 @@ Traversal weedStatement(STATEMENT *s, bool allowBreak, bool allowContinue, bool 
 		case exprS:
 			
 			// seen inside a for loop
-			if (onlyFuncCallExp)
+			//if (onlyFuncCallExp)
 				weedExpression(s->val.expression, s->lineno, false, true, true);
-			else
-				weedExpression(s->val.expression, s->lineno, false, false, true);
+			//else
+			//	weedExpression(s->val.expression, s->lineno, false, false, true);
 			
 			if (foundValues.foundBreak) return foundBreak;
 			
@@ -566,24 +574,24 @@ void weedExpression(EXP *e, int lineno, bool divBy0, bool funcExpOnly, bool look
 		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	case elementExp:
-		weedExpression(e->val.binary.lhs, lineno, false, false, false);
-		weedExpression(e->val.binary.rhs, lineno, false, false, false);
+		weedExpression(e->val.binary.lhs, lineno, false, false, true);
+		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	
 	// struct member invoke
 	case invocExp:
-		weedExpression(e->val.binary.lhs, lineno, false, false, false);
+		weedExpression(e->val.binary.lhs, lineno, false, false, true);
 		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	
 	// built-in
 	case appendExp:
-		weedExpression(e->val.binary.lhs, lineno, false, false, false);
-		weedExpression(e->val.binary.rhs, lineno, false, false, false);
+		weedExpression(e->val.binary.lhs, lineno, false, false, true);
+		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	case lenExp:
 	case capExp:
-		weedExpression(e->val.binary.rhs, lineno, false, false, false);
+		weedExpression(e->val.binary.rhs, lineno, false, false, true);
 		return;
 	
 	case funcExp:

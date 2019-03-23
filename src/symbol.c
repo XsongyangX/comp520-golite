@@ -36,7 +36,7 @@ symTable *initScopeTable(symTable *parent)
 }
 void putVar(SYMBOL *s, symTable *t, int lineno)
 {
-    if(strlen(lookupFuncLocal(t, s->name)) != 0 || strlen(lookupTypeLocal(t, s->name)) != 0){
+    if(strlen(lookupFunc(t, s->name, lineno, false)) != 0 || strlen(lookupTypeLocal(t, s->name)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
     }
@@ -58,7 +58,7 @@ void putVar(SYMBOL *s, symTable *t, int lineno)
 /*used for types and structs*/
 void putType(SYMBOL *s, symTable *t, int lineno)
 {
-    if(strlen(lookupVarLocal(t, s->name)) != 0 || strlen(lookupFuncLocal(t, s->name)) != 0){
+    if(strlen(lookupVarLocal(t, s->name)) != 0 || strlen(lookupFunc(t, s->name, lineno, false)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
     }
@@ -96,6 +96,10 @@ void putFunc(SYMBOL *s, symTable *t, int lineno)
                 exit(1);
             }
         }
+    }
+    if(strcmp(s->name, "init") == 0)
+    {
+        return;
     }
     int cell = Hash(s->name);
     s->next = t->funcTable[cell];
@@ -225,6 +229,11 @@ char *lookupVar(symTable *t, char* identifier, int lineno, int doesExit)
             tmp = tmp->next;
         }
     }
+    if(doesExit && (strlen(lookupTypeLocal(t, identifier)) != 0 || strlen(lookupFuncLocal(t, identifier)) != 0))
+    {
+        fprintf(stderr, "Error: (line %d) %s is not a variable.\n", lineno, identifier);
+        exit(1);
+    }
     if(t->next != NULL)
     {
         return lookupVar(t->next, identifier, lineno, doesExit);       
@@ -250,6 +259,11 @@ char *lookupType(symTable *t, char* identifier, int lineno, int doesExit)
         {
             tmp = tmp->next;
         }
+    }
+    if(doesExit && (strlen(lookupVarLocal(t, identifier)) != 0 || strlen(lookupFuncLocal(t, identifier)) != 0))
+    {
+        fprintf(stderr, "Error: (line %d) %s is not a type.\n", lineno, identifier);
+        exit(1);
     }
     if(t->next != NULL)
     {
@@ -332,6 +346,11 @@ char *lookupFunc(symTable *t, char* identifier, int lineno, int doesExit)
         {
             tmp = tmp->next;
         }
+    }
+    if(doesExit && (strlen(lookupTypeLocal(t, identifier)) != 0 || strlen(lookupVarLocal(t, identifier)) != 0))
+    {
+        fprintf(stderr, "Error: (line %d) %s is not a function.\n", lineno, identifier);
+        exit(1);
     }
     if(t->next != NULL)
     {
@@ -569,24 +588,49 @@ char *getName(TYPE *t)
     }
     
 }
+bool isSlice(TYPE *t)
+{
+    if(t == NULL || t->gType == nilType)
+    {
+        return false;
+    }
+    if(t->gType == sliceType)
+    {
+        return true;
+    }
+    if(t->gType == arrayType)
+    {
+        return isSlice(t->val.arg);
+    }
+    
+        return false;
+    
+}
 void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
 {
             if(strcmp(decl->identifier,"_") == 0)
                 return;
+            if(strcmp(decl->identifier,"_") == 0)
+                return;
+            if(strcmp(decl->identifier, "main") == 0 || strcmp(decl->identifier, "init") == 0)
+            {
+                fprintf(stderr, "Error: (line %d) using %s for type identifier.\n", decl->lineno, decl->identifier);
+                exit(1);
+            }
             char *parentname = getName(decl->t);
             if(strcmp(parentname, "struct") != 0)
             {
                 SYMBOL *tmp = makeSymbol(decl->identifier, typeSym);
+                putType(tmp, table, decl->lineno);
                 SYMBOL *parent = getSymbol(table, parentname, typeSym);
                 //printf("Parent of %s is %s.\n", decl->identifier, parentname);
-                if(parent == NULL)
+                if(parent == NULL || (strcmp(decl->identifier, parent->name) == 0 && !isSlice(decl->t)))
                 {
                     fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
                     exit(1);
                 }
                 tmp->val.parentSym = parent;
                 tmp->t = decl->t;
-                putType(tmp, table, decl->lineno);
                 if(symbolPrint == 1)
                 {
                     prettyTabs(depth);
@@ -615,13 +659,14 @@ void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
                 tmp->t = decl->t;
                 TYPE *structT;
                 structT = tmp->t;
+                putType(tmp, table, decl->lineno);
                 while(structT->name == NULL)
                 {
                     structT = structT->val.arg;
                 }
-                SYMBOL *bodyList = symStructHelper(structT->val.args, table);
+                symTable *subTable = initScopeTable(table);
+                SYMBOL *bodyList = symStructHelper(structT->val.args, subTable, decl->identifier);
                 tmp->val.structFields = bodyList;
-                putType(tmp, table, decl->lineno);
                 if(symbolPrint == 1)
                 {
                     prettyTabs(depth);
@@ -639,6 +684,11 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
 {
             if(strcmp(decl->identifier,"_") == 0)
                 return;
+            if(strcmp(decl->identifier, "main") == 0 || strcmp(decl->identifier, "init") == 0)
+            {
+                fprintf(stderr, "Error: (line %d) using %s for variable identifier.\n", decl->lineno, decl->identifier);
+                exit(1);
+            }
             char *parentname = getName(decl->t);
             if(strcmp(parentname, "struct") != 0)
             {
@@ -647,6 +697,11 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
                 if(parent == NULL && strlen(parentname) > 0)
                 {
                     fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
+                    exit(1);
+                }
+                if(strcmp(parentname, decl->identifier) == 0)
+                {
+                    fprintf(stderr, "Error: (line %d) %s is not a type.\n", decl->lineno, parentname);
                     exit(1);
                 }
                 tmp->val.parentSym = parent;
@@ -673,13 +728,14 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
                 tmp->t = decl->t;
                 TYPE *structT;
                 structT = tmp->t;
+                putVar(tmp, table, decl->lineno);
                 while(structT->name == NULL)
                 {
                     structT = structT->val.arg;
                 }
-                SYMBOL *bodyList = symStructHelper(structT->val.args, table);
+                symTable *subTable = initScopeTable(table);
+                SYMBOL *bodyList = symStructHelper(structT->val.args, subTable, decl->identifier);
                 tmp->val.structFields = bodyList;
-                putVar(tmp, table, decl->lineno);
                 if(symbolPrint == 1)
                 {
                     prettyTabs(depth);
@@ -701,7 +757,7 @@ void symStructDecl(DECLARATION *decl, symTable *table, int depth)
             if(strcmp(decl->identifier,"_") == 0)
                 return;
             SYMBOL *tmp = makeSymbol(decl->identifier, structSym);
-            SYMBOL *bodyList = symStructHelper(decl->val.body, table);
+            SYMBOL *bodyList = symStructHelper(decl->val.body, table, decl->identifier);
             tmp->val.structFields = bodyList;
             putType(tmp, table, decl->lineno);
             if(symbolPrint == 1)
@@ -722,14 +778,19 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
                 fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, typename);
                 exit(1);
             }
-            SYMBOL *paramList = symFuncHelper(decl->val.f->params, table);
+            if(strcmp(typename, decl->val.f->identifier) == 0)
+            {
+                fprintf(stderr, "Error: (line %d) %s is not a type.\n", decl->lineno, typename);
+                exit(1);
+            }
+            if(strcmp(decl->val.f->identifier, "_") != 0)
+                putFunc(tmp, table, decl->lineno);
+            SYMBOL *paramList = symFuncHelper(decl->val.f->params, table, decl->val.f->identifier);
             tmp->val.func.funcParams = paramList;
             tmp->val.func.returnSymRef = makeSymbol(" ", varSym);
             tmp->val.func.returnSymRef->val.parentSym = typeref;
             tmp->val.func.returnSymRef->t = decl->val.f->returnt;
             tmp->t = decl->val.f->returnt;
-            if(strcmp(decl->val.f->identifier, "_") != 0)
-                putFunc(tmp, table, decl->lineno);
 
             //main and init check
             if(strcmp(decl->val.f->identifier, "main") == 0 || strcmp(decl->val.f->identifier, "init") == 0)
@@ -874,16 +935,24 @@ void printStructFields(symTable *table, SYMBOL *fields)
     }
 }
 /*helps construct struct body reference, these are all var declarations in GoLite*/
-SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
+SYMBOL *symStructHelper(DECLARATION *body, symTable *table, char *structName)
 {
     if(body == NULL)
     {
         return NULL;
     }
-    SYMBOL *next = symStructHelper(body->next, table);
+    SYMBOL *next = symStructHelper(body->next, table, structName);
     if(strcmp(getName(body->t),"struct") == 0)
     {
-                SYMBOL *tmp = makeSymbol(body->identifier, varstructSym);
+
+                SYMBOL *tmp;
+                if(strlen(lookupVarLocal(table, body->identifier)) == 0)
+                    tmp = makeSymbol(body->identifier, varstructSym);
+                else{
+                    fprintf(stderr, "Error: (line %d) redefinition of %s in struct.\n", body->lineno ,body->identifier);
+                    exit(1);
+                }
+                putVar(tmp, table, body->lineno);
                 tmp->t = body->t;
                 TYPE *structT;
                 structT = tmp->t;
@@ -891,14 +960,28 @@ SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
                 {
                     structT = structT->val.arg;
                 }
-                SYMBOL *bodyList = symStructHelper(structT->val.args, table);
+                symTable *subTable = initScopeTable(table);
+                SYMBOL *bodyList = symStructHelper(structT->val.args, subTable, body->identifier);
                 tmp->val.structFields = bodyList;
                 //putVar(tmp, table, body->lineno);
                 return tmp;
     }
     else{
-        SYMBOL *tmp = makeSymbol(body->identifier, varSym);
+        SYMBOL *tmp; 
+        if(strlen(lookupVarLocal(table, body->identifier)) == 0)
+            tmp = makeSymbol(body->identifier, varSym);
+        else{
+            fprintf(stderr, "Error: (line %d) redefinition of %s in struct.\n", body->lineno ,body->identifier);
+            exit(1);
+        }
+        
+        putVar(tmp, table, body->lineno);
         SYMBOL *parent = getSymbol(table, getName(body->t), typeSym);
+        if(parent == NULL || (strcmp(getName(body->t), structName) == 0 && !isSlice(body->t)))
+        {
+            fprintf(stderr, "Error: (line %d) type %s undefined.\n", body->lineno, getName(body->t));
+            exit(1);
+        }
         tmp->val.parentSym = parent;
         tmp->next = next;
         tmp->t = body->t;
@@ -907,19 +990,103 @@ SYMBOL *symStructHelper(DECLARATION *body, symTable *table)
     }
 }
 /*puts the function arguments in a reversed list of symbols*/
-SYMBOL *symFuncHelper(DECLARATION *params, symTable *table)
+SYMBOL *symFuncHelper(DECLARATION *params, symTable *table, char *funcName)
 {
     if(params == NULL)
     {
         return NULL;
     }
-    SYMBOL *next = symFuncHelper(params->next, table);
+    SYMBOL *next = symFuncHelper(params->next, table, funcName);
     SYMBOL *tmp = makeSymbol(params->identifier, varSym);
+    if(strcmp(getName(params->t), funcName) == 0)
+    {
+        fprintf(stderr, "Error: (line %d) %s is not a type.\n", params->lineno, getName(params->t));
+        exit(1);
+    }
     SYMBOL *parent = getSymbol(table, getName(params->t), typeSym);
+    if(parent == NULL)
+    {
+        fprintf(stderr, "Error: (line %d) type %s undefined.\n", params->lineno, getName(params->t));
+        exit(1);
+    }
     tmp->val.parentSym = parent;
     tmp->next = next;
     tmp->t = params->t;
     return tmp;
+}
+void checkFnReturn(EXP *e, int lineno, symTable *table)
+{
+    EXP *tmp = e->val.fnblock.identifier;
+    while(tmp->kind == parExp)
+    {
+        tmp = tmp->val.binary.rhs;
+    }
+    SYMBOL *fnSym = getSymbol(table, tmp->val.identifier, funcSym);
+    if(fnSym != NULL && fnSym->val.func.returnSymRef->t->gType == sliceType)
+    {
+        //OK
+    }
+    else{
+        fprintf(stderr, "Error: (line %d) expecting lvalue.\n", lineno);
+        exit(1);
+    }
+}
+void checkStmtExp(EXP *e, int lineno, symTable *table)
+{
+    switch(e->kind){
+        case idExp:
+            return;
+        case elementExp:
+            checkStmtExp(e->val.binary.lhs, lineno, table);
+            break;
+        case invocExp:
+            checkStmtExp(e->val.binary.lhs, lineno, table);
+            break;
+        case funcBlockExp:
+            checkFnReturn(e, lineno, table);
+            break;
+        default:
+                fprintf(stderr, "Error: (line %d) expecting lvalue.\n", lineno);
+                exit(1);
+    }
+}
+void checkStmtLHS(STATEMENT *stmt)
+{
+        if(stmt->kind == decrementS || stmt->kind == incrementS)
+        {
+            EXP *tmp = stmt->val.expression;
+            while(tmp != NULL && tmp->kind == parExp)
+            {
+                tmp = tmp->val.binary.rhs;
+            }
+            if(tmp->kind == idExp) {}
+            else if( tmp->kind == elementExp || tmp->kind == invocExp)
+            {
+                checkStmtExp(tmp, stmt->lineno, stmt->localScope);
+            }
+            else{
+                fprintf(stderr, "Error: (line %d) expecting lvalue.\n", stmt->lineno);
+                exit(1);
+            }
+        }
+        else if(stmt->kind == assignS || stmt->kind == quickDeclS)
+        {
+            EXP *tmp = stmt->val.assignment.identifier;
+            while(tmp != NULL && tmp->kind == parExp)
+            {
+                tmp = tmp->val.binary.rhs;
+            }
+            if(tmp->kind == idExp) {}
+            else if( tmp->kind == elementExp || tmp->kind == invocExp)
+            {
+                checkStmtExp(tmp, stmt->lineno, stmt->localScope);
+            }
+            else{
+                fprintf(stderr, "Error: (line %d) expecting lvalue.\n", stmt->lineno);
+                exit(1);
+            }
+        }
+            
 }
 void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
 {
@@ -927,6 +1094,7 @@ void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
             while(cur != NULL)
             {
                 cur->localScope = table;
+                checkStmtLHS(cur);
                 if(cur->val.assignment.identifier->kind == idExp)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
@@ -942,13 +1110,35 @@ void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
                 cur = cur->val.assignment.chain;    
             }
 }
+void checkRepeats(STATEMENT *stmt)
+{
+    char *namelist[128];
+    STATEMENT *tmp = stmt;
+    int count = 0;
+    while(tmp != NULL)
+    {
+        for(int i = 0; i < count; i++)
+        {
+            if(strcmp(*(namelist+i), tmp->val.assignment.identifier->val.identifier) == 0)
+            {
+                fprintf(stderr, "Error: (line %d) re use of identifier %s in quick declaration statement.", stmt->lineno, namelist[i]);
+                exit(1);
+            }
+        }
+        *(namelist+count) = tmp->val.assignment.identifier->val.identifier;
+        count++;
+        tmp = tmp->val.assignment.chain;
+    }
+}
 void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
 {
+            checkRepeats(stmt);
             int newLocals = 0;
             STATEMENT *cur = stmt;
             while(cur != NULL)
             {
                 cur->localScope = table;
+                checkStmtLHS(cur);
                 if(cur->val.assignment.identifier->kind == idExp)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
@@ -1128,6 +1318,20 @@ void symCaseStmt(STATEMENT *stmt, symTable *table, int depth){
             }
             stmt->localScope = subtable;
 }
+void checkExpSValid(STATEMENT *stmt)
+{
+            EXP *expList = stmt->val.expression->val.fnblock.identifier;
+            while(expList->kind == parExp)
+            {
+                expList = expList->val.binary.rhs;
+            }
+            char *name = expList->val.identifier;
+            if(getSymbol(stmt->localScope, name, funcSym) == NULL)
+            {
+                fprintf(stderr, "Error: (line %d) unexpected function cast in expression statement.\n", stmt->lineno);
+                exit(1);
+            }
+}
 void symStmt(STATEMENT *stmt, symTable *table, int depth)
 {
     if(stmt == NULL)
@@ -1140,6 +1344,7 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth)
         case incrementS:
         case decrementS:
             stmt->localScope = table;
+            checkStmtLHS(stmt);
             symExp(stmt->val.expression, table, stmt->lineno);
             break;
         case assignS:
@@ -1169,6 +1374,11 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth)
             stmt->localScope = table;
             break;
         case exprS:
+            symExp(stmt->val.expression, table, stmt->lineno);
+            stmt->localScope = table;
+            checkExpSValid(stmt);
+            break;
+
         case returnS:
             symExp(stmt->val.expression, table, stmt->lineno);
             stmt->localScope = table;
@@ -1263,10 +1473,10 @@ void symExp(EXP *exp, symTable *table, int lineno)
             lookupVar(table, exp->val.identifier, lineno, 1);
             break;
         case funcExp:
-            if(strlen(lookupFunc(table, exp->val.fn->identifier, lineno, 0)) == 0)//function 
+            if(strlen(lookupFunc(table, exp->val.fn->identifier, lineno, false)) == 0)//function 
             {
             
-                if(strlen(lookupType(table,exp->val.fn->identifier, lineno, 0)) != 0) {}
+                if(strlen(lookupType(table,exp->val.fn->identifier, lineno, true)) != 0) {}
                 else{
                     fprintf(stderr, "Error: (line %d) undefined function %s.\n", lineno, exp->val.fn->identifier);
                     exit(1);
@@ -1291,7 +1501,7 @@ void symExp(EXP *exp, symTable *table, int lineno)
             symExp(exp->val.binary.rhs, table, lineno);
             break;
         default:
-            fprintf(stderr, "Unrecognized expression kind %d", exp->kind);
+            fprintf(stderr, "Unrecognized expression kind s %d", exp->kind);
             exit(1);
     }
 }
@@ -1308,10 +1518,10 @@ void funcBlockHelper(EXP *exp, symTable *table, int lineno)
         fprintf(stderr,"Error: (line %d) function call id not an identifier.\n", lineno);
     }
     else{
-        if(strlen(lookupFunc(table, tmp->val.identifier, lineno, 0)) == 0)//function 
+        if(strlen(lookupFunc(table, tmp->val.identifier, lineno, false)) == 0)//function 
             {
             
-                if(strlen(lookupType(table,tmp->val.identifier, lineno, 0)) != 0) {}
+                if(strlen(lookupType(table,tmp->val.identifier, lineno, true)) != 0) {}
                 else{
                     fprintf(stderr, "Error: (line %d) undefined function %s.\n", lineno, tmp->val.identifier);
                     exit(1);

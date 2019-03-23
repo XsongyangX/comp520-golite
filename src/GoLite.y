@@ -185,7 +185,7 @@ prgrm           : tPACKAGE tIDENTIFIER ';' progdefs {$$ = makePROG($2, $4); my_p
                 ;
 /*list of declarations and function declarations*/
 progdefs        : {$$ = NULL;}
-                | progdefs topdecl {if($2 != NULL){$$ = $2; $$->next = $1;} else{ $$ = $1;}}
+                | progdefs topdecl {if($2 != NULL){$$ = $2; findBottomDECL($$)->next = $1;} else{ $$ = $1;}}
                 ;
 
 topdecl         : dec { $$ = $1;}
