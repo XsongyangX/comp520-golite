@@ -85,7 +85,7 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth);
 void symQDecl(STATEMENT *cur, symTable *table);
 void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 
-void symExp(EXP *exp, symTable *table, int lineno);
+void symExp(EXP *exp, symTable *table, int lineno, bool checkBlank);
 void funcBlockHelper(EXP *exp, symTable *table, int lineno);
 
 /* The following four functions will be in separate .h and .c files. */

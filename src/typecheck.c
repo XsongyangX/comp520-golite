@@ -23,7 +23,8 @@ void typeCheckDeclaration(DECLARATION *decl, symTable *table)
     {
         if(strcmp("_", decl->identifier) == 0)
         {
-            SYMBOL *declType = typecheckExp(decl->val.right, table, decl->lineno);
+            if(decl->val.right != NULL)
+                typecheckExp(decl->val.right, table, decl->lineno);
             //OK
         }
         else if(decl->t->gType == nilType)
@@ -72,7 +73,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
     if(stmt == NULL)
         return;
     typeCheckStatement(stmt->next, func);
-    SYMBOL *symRHS, *symLHS;
+    SYMBOL *symRHS = NULL, *symLHS = NULL;
     EXP *expList;
     switch(stmt->kind){
         case incrementS:
@@ -276,7 +277,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
                 //OK
                 return;
             }
-            if(func->t->gType != nilType && MatchingTypes(symLHS, func->val.func.returnSymRef, stmt->lineno, false))
+            if(func->t->gType != nilType && symLHS != NULL && MatchingTypes(symLHS, func->val.func.returnSymRef, stmt->lineno, false))
             {
                 //OK
             }

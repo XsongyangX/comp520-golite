@@ -36,9 +36,23 @@ symTable *initScopeTable(symTable *parent)
 }
 void putVar(SYMBOL *s, symTable *t, int lineno)
 {
-    if(strlen(lookupFunc(t, s->name, lineno, false)) != 0 || strlen(lookupTypeLocal(t, s->name)) != 0){
+    if(strlen(lookupFuncLocal(t, s->name)) != 0 || strlen(lookupTypeLocal(t, s->name)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
+    }
+    if(strcmp(s->name, "main") == 0 || strcmp(s->name, "init") == 0)
+    {
+        if(t->next != NULL)
+        {
+            if(t->next->next != NULL)
+            {
+                
+            }
+            else{
+                fprintf(stderr, "Error: (line %d) declaring var %s at global scope.\n", lineno, s->name);
+                exit(1);
+            }
+        }
     }
     int cell = Hash(s->name);
     s->next = t->varTable[cell];
@@ -58,9 +72,23 @@ void putVar(SYMBOL *s, symTable *t, int lineno)
 /*used for types and structs*/
 void putType(SYMBOL *s, symTable *t, int lineno)
 {
-    if(strlen(lookupVarLocal(t, s->name)) != 0 || strlen(lookupFunc(t, s->name, lineno, false)) != 0){
+    if(strlen(lookupVarLocal(t, s->name)) != 0 || strlen(lookupFuncLocal(t, s->name)) != 0){
         fprintf(stderr, "Error: (line %d) redeclaration of %s.\n", lineno, s->name);
         exit(1);
+    }
+    if(strcmp(s->name, "main") == 0 || strcmp(s->name, "init") == 0)
+    {
+        if(t->next != NULL)
+        {
+            if(t->next->next != NULL)
+            {
+                
+            }
+            else{
+                fprintf(stderr, "Error: (line %d) declaring type %s at global scope.\n", lineno, s->name);
+                exit(1);
+            }
+        }
     }
     int cell = Hash(s->name);
     s->next = t->typeTable[cell];
@@ -347,7 +375,7 @@ char *lookupFunc(symTable *t, char* identifier, int lineno, int doesExit)
             tmp = tmp->next;
         }
     }
-    if(doesExit && (strlen(lookupTypeLocal(t, identifier)) != 0 || strlen(lookupVarLocal(t, identifier)) != 0))
+    if((strlen(lookupVarLocal(t, identifier)) != 0))
     {
         fprintf(stderr, "Error: (line %d) %s is not a function.\n", lineno, identifier);
         exit(1);
@@ -527,6 +555,11 @@ void addPredefinitions(symTable *s)
 /*First will build a symbol table for the program, then call typechecking functions*/
 void checkProg(PROGRAM *prog)
 {
+	if(strcmp(prog->package, "_") == 0)
+	{
+		fprintf(stderr, "Error: (line 1) cannot use blank identifier in package declaration.\n");
+		exit(1);
+	}
     prog->globalScope = initSymbolTable();
     if(strcmp(prog->package, "_") == 0)
     {
@@ -621,6 +654,8 @@ void symTypeDecl(DECLARATION *decl, symTable *table, int depth)
             if(strcmp(parentname, "struct") != 0)
             {
                 SYMBOL *tmp = makeSymbol(decl->identifier, typeSym);
+                if(strcmp(parentname, decl->identifier) != 0)
+                    lookupType(table, parentname, decl->lineno, true);
                 putType(tmp, table, decl->lineno);
                 SYMBOL *parent = getSymbol(table, parentname, typeSym);
                 //printf("Parent of %s is %s.\n", decl->identifier, parentname);
@@ -684,26 +719,28 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
 {
             if(strcmp(decl->identifier,"_") == 0)
                 return;
-            if(strcmp(decl->identifier, "main") == 0 || strcmp(decl->identifier, "init") == 0)
-            {
-                fprintf(stderr, "Error: (line %d) using %s for variable identifier.\n", decl->lineno, decl->identifier);
-                exit(1);
-            }
+            // if(strcmp(decl->identifier, "main") == 0)// || strcmp(decl->identifier, "init") == 0)
+            // {
+            //     fprintf(stderr, "Error: (line %d) using %s for variable identifier.\n", decl->lineno, decl->identifier);
+            //     exit(1);
+            // }
             char *parentname = getName(decl->t);
             if(strcmp(parentname, "struct") != 0)
             {
                 SYMBOL *tmp = makeSymbol(decl->identifier, varSym);
+                if(strlen(parentname) != 0)
+                    lookupType(table, parentname, decl->lineno, true);
                 SYMBOL *parent = getSymbol(table, parentname, typeSym);
                 if(parent == NULL && strlen(parentname) > 0)
                 {
                     fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, parentname);
                     exit(1);
                 }
-                if(strcmp(parentname, decl->identifier) == 0)
-                {
-                    fprintf(stderr, "Error: (line %d) %s is not a type.\n", decl->lineno, parentname);
-                    exit(1);
-                }
+                // if(strcmp(parentname, decl->identifier) == 0)
+                // {
+                //     fprintf(stderr, "Error: (line %d) %s is not a type.\n", decl->lineno, parentname);
+                //     exit(1);
+                // }
                 tmp->val.parentSym = parent;
                 tmp->t = decl->t;
                 putVar(tmp, table, decl->lineno);
@@ -720,7 +757,7 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
                 }
                 if(decl->val.right != NULL)
                 {
-                    symExp(decl->val.right, table, decl->lineno);
+                    symExp(decl->val.right, table, decl->lineno, true);
                 }
             }
             else{
@@ -747,7 +784,7 @@ void symVarDecl(DECLARATION *decl, symTable *table, int depth)
                 }
                 if(decl->val.right != NULL)
                 {
-                    symExp(decl->val.right, table, decl->lineno);
+                    symExp(decl->val.right, table, decl->lineno, true);
                 }
             }
             
@@ -1099,14 +1136,14 @@ void symAssignStmt(STATEMENT *stmt, symTable *table, int depth)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
                     {
-                        symExp(cur->val.assignment.value, table, stmt->lineno);
+                        symExp(cur->val.assignment.value, table, stmt->lineno, true);
                         cur = cur->val.assignment.chain;
                         continue;
                     }
                 }
                     
-                symExp(cur->val.assignment.identifier, table, stmt->lineno);
-                symExp(cur->val.assignment.value, table, stmt->lineno);
+                symExp(cur->val.assignment.identifier, table, stmt->lineno, false);
+                symExp(cur->val.assignment.value, table, stmt->lineno, true);
                 cur = cur->val.assignment.chain;    
             }
 }
@@ -1143,7 +1180,7 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
                 {
                     if(strcmp(cur->val.assignment.identifier->val.identifier, "_")==0)
                     {//ignore blank identifier
-                        symExp(cur->val.assignment.value, table, stmt->lineno);
+                        symExp(cur->val.assignment.value, table, stmt->lineno, true);
                         cur = cur->val.assignment.chain;
                         continue;
                     }
@@ -1152,16 +1189,16 @@ void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth)
                         newLocals++;
                         
                         symQDecl(cur, table);
-                        symExp(cur->val.assignment.value, table, stmt->lineno);
+                        symExp(cur->val.assignment.value, table, stmt->lineno, true);
                     }  
                     else{
-                        symExp(cur->val.assignment.identifier, table, stmt->lineno);
-                        symExp(cur->val.assignment.value, table, stmt->lineno);
+                        symExp(cur->val.assignment.identifier, table, stmt->lineno, true);
+                        symExp(cur->val.assignment.value, table, stmt->lineno, true);
                     }
                 }  
                 else{
-                    symExp(cur->val.assignment.identifier, table, stmt->lineno);
-                    symExp(cur->val.assignment.value, table, stmt->lineno);
+                    symExp(cur->val.assignment.identifier, table, stmt->lineno, true);
+                    symExp(cur->val.assignment.value, table, stmt->lineno, true);
 
                 }
                 cur = cur->val.assignment.chain;    
@@ -1191,7 +1228,7 @@ void symElifStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth+1);
                 printf("{\n");
             }
-            symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
+            symExp(stmt->val.conditional.condition, subtable, stmt->lineno, true);
             symStmt(stmt->val.conditional.body, subsubtable, depth+2);
             if(symbolPrint == 1)
             {
@@ -1208,7 +1245,7 @@ void symElifStmt(STATEMENT *stmt, symTable *table, int depth){
 }
 void symElseStmt(STATEMENT *stmt, symTable *table, int depth){
             symTable *subtable = initScopeTable(table);
-            symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
+            symExp(stmt->val.conditional.condition, subtable, stmt->lineno, true);
             if(symbolPrint == 1)
             {
                 prettyTabs(depth);
@@ -1231,7 +1268,7 @@ void symForStmt(STATEMENT *stmt, symTable *table, int depth){
             }
             symStmt(stmt->val.conditional.optDecl, subtable, depth+1);
             symTable *subsubtable = initScopeTable(subtable);
-            symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
+            symExp(stmt->val.conditional.condition, subtable, stmt->lineno, true);
             if(symbolPrint == 1)
             {
                 prettyTabs(depth+1);
@@ -1269,7 +1306,7 @@ void symBlockStmt(STATEMENT *stmt, symTable *table, int depth)
 }
 void symWhileStmt(STATEMENT *stmt, symTable *table, int depth){
             symTable *subtable = initScopeTable(table);
-            symExp(stmt->val.conditional.condition, subtable, stmt->lineno);
+            symExp(stmt->val.conditional.condition, subtable, stmt->lineno, true);
             if(symbolPrint == 1)
             {
                 prettyTabs(depth);
@@ -1292,7 +1329,7 @@ void symSwitchStmt(STATEMENT *stmt, symTable *table, int depth){
             }
             symStmt(stmt->val.switchBody.optDecl, subtable, depth+1);
             
-            symExp(stmt->val.switchBody.condition, subtable, stmt->lineno);
+            symExp(stmt->val.switchBody.condition, subtable, stmt->lineno, true);
             symStmt(stmt->val.switchBody.cases, subtable, depth+1);
             
             if(symbolPrint == 1)
@@ -1303,7 +1340,7 @@ void symSwitchStmt(STATEMENT *stmt, symTable *table, int depth){
             stmt->localScope = subtable;
 }
 void symCaseStmt(STATEMENT *stmt, symTable *table, int depth){
-            symExp(stmt->val.caseBody.condition, table, stmt->lineno);
+            symExp(stmt->val.caseBody.condition, table, stmt->lineno, true);
             symTable *subtable = initScopeTable(table);
             if(symbolPrint == 1)
             {
@@ -1320,7 +1357,14 @@ void symCaseStmt(STATEMENT *stmt, symTable *table, int depth){
 }
 void checkExpSValid(STATEMENT *stmt)
 {
-            EXP *expList = stmt->val.expression->val.fnblock.identifier;
+            EXP *expList = stmt->val.expression;
+            
+            if(expList->kind != funcBlockExp)
+            {
+                fprintf(stderr, "Error: (line %d) unexpected expression kind in expression statement.\n", stmt->lineno);
+                exit(1);
+            }
+            expList = expList->val.fnblock.identifier;
             while(expList->kind == parExp)
             {
                 expList = expList->val.binary.rhs;
@@ -1345,7 +1389,7 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth)
         case decrementS:
             stmt->localScope = table;
             checkStmtLHS(stmt);
-            symExp(stmt->val.expression, table, stmt->lineno);
+            symExp(stmt->val.expression, table, stmt->lineno, true);
             break;
         case assignS:
             symAssignStmt(stmt, table, depth);
@@ -1370,17 +1414,17 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth)
             symWhileStmt(stmt, table, depth);
             break; 
         case printS:
-            symExp(stmt->val.iostmt.value, table, stmt->lineno);
+            symExp(stmt->val.iostmt.value, table, stmt->lineno, true);
             stmt->localScope = table;
             break;
         case exprS:
-            symExp(stmt->val.expression, table, stmt->lineno);
+            symExp(stmt->val.expression, table, stmt->lineno, true);
             stmt->localScope = table;
             checkExpSValid(stmt);
             break;
 
         case returnS:
-            symExp(stmt->val.expression, table, stmt->lineno);
+            symExp(stmt->val.expression, table, stmt->lineno, true);
             stmt->localScope = table;
             break;
         case switchS:
@@ -1419,7 +1463,7 @@ void symQDecl(STATEMENT *cur, symTable *table)
     tmp->t = makeTYPE(nilType, 0, " ", NULL);
     putVar(tmp, table, cur->lineno);
 }
-void symExp(EXP *exp, symTable *table, int lineno)
+void symExp(EXP *exp, symTable *table, int lineno, bool checkBlank)
 {
     if(exp == NULL)
     {
@@ -1454,23 +1498,38 @@ void symExp(EXP *exp, symTable *table, int lineno)
         case xorExp:
         case lshiftExp:
         case rshiftExp:
+            symExp(exp->val.binary.lhs, table, lineno, true);
+            symExp(exp->val.binary.rhs, table, lineno, true);
+            break;
         case elementExp:
-            symExp(exp->val.binary.lhs, table, lineno);
-            symExp(exp->val.binary.rhs, table, lineno);
+            symExp(exp->val.binary.lhs, table, lineno, true);
+            symExp(exp->val.binary.rhs, table, lineno, true);
             break;
         case invocExp:
-            symExp(exp->val.binary.lhs, table, lineno);
+            symExp(exp->val.binary.lhs, table, lineno, true);
+            if(checkBlank && strcmp(exp->val.binary.rhs->val.identifier, "_") == 0)
+            {
+                fprintf(stderr, "Error: (line %d) illegal use of blank identifier.\n", lineno);
+                exit(1);
+            }
             break;
         case notExp:
         case posExp:
         case negExp:
-        case parExp:
         case indexExp:
         case uxorExp:
-            symExp(exp->val.binary.rhs, table, lineno);
+            symExp(exp->val.binary.rhs, table, lineno, true);
+            break;
+        case parExp:
+            symExp(exp->val.binary.rhs, table, lineno, checkBlank);
             break;
         case idExp:
             lookupVar(table, exp->val.identifier, lineno, 1);
+            if(checkBlank && strcmp(exp->val.identifier, "_") == 0)
+            {
+                fprintf(stderr, "Error: (line %d) illegal use of blank identifier.\n", lineno);
+                exit(1);
+            }
             break;
         case funcExp:
             if(strlen(lookupFunc(table, exp->val.fn->identifier, lineno, false)) == 0)//function 
@@ -1482,23 +1541,23 @@ void symExp(EXP *exp, symTable *table, int lineno)
                     exit(1);
                 }
             }
-            symExp(exp->val.fn->params->val.fnCallBlock, table, lineno);
+            symExp(exp->val.fn->params->val.fnCallBlock, table, lineno, checkBlank);
             break;
         case expblockExp://this case occurs from function calls
-            symExp(exp->val.expblock.next, table, lineno);
-            symExp(exp->val.expblock.value, table, lineno);
+            symExp(exp->val.expblock.next, table, lineno, checkBlank);
+            symExp(exp->val.expblock.value, table, lineno, checkBlank);
             break;
         case funcBlockExp:
             funcBlockHelper(exp, table, lineno);
-            symExp(exp->val.fnblock.fn->params->val.fnCallBlock, table, lineno);
+            symExp(exp->val.fnblock.fn->params->val.fnCallBlock, table, lineno, true);
             break;
         case appendExp:
-            symExp(exp->val.binary.lhs, table, lineno);
-            symExp(exp->val.binary.rhs, table, lineno);
+            symExp(exp->val.binary.lhs, table, lineno, true);
+            symExp(exp->val.binary.rhs, table, lineno, true);
             break;
         case lenExp:
         case capExp:
-            symExp(exp->val.binary.rhs, table, lineno);
+            symExp(exp->val.binary.rhs, table, lineno, true);
             break;
         default:
             fprintf(stderr, "Unrecognized expression kind s %d", exp->kind);
