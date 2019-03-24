@@ -82,38 +82,36 @@ do
 done
 
 # if the 'compare' argument is given
-if [[ $2 == "compare" ]]
-then
-	# compare files
-	
-	# first pass vs reference
-	# removed
-	#echo "===="
-	#echo "First pass vs. reference"
-	#echo "===="
-	#for file in pretty/first/*.go
-	#do 
-	#	name=$(basename $file)
-	#	python3 prettyChecker.py $file pretty/reference/$name
-	#	
-	#	if [[ $? == 1 ]]
-	#	then
-	#		echo -e "\033[0;31m[Comparison failed]\033[0m: $name\n"
-	#	fi
-	#done
+# compare files
 
-	# first pass vs second pass
-	echo "===="
-	echo "First pass vs. second pass"
-	echo "===="
-	for file in pretty/first/*.go
-	do
-		name=$(basename $file)
-		python3 prettyChecker.py $file pretty/second/$name
-		
-		if [[ $? == 1 ]]
-		then 
-			echo -e "\033[0;31m[Identity failed]\033[0m: $name\n"
-		fi
-	done
-fi
+# first pass vs reference
+# removed
+#echo "===="
+#echo "First pass vs. reference"
+#echo "===="
+#for file in pretty/first/*.go
+#do 
+#	name=$(basename $file)
+#	python3 prettyChecker.py $file pretty/reference/$name
+#	
+#	if [[ $? == 1 ]]
+#	then
+#		echo -e "\033[0;31m[Comparison failed]\033[0m: $name\n"
+#	fi
+#done
+
+# first pass vs second pass
+echo "===="
+echo "First pass vs. second pass"
+echo "===="
+for file in pretty/first/*.go
+do
+	name=$(basename $file)
+	python3 prettyChecker.py $file pretty/second/$name
+	
+	if [[ $? == 1 ]]
+	then 
+		echo -e "\033[0;31m[Identity failed]\033[0m: $name\n"
+	fi
+done
+
