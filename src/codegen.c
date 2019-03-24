@@ -16,6 +16,7 @@ char *getTypeString(TYPE *t)
 	TYPE *tmp = t;
 	char *name = malloc(128);
 	
+	
 }
 void codegenExpression(EXP *e, symTable *table){
 	switch (e->kind){

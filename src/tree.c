@@ -632,7 +632,7 @@ PROGRAM *makePROG(char* package, DECLARATION *declList)
     p->declList = declList;
     p->package = package;
      
-    
+    return p;
 }
 
 /*Stuff written by Greg starts here */
@@ -665,6 +665,7 @@ EXP *makeEXP_idblock(char *identifier, EXP *next){
     e->kind = idblockExp;
     e->val.idblock.next = next;
     e->val.idblock.identifier = identifier;
+    return e;
 }
 /*used for exps*/
 EXP *makeEXP_expblock(EXP *e1, EXP *next){
@@ -674,6 +675,7 @@ EXP *makeEXP_expblock(EXP *e1, EXP *next){
     e->kind = expblockExp; // was set to 0 (?!?)
     e->val.expblock.next = next;
     e->val.expblock.value = e1;
+    return e;
 }
 /*specific declaration node constructor for type declarations*/
 DECLARATION *makeDECL_type(char* identifier, TYPE *typeNode, int lineno){

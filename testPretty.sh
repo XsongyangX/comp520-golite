@@ -87,19 +87,20 @@ then
 	# compare files
 	
 	# first pass vs reference
-	echo "===="
-	echo "First pass vs. reference"
-	echo "===="
-	for file in pretty/first/*.go
-	do 
-		name=$(basename $file)
-		python3 prettyChecker.py $file pretty/reference/$name
-		
-		if [[ $? == 1 ]]
-		then
-			echo -e "\033[0;31m[Comparison failed]\033[0m: $name\n"
-		fi
-	done
+	# removed
+	#echo "===="
+	#echo "First pass vs. reference"
+	#echo "===="
+	#for file in pretty/first/*.go
+	#do 
+	#	name=$(basename $file)
+	#	python3 prettyChecker.py $file pretty/reference/$name
+	#	
+	#	if [[ $? == 1 ]]
+	#	then
+	#		echo -e "\033[0;31m[Comparison failed]\033[0m: $name\n"
+	#	fi
+	#done
 
 	# first pass vs second pass
 	echo "===="

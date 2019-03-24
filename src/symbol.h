@@ -70,8 +70,8 @@ void printStructFields(symTable *table, SYMBOL *fields);
 void printType(TYPE *t);
 void printFnArgs(symTable *table, DECLARATION *args);
 void printFnScope(symTable *table, DECLARATION *args, int depth);
-SYMBOL *symStructHelper(DECLARATION *body, symTable *table);
-SYMBOL *symFuncHelper(DECLARATION *params, symTable *table);
+SYMBOL *symStructHelper(DECLARATION *body, symTable *table, char *structName);
+SYMBOL *symFuncHelper(DECLARATION *params, symTable *table, char *funcName);
 void symAssignStmt(STATEMENT *stmt, symTable *table, int depth);
 void symQDeclStmt(STATEMENT *stmt, symTable *table, int depth);
 void symElifStmt(STATEMENT *stmt, symTable *table, int depth);
@@ -85,7 +85,7 @@ void symStmt(STATEMENT *stmt, symTable *table, int depth);
 void symQDecl(STATEMENT *cur, symTable *table);
 void printQDeclHelper(symTable *table, STATEMENT *stmt, int depth);
 
-void symExp(EXP *exp, symTable *table, int lineno);
+void symExp(EXP *exp, symTable *table, int lineno, bool checkBlank);
 void funcBlockHelper(EXP *exp, symTable *table, int lineno);
 
 /* The following four functions will be in separate .h and .c files. */
