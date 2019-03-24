@@ -42,3 +42,12 @@ Specifications: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone2_Specific
 Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone2_Rubric.pdf
 
 Report Google doc: https://docs.google.com/document/d/1LOxscfPnuSVjlCml0N6HCuIO17D91X-Ot_sBorizRGI/edit?ts=5c869eb9
+
+## Milestone 3
+Assignment description: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3.pdf
+
+Specifications: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3_Specifications.pdf
+
+Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3_Rubric.pdf
+
+Report Google doc: https://docs.google.com/document/d/1XdmYVDXqE7iNQWk2r2ZnVAexotE-3Z0spWudZLKTfcc/edit?usp=gmail_thread&ts=5c969b37
