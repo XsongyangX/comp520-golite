@@ -2,7 +2,9 @@
 #define CODEGEN_H
 
 #include "typecheck.h"
+#include <string.h>
 
+char* getTypeString(TYPE t*);
 void codegenProgram(PROGRAM *p);
 void codegenDeclaration(DECLARATION *d);
 void codegenStatement(STATEMENT *s);
