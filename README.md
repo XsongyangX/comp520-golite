@@ -46,8 +46,6 @@ Report Google doc: https://docs.google.com/document/d/1LOxscfPnuSVjlCml0N6HCuIO1
 ## Milestone 3
 Assignment description: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3.pdf
 
-Specifications: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3_Specifications.pdf
-
 Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3_Rubric.pdf
 
 Tutorial: https://www.cs.mcgill.ca/~cs520/2019/slides/10-golite-tutorial.pdf
