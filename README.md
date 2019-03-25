@@ -50,4 +50,6 @@ Specifications: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3_Specific
 
 Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone3_Rubric.pdf
 
+Tutorial: https://www.cs.mcgill.ca/~cs520/2019/slides/10-golite-tutorial.pdf
+
 Report Google doc: https://docs.google.com/document/d/1XdmYVDXqE7iNQWk2r2ZnVAexotE-3Z0spWudZLKTfcc/edit?usp=gmail_thread&ts=5c969b37
