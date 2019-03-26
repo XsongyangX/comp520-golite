@@ -28,8 +28,8 @@ func main() {
 	println(r) // 0
 	
 	// structs
-	var x struct { m bool; }
-	println(x.m) // false
+	var xx struct { m bool; }
+	println(xx.m) // false
 
 	var ooo struct{
 		x int
