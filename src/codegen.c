@@ -1,9 +1,6 @@
 #include "codegen.h"
 int bindingCounter = 0;
 
-void codegenProgram(PROGRAM *p){
-
-}
 char *getNewBinding()
 {
 	char *tmp = malloc(32);
@@ -173,6 +170,44 @@ char *findExistingBinding(SYMBOL *sym, symTable *table)
 	}
 	return "";
 }
+
+//Generates code for comparing structs.
+//mode=1 for == expressions
+//mode=0 for != expressions
+//nameSoFar represents the path to nested structs since we don't have pointers to parents;
+//e.g. struct.innerStruct.innerInnerStruct and the like
+void eqExpStructs(SYMBOL *s1, SYMBOL *s2, int mode, char *nameSoFar){
+	printf("(");
+	SYMBOL *field1 = s1->val.structFields;
+	SYMBOL *field2 = s2->val.structFields;
+	while(field1 != NULL){
+		if(field1->kind != structSym){
+			printf("%s%s.%s", nameSoFar, s1->name, field1->name);
+			if (mode){
+				printf("==");
+			}
+			else{
+				printf("!=");
+			}
+			printf("%s%s.%s", nameSoFar, s2->name, field2->name);
+			if(field1->next != NULL){
+				if (mode){
+					printf("&&");
+				}
+				else{
+					printf("||");
+				}
+			}
+		}
+		else{
+			eqExpStructs(field1, field2, mode, strcat(s1->name, "."));
+		}
+		field1 = field1->next;
+		field2 = field2->next;
+	}
+	printf(")");
+}
+
 void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 {
 	SYMBOL *tmp = lookupVar(table, decl->identifier, decl->lineno, false);
@@ -395,34 +430,7 @@ void codegenFuncCall(DECLARATION *decl, symTable *table)
 {
 	
 }
-void codegenDeclaration(DECLARATION *decl, symTable *table, int depth){
-	if(decl == NULL) return;
-	codegenDeclaration(decl->chain, table, depth);
-	codegenDeclaration(decl->next, table, depth);
-	switch(decl->d)
-	{
-		case varDecl:
-			codegenVarDecl(decl, table, depth);
-			break;
-		case typeDecl:
-			codegenTypeDecl(decl,table, depth);
-			break;
-		case structDecl:
-			//should be unused
-			fprintf(stderr, "StructDecl encountered.\n");
-			exit(1);
-		case funcDecl:
-			codegenFuncDecl(decl, table, depth);
-			break;
-		case funcCall:
-			codegenFuncCall(decl, table);
-			break;
-	}
-}
 
-void codegenStatement(STATEMENT *stmt, int depth){
-	
-}
 /*do not use for varStructSym symbols*/
 char *getTypeName(SYMBOL *tmp)
 {
@@ -522,6 +530,161 @@ char *getTypeModifiers(SYMBOL *tmp)
 
     }
 }
+
+/*Only handles simple assignments to singleton vars for the moment,
+i.e. things like a = 5 and not a.b = 5 or a[7] = 5 */
+void codegenAssign(STATEMENT *stmt, symTable *table, int depth){
+	EXP *tmpExp= stmt->val->assignment->identifier
+	if (tmpExp->kind == idExp){
+		SYMBOL *tmp = lookupVar(table, tmpExp->val->identifier, stmt->lineno, false);
+		//We need to handle strings in a special way since Go changes values not pointers
+		if (strcmp(getTypeName(tmp), "str")==0){
+			prettyTabs(depth);
+			printf("strcpy(%s,", tmp->bindingName);
+			codegenExpression(stmt->val->assignment->value, table);
+			printf(");\n");
+		}
+		else{
+			prettyTabs(depth);
+			printf("%s", tmp->bindingName);
+			printf(" = ");
+			codegenExpression(stmt->val->assignment->value, table);
+			printf(";\n");
+		}
+	} 
+}
+
+/*Handles if statements*/
+void codegenIf(STATEMENT *stmt, symTable *table, int depth){
+	if(stmt->val->conditional->optDecl != NULL)
+		codegenStatement(stmt->val->conditional->optDecl, table, depth);
+	prettyTabs(depth);
+	printf("if (");
+	codegenExpression(stmt->val->conditional->condition);
+	printf("){\n");
+	STMT *tmpStmt = stmt->val->conditional->body;
+	if(tmpStmt != NULL){
+		codegenStatement(tmpStmt, table, depth+1);
+		tmpStmt = tmpStmt->next;
+	}
+	printf("}\n");
+	if(stmt->val->conditional->elif != NULL){
+		codegenStatement(stmt->val->conidtional->elif, table, depth);
+	}
+}
+
+/*Handles else statements*/ 
+void codegenElse(STATEMENT *stmt, symTable *table, int depth){
+	if(stmt->val->conditional->optDecl != NULL)
+		codegenStatement(stmt->val->conditional->optDecl, table, depth);
+	printf("else{\n");
+	STMT *tmpStmt = stmt->val->conditional->body;
+	if(tmpStmt != NULL){
+		codegenStatement(tmpStmt, table, depth+1);
+		tmpStmt = tmpStmt->next;
+	}
+	prettyTabs(depth);
+	printf("}\n");
+}
+
+/*Handles elif statements.
+For scoping reasons, the else and if are separated onto their own lines
+And quick declarations come inside the else but not the subsequent if.*/
+void codegenElif(STATEMENT *stmt, symTable *table, int depth){
+	prettyTabs(depth);
+	printf("else{\n");
+	if(stmt->val->conditional->optDecl != NULL)
+		codegenStatement(stmt->val->conditional->optDecl, table, depth+1);
+	prettyTabs(depth+1);
+	printf("if(");
+	codegenExpression(stmt->val->conditional->condition);
+	printf("){\n")
+	STMT *tmpStmt = stmt->val->conditional->body;
+	if(tmpStmt != NULL){
+		codegenStatement(tmpStmt, table, depth+2);
+		tmpStmt = tmpStmt->next;
+	}
+	prettyTabs(depth+1);
+	printf("}\n");
+	prettyTabs(depth);
+	printf("}\n");
+}
+
+/*Handles quick declarations */
+void codegenQuickDecl(STATEMENT *stmt, symTable *table, int depth){
+	//shouldn't need to do any symbol table manipulation in here
+	//So this is delegated to other methods
+	DECL *dummyDecl = makeDECL_norhs(1, stmt->val->assignment->identifier, typecheckExp(stmt->val->assignment->value), 0);
+	codegenDeclaration(dummyDecl, table, depth);
+	STMT *dummyStmt = makeSTMT_assmt(0, stmt->val->assignment->identifier, stmt->val->assignment->value);
+	codegenStatement(dummyStmt, table, depth);
+}
+
+
+void codegenProgram(PROGRAM *p){
+
+}
+
+void codegenDeclaration(DECLARATION *decl, symTable *table, int depth){
+	if(decl == NULL) return;
+	codegenDeclaration(decl->chain, table, depth);
+	codegenDeclaration(decl->next, table, depth);
+	switch(decl->d)
+	{
+		case varDecl:
+			codegenVarDecl(decl, table, depth);
+			break;
+		case typeDecl:
+			codegenTypeDecl(decl,table, depth);
+			break;
+		case structDecl:
+			//should be unused
+			fprintf(stderr, "StructDecl encountered.\n");
+			exit(1);
+		case funcDecl:
+			codegenFuncDecl(decl, table, depth);
+			break;
+		case funcCall:
+			codegenFuncCall(decl, table);
+			break;
+	}
+}
+
+
+void codegenStatement(STATEMENT *stmt, symTable *table, int depth){
+	switch(stmt->kind){
+		case emptyS:
+			break; 
+		case assignS:
+			codegenAssign(stmt, table, depth);
+			break;
+		case quickDeclS:
+			codegenQuickDecl(stmt, table, depth);
+		case blockS:
+		case ifS:
+			codegenIf(stmt, table, depth);
+			break;
+		case elifS:
+			codegenElif(stmt, table, depth);
+			break;
+		case elseS:
+			codegenElse(stmt, table, depth);
+			break;
+		case forS:
+		case whileS:
+		case printS:
+		case exprS:
+		case returnS:
+		case switchS:
+		case caseS:
+		case breakS:
+		case continueS:
+		case declS:
+		case incrementS:
+		case decrementS:
+	}
+}
+
 void codegenExpression(EXP *e, symTable *table){
 	switch (e->kind){
 		case emptyExp:
@@ -740,43 +903,5 @@ void codegenExpression(EXP *e, symTable *table){
 			printf("ERROR: Unknown expression type\n");
 			exit(1);
 	}
-}
-
-
-//Generates code for comparing structs.
-//mode=1 for == expressions
-//mode=0 for != expressions
-//nameSoFar represents the path to nested structs since we don't have pointers to parents;
-//e.g. struct.innerStruct.innerInnerStruct and the like
-void eqExpStructs(SYMBOL *s1, SYMBOL *s2, int mode, char *nameSoFar){
-	printf("(");
-	SYMBOL *field1 = s1->val.structFields;
-	SYMBOL *field2 = s2->val.structFields;
-	while(field1 != NULL){
-		if(field1->kind != structSym){
-			printf("%s%s.%s", nameSoFar, s1->name, field1->name);
-			if (mode){
-				printf("==");
-			}
-			else{
-				printf("!=");
-			}
-			printf("%s%s.%s", nameSoFar, s2->name, field2->name);
-			if(field1->next != NULL){
-				if (mode){
-					printf("&&");
-				}
-				else{
-					printf("||");
-				}
-			}
-		}
-		else{
-			eqExpStructs(field1, field2, mode, strcat(s1->name, "."));
-		}
-		field1 = field1->next;
-		field2 = field2->next;
-	}
-	printf(")");
 }
 
