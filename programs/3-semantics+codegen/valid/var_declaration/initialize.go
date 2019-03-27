@@ -1,6 +1,6 @@
 //~false
 //~0
-//~+0.000000e+000
+//~+0.000000e+00
 //~
 //~0
 //~false
@@ -19,7 +19,7 @@ func main() {
 	println(n)
 
 	var x float64
-	println(x) // +0.000000e+000
+	println(x) // +0.000000e+00
 
 	var s string
 	println(s) // "" (when printed, it shows nothing)
