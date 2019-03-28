@@ -25,6 +25,7 @@ SYMBOL *makeSymbolCopy(SYMBOL *sym);
 void lookForPlusString(EXP *e, int tabs);
 char *getFullStr(EXP *e, symTable *table);
 void eqExpArrays(SYMBOL *s1, SYMBOL *s2, char *tMods, char *nameSoFar1, char *nameSoFar2, symTable *table);
+SYMBOL *findExistingBindingSym(SYMBOL *sym, symTable *table);
 
 
 
