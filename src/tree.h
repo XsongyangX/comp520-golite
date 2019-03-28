@@ -122,7 +122,7 @@ about things like $$->next here.
 */
 struct EXP{
     enum ExpressionKind kind;
-    TYPE *t;
+    SYMBOL *symTypeRef;
     union {
         char *identifier;
         char *strLiteral;

@@ -18,6 +18,7 @@ enum TABLEID {VARTABLE, TYPETABLE, FUNCTABLE};
 
 struct SYMBOL{
     char *name;
+    char *bindingName;
     enum SymbolKind kind;
     bool isConstant;
     TYPE *t;
@@ -27,12 +28,15 @@ struct SYMBOL{
         SYMBOL *structFields;
         struct {SYMBOL *funcParams; SYMBOL *returnSymRef;} func;
     } val;
+    int codeBinding;
     struct SYMBOL *next;
 };
 struct symTable {
     SYMBOL *varTable[HASHSIZE];
     SYMBOL *typeTable[HASHSIZE];
     SYMBOL *funcTable[HASHSIZE];
+    SYMBOL *bindingsList;
+    int bindingsSize;
     symTable *next;
 };
 

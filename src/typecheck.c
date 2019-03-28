@@ -367,20 +367,20 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
     EXP *expList;
     switch (exp->kind){
         case intExp:
-            exp->t = INT_SYMBOL->t;
+            exp->symTypeRef = INT_SYMBOL;
             return INT_SYMBOL;
         case floatExp:
-            exp->t = FLOAT_SYMBOL->t;
+            exp->symTypeRef = FLOAT_SYMBOL;
             return FLOAT_SYMBOL;
         case strExp:
         case rawstrExp:
-            exp->t = STR_SYMBOL->t;
+            exp->symTypeRef = STR_SYMBOL;
             return STR_SYMBOL;
         case boolExp:
-            exp->t = BOOL_SYMBOL->t;
+            exp->symTypeRef = BOOL_SYMBOL;
             return BOOL_SYMBOL;
         case runeExp:
-            exp->t = RUNE_SYMBOL->t;
+            exp->symTypeRef = RUNE_SYMBOL;
             return RUNE_SYMBOL;
         case plusExp:
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
@@ -397,7 +397,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false) ||
                 MatchingTypes(dummy2, STR_SYMBOL, lineno, false))
             {
-                exp->t = dummy1->t;
+                exp->symTypeRef = dummy2;
                 return dummy1; 
             }
             else{
@@ -418,7 +418,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
                 MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false))
             {
-                 exp->t = dummy1->t;
+                 exp->symTypeRef = dummy2;
                  return dummy1; 
             }
             else{
@@ -439,7 +439,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
                 MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false))
             {
-                 exp->t = dummy1->t;
+                 exp->symTypeRef = dummy2;
                  return dummy1; 
             }
             else{
@@ -460,7 +460,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false)||
                 MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false))
             {
-                 exp->t = dummy1->t;
+                 exp->symTypeRef = dummy2;
                  return dummy1; 
             }
             else{
@@ -481,7 +481,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             MatchingTypes(dummy2, RUNE_SYMBOL,  lineno, false) ||
             MatchingTypes(dummy2, FLOAT_SYMBOL,  lineno, false))
             {
-                 exp->t = dummy1->t;
+                 exp->symTypeRef = dummy2;
                  return dummy1; 
             }
             else{
@@ -495,7 +495,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             MatchingTypes(dummy1, dummy2, lineno, true);
             if (isComparable(dummy1, table, lineno))
             {
-                exp->t = BOOL_SYMBOL->t;
+                exp->symTypeRef = BOOL_SYMBOL;
                 return BOOL_SYMBOL; 
             }
             
@@ -521,7 +521,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false) || 
                 MatchingTypes(dummy2, STR_SYMBOL, lineno, false))
             {
-                exp->t = BOOL_SYMBOL->t;
+                exp->symTypeRef = BOOL_SYMBOL;
                 return BOOL_SYMBOL; 
             }
             else{
@@ -541,7 +541,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
             if ( MatchingTypes(dummy2, BOOL_SYMBOL, lineno, false))
             {
-                exp->t = dummy1->t;
+                exp->symTypeRef = BOOL_SYMBOL;
                 return dummy1; 
             }
             else{
@@ -563,7 +563,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
             if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
-                exp->t = dummy1->t;
+                exp->symTypeRef = dummy2;
                 return dummy1; 
             }
             else{
@@ -583,7 +583,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
             if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
-                exp->t = dummy1->t;
+                exp->symTypeRef = dummy2;
                 return dummy1; 
             }
             else{
@@ -599,7 +599,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
             dummy2 = elementHelper(dummy1, lineno);
-            exp->t = dummy2->t;
+            exp->symTypeRef = dummy2;
             return dummy2;
             
         case invocExp:
@@ -618,7 +618,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
             dummy2 = structAccessHelper(dummy1, exp->val.binary.rhs->val.identifier, lineno);
-            exp->t = dummy2->t;
+            exp->symTypeRef = dummy2;
             return dummy2;
             break;
         case notExp:
@@ -631,7 +631,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
             if (MatchingTypes(dummy2, BOOL_SYMBOL, lineno, false))
             {
-                    exp->t = dummy1->t;
+                    exp->symTypeRef = BOOL_SYMBOL;
                     return dummy1;
                 
             }
@@ -652,7 +652,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 MatchingTypes(dummy2, FLOAT_SYMBOL, lineno, false) ||
                 MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
-                exp->t = dummy1->t;
+                exp->symTypeRef = dummy2;
                 return dummy1;
             }
             
@@ -668,7 +668,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
             if (MatchingTypes(dummy2, INT_SYMBOL, lineno, false) || MatchingTypes(dummy2, RUNE_SYMBOL, lineno, false))
             {
-                exp->t = dummy1->t;
+                exp->symTypeRef = dummy2;
                 return dummy1;
             }
             
@@ -677,7 +677,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             
         case parExp:
             dummy1 =  typecheckExp(exp->val.binary.rhs, table, lineno);
-            exp->t = dummy1->t;
+            exp->symTypeRef = dummy1;
             return dummy1;
         case indexExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
@@ -689,7 +689,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
             if(MatchingTypes(dummy2, INT_SYMBOL, lineno, false) )
             {
-                    exp->t = dummy1->t;
+                    exp->symTypeRef = INT_SYMBOL;
                     return dummy1;
                 
             }
@@ -699,12 +699,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case idExp:
             if(strcmp(exp->val.identifier, "_") == 0)
             {
-                exp->t = NULL;
+                exp->symTypeRef = NULL;
                 return BLANK_SYMBOL;
             }
             dummy1 = getSymbol(table, exp->val.identifier, varSym);
             if(dummy1 != NULL)//case rhs of invoc
-                exp->t = dummy1->t;
+                exp->symTypeRef = dummy1;
             return dummy1;
 
        
@@ -730,7 +730,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                     }
                     dummy2 = typecheckExp(expList->val.expblock.value,table, lineno);
                     SubTypes(dummy1, dummy2, lineno);
-                    exp->t = dummy1->t;
+                    exp->symTypeRef = dummy1;
                     return dummy1;
                 }
                 else{
@@ -761,7 +761,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                     fprintf(stderr, "Error: (line %d) too many arguments for function %s.\n", lineno, exp->val.fn->identifier);
                     exit(1);
                 }
-                exp->t = dummy2->t;
+                exp->symTypeRef = dummy2;
                 return dummy2;
             }
             break;
@@ -797,7 +797,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                     }
                     dummy2 = typecheckExp(expList->val.expblock.value,table, lineno);
                     checkDefaultCasts(dummy1, dummy2, lineno);
-                    exp->t = dummy1->t;
+                    exp->symTypeRef = dummy1;
                     return dummy1;
                 }
                 else{
@@ -828,7 +828,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                     fprintf(stderr, "Error: (line %d) too many arguments for function %s.\n", lineno, name);
                     exit(1);
                 }
-                exp->t = dummy2->t;
+                exp->symTypeRef = dummy2;
                 return dummy2;
             }
             break;
@@ -850,17 +850,17 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
             dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
             sliceTypes(dummy1, dummy2, lineno);
-            exp->t = dummy1->t;
+            exp->symTypeRef = dummy1;
             return dummy1;
         case lenExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
             lenHelper(dummy1, lineno);
-            exp->t = INT_SYMBOL->t;
+            exp->symTypeRef = INT_SYMBOL;
             return INT_SYMBOL;
         case capExp:
             dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
             capHelper(dummy1, lineno);
-            exp->t = INT_SYMBOL->t;
+            exp->symTypeRef = INT_SYMBOL;
             return INT_SYMBOL;
             
         default:

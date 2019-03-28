@@ -26,12 +26,14 @@ symTable *initSymbolTable()
         t->funcTable[i]->kind = nullSym;
     }
     t->next = NULL;
+    t->bindingsSize = 0;
     return t;
 }
 symTable *initScopeTable(symTable *parent)
 {
     symTable *t = initSymbolTable();
     t->next = parent;
+    t->bindingsSize = 0;
     return t;
 }
 void putVar(SYMBOL *s, symTable *t, int lineno)
