@@ -16,6 +16,7 @@ char *getNewBinding()
 }
 void lookForPlusString(EXP *e, int tabs)
 {
+	char *type = getTypeName(e->symTypeRef);
 	switch (e->kind){
 		case emptyExp:
 		case intExp:
@@ -26,7 +27,7 @@ void lookForPlusString(EXP *e, int tabs)
 		case runeExp:
 			return;
 		case plusExp:
-			if(MatchingTypes(STR_SYMBOL, e->symTypeRef, 0, false))
+			if(strcmp(type, "string") == 0)
 			{
 				prettyTabs(tabs);
 				printf("char *CODEGEN_BINDING%d = malloc(128);\n", bindingCounter);
@@ -117,19 +118,37 @@ void lookForPlusString(EXP *e, int tabs)
 			exit(1);
 	}
 }
-/*general helper for slice and array structures*/
-void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *typeName, bool isTypeDef)
+/*general helper for slice and array structures
+generates new symbols and binding mappings as it encounters new slice/array/struct types*/
+void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *typeName, bool isTypeDef, symTable *table)
 {
-		
+		SYMBOL *copy = makeSymbolCopy(sym);		
+		SYMBOL *parent = getSymbol(table, tName, typeSym);
 		if (*tMods != 0)
 		{
+			char *name1;
 			prettyTabs(depth);
 			if(isTypeDef) printf("struct %s {\n", typeName);
-			else printf("struct {\n");
+			else{
+				name1 = findExistingBinding(copy, table);
+				if(strlen(name1) == 0)
+				{
+					name1 = getNewBinding();
+					copy->next = table->bindingsList;
+					table->bindingList = copy;
+					copy->bindingName = name1;
+				}
+				printf("struct %s {\n", name1);
+			}
 			prettyTabs(depth+1);
 				//slice case
 			if(*(tMods+1) == ']')
 			{
+				while(copy->t->gType != sliceType)
+				{
+					copy = makeSymbolCopy(copy->val.parentSym);
+				}
+				copy->t = copy->t->val.arg;
 				printf("int size = 0;\n");
 				prettyTabs(depth+1);
 				printf("int cap = 0;\n");
@@ -137,12 +156,28 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 				tMods += 2;
 				if(*tMods == 0)
 				{
-					if(strcmp(tName, "struct"))
+					if(strcmp(tName, "struct") || parent != NULL && parent->kind == structSym)
 					{
-						printf("struct {\n");
-						codegenStructHelper(sym->val.structFields, depth+2);
+						char *name2;
+						if(parent != NULL)
+							name2 = findExistingBinding(parent, table);
+						else
+						{
+							name2 = findExistingBinding(copy, table);
+						}
+						if(strlen(name2) == 0)
+						{
+							name2 = getNewBinding();
+							copy->next = table->bindingsList;
+							table->bindingList = copy;
+							copy->bindingName =  name2;
+						}
+						printf("struct %s {\n", name2);
+						codegenStructHelper(sym->val.structFields, depth+2, table);
 						prettyTabs(depth+1);
-						printf("}val[0];\n");			
+						printf("};\n");	
+						prettyTabs(depth+1);
+						printf("struct %s *val;\n", name2);		
 					}
 					else if(strcmp(tName, "float64"))
 					{
@@ -161,13 +196,20 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 					}
 				}
 				else{
-					genStructureHelper(tName, tMods, sym, depth+1, "", false);
+					genStructureHelper(tName, tMods, sym, depth+1, "", false, table);
 					prettyTabs(depth);
-					printf("}val[0];\n");	
+					printf("};\n");	
+					prettyTabs(depth);
+					printf("struct %s *val;\n", name1)
 				}
 			}
 			else
 			{
+				while(copy->t->gType != arrayType)
+				{
+					copy = makeSymbolCopy(copy->val.parentSym);
+				}
+				copy->t = copy->t->val.arg;
 				int size = atoi(tMods+1);
 				while(*tMods != ']')
 				{
@@ -178,9 +220,24 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 				prettyTabs(depth+1);
 				if(*tMods == 0)
 				{
-					if(strcmp(tName, "struct"))
+					if(strcmp(tName, "struct") || parent != NULL && parent->kind == structSym)
 					{
-						printf("struct {\n");
+						char *name2;
+						if(parent != NULL)
+							name2 = findExistingBinding(parent, table);
+						else
+						{
+							name2 = findExistingBinding(copy, table);
+						}
+						
+						if(strlen(name2) == 0)
+						{
+							name2 = getNewBinding();
+							copy->next = table->bindingsList;
+							table->bindingList = copy;
+							copy->bindingName = name2;
+						}
+						printf("struct %s {\n", name2);
 						codegenStructHelper(sym->val.structFields, depth+2);
 						prettyTabs(depth+1);
 						printf("}val[%d];\n", size);			
@@ -202,7 +259,7 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 					}
 				}
 				else{
-					genStructureHelper(tName, tMods, sym, depth+1, "", false);
+					genStructureHelper(tName, tMods, sym, depth+1, "", false, table);
 					prettyTabs(depth);
 					printf("}val[%d];\n", size);	
 				}						
@@ -210,25 +267,48 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 		}
 }
 /*prints struct fields*/
-void codegenStructHelper(SYMBOL *field, int depth)
+void codegenStructHelper(SYMBOL *field, int depth, symTable *table)
 {
 	if(field == NULL) return;
-	codegenStructHelper(field->next, depth);
+	codegenStructHelper(field->next, depth, table);
 
 	if(strcmp(field->name, "_") == 0)
 	{
 		return;
 	}
 	prettyTabs(depth);
+	if(strcmp(field->name, "int") == 0 || strcmp(field->name, "float") == 0 || strcmp(field->name, "bool") == 0 || strcmp(field->name, "char") == 0 || strcmp(field->name, "double") == 0)
+	{
+		field->bindingName = getNewBinding();
+	}
+	else{
+		field->bindingName = field->name;
+	}
 	int curDepth = depth;
 	char *tName = getTypeName(field);
 	char *tMods = getTypeModifiers(field);
+	SYMBOl *parent = getSymbol(table, tName, typeSym);
 	if(*tMods == 0)
 	{
-		if(strcmp(tName, "struct"))
+		if(strcmp(tName, "struct") || parent != NULL && parent->kind == structSym)
 		{
-			printf("struct {\n");
-			codegenStructHelper(field->val.structFields, curDepth+1);
+			char *name;
+			if(parent != NULL)
+				name = findExistingBinding(parent, table);
+			else
+			{
+				name = findExistingBinding(copy, table);
+			}
+			if(strlen(name) == 0)
+			{
+				name = getNewBinding();
+				copy->next = table->bindingsList;
+				table->bindingList = copy;
+				copy->bindingName = name;
+			}
+			
+			printf("struct %s {\n", name);
+			codegenStructHelper(field->val.structFields, curDepth+1, table);
 			prettyTabs(curDepth);
 			printf("}%s;\n", field->name);			
 		}
@@ -249,7 +329,7 @@ void codegenStructHelper(SYMBOL *field, int depth)
 		}
 	}
 	else{
-		genStructureHelper(tName, tMods, field, depth, "", false);
+		genStructureHelper(tName, tMods, field, depth, "", false, table);
 		prettyTabs(depth);
 		printf("}%s;\n", field->name);
 	}
@@ -323,14 +403,17 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 	char *tName = findExistingBinding(tmp, table);
 	if(strlen(tName) != 0)
 	{
+		char *parentName = getTypeName(tmp);
+		SYMBOL *parent = getSymbol(table, parentName, typeSym);
+		//DO PROPER INITIALIZATION IN DECLARATIONS AND FIX MATCHINGTYPES() CALLS AND PROPER SYMBOL COMPARISON FOR STRUCT CASES
 		printf("%s %s", tName, tmp->bindingName);
 		if(decl->val.right != NULL)
 		{
 			printf(" = ");
 			codegenExpression(decl->val.right, table);
 			laggingCounter = bindingCounter;
+			printf(";\n");
 		}
-		printf(";\n");
 	}
 	else if(tmp->kind == varstructSym)//"inline" struct definition, can be grouped in an array structure or the like
 	{
@@ -345,15 +428,23 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 		{
 			prettyTabs(depth);
 			printf("struct %s {\n", copy->bindingName);
-			codegenStructHelper(tmp->val.structFields, depth+1);
+			codegenStructHelper(tmp->val.structFields, depth+1, table);
 			prettyTabs(depth);
 			printf("}%s;\n", tmp->bindingName);
+			structAssignHelper(copy, NULL, copy->bindingName, NULL, depth, table);
 		}
 		else{
 			prettyTabs(depth);
-			genStructureHelper("struct", tMods, tmp, depth, copy->bindingName, true);
+			genStructureHelper("struct", tMods, tmp, depth, copy->bindingName, true, table);
 			prettyTabs(depth);
 			printf("}%s;\n", tmp->bindingName);
+			if(*(tMods+1) == ']')
+			{
+				sliceAssignHelper(copy->bindingName, NULL, depth);
+			}
+			else{
+				arrayAssignHelper(copy, NULL, tMods, depth, copy->bindingName, NULL);
+			}
 		}
 	}
 	else 
@@ -391,7 +482,7 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 			copy->next = table->bindingsList;
 			table->bindingsList = copy;
 			table->bindingsSize++;
-			genStructureHelper(tName, tMods, tmp, depth, copy->bindingName, true);
+			genStructureHelper(tName, tMods, tmp, depth, copy->bindingName, true, table);
 			prettyTabs(depth);
 			printf("}%s;\n", tmp->bindingName);
 		}
@@ -419,13 +510,13 @@ void codegenTypeDecl(DECLARATION *decl, symTable *table, int depth)
 		{
 			prettyTabs(depth);
 			printf("struct %s {\n", tmp->bindingName);
-			codegenStructHelper(tmp->val.structFields, depth+1);
+			codegenStructHelper(tmp->val.structFields, depth+1, table);
 			prettyTabs(depth);
 			printf("};\n");
 		}
 		else{
 			prettyTabs(depth);
-			genStructureHelper("struct", tMods, tmp, depth, tmp->bindingName, true);
+			genStructureHelper("struct", tMods, tmp, depth, tmp->bindingName, true, table);
 			prettyTabs(depth);
 			printf("};\n");
 		}
@@ -472,7 +563,7 @@ void codegenFuncDeclArgsCheck(SYMBOL *args, symTable *table)
 		copy->next = table->bindingsList;
 		table->bindingsList = copy;
 		table->bindingsSize++;
-		genStructureHelper(tName, tMods, args, 0, copy->bindingName, true);
+		genStructureHelper(tName, tMods, args, 0, copy->bindingName, true, table);
 		printf("};\n");
 	}
 	
@@ -530,7 +621,7 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 		copy->next = table->bindingsList;
 		table->bindingsList = copy;
 		table->bindingsSize++;
-		genStructureHelper(tName, tMods, tmp->val.func.returnSymRef, 0, copy->bindingName, true);
+		genStructureHelper(tName, tMods, tmp->val.func.returnSymRef, 0, copy->bindingName, true, table);
 		printf("};\n");
 		printf("%s %s(", tName, tmp->bindingName);
 	}
@@ -540,6 +631,282 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 	printf("}\n");
 	
 
+}
+/*set sym2 to NULL for imlicit initialization
+nameSoFar should contain the name of the struct variable*/
+void structAssignHelper(SYMBOL *sym1, SYMBOL *sym2, char *nameSoFar1, char *nameSoFar2, int depth, symTable *table)
+{	
+	char *tName, *tMods;
+	SYMBOL *tmps1 = sym1, *tmps2 = sym2, *parent;
+	if(sym2 == NULL)
+	{
+		
+		while(tmps1->kind != structSym || tmps1->kind != varstructSym)
+		{
+			tmps1 = tmps1->val.parentSym;
+		}
+		
+		SYMBOL *fields = tmps1->val.structFields;
+		while(fields != NULL)
+		{
+			tMods = getTypeModifiers(fields);
+			tName = getTypeName(fields);
+			parent = getSymbol(table, tName, typeSym);
+			if(*(tMods) == 0)
+			{
+				if(strcmp(tName, "string") == 0)
+				{
+					prettyTabs(depth);
+					printf("%s.%s = malloc(128); ", nameSoFar1, fields->bindingName);
+				}
+				else if(strcmp(tName, "int") == 0 || strcmp(tName, "rune") == 0 || strcmp(tName, "bool") == 0)
+				{
+					prettyTabs(depth);
+					printf("%s.%s = 0; ", nameSoFar1, fields->bindingName);
+				}
+				else if(strcmp(tName, "float64") == 0)
+				{
+					prettyTabs(depth);
+					printf("%s.%s = 0.0; ", nameSoFar1, fields->bindingName);
+				}
+				else if(strcmp(tName, "struct") == 0 || parent != NULL && parent->kind == structSym)
+				{
+					char *nameSoFar = malloc(128);
+					sprintf(nameSoFar, "%s.%s", nameSoFar1, fields->bindingName);
+					structAssignHelper(fields, NULL, nameSoFar, NULL, depth, table);
+				}
+			}
+			else{
+				if(*(tMods+1) != ']')
+				{
+					char *tmp1, *tmp2;
+					tmp1 = malloc(128);
+					sprintf(tmp1, "%s.%s", nameSoFar1, fields1->bindingName);
+					arrayAssignHelper(fields, NULL, tMods, depth, tmp1, NULL);
+				}
+				else{
+					char *tmp1, *tmp2;
+					tmp1 = malloc(128);
+					sprintf(tmp1, "%s.%s", nameSoFar1, fields1->bindingName);
+					sliceAssignHelper(tmp1, NULL, depth);
+				}
+			}
+			fields = fields->next;
+		}
+	}
+	else{
+		
+		while(tmps1->kind != structSym || tmps1->kind != varstructSym)
+		{
+			tmps1 = tmps1->val.parentSym;
+			tmps2 = tmps2->val.parentSym;
+		}
+		
+		SYMBOL *fields1, *fields2;
+		fields1 = tmps1->val.structFields;
+		fields2 = tmps2->val.structFields;
+		while(fields1 != NULL)
+		{
+			tMods = getTypeModifiers(fields1);
+			tName = getTypeName(fields1);
+			parent = getSymbol(table, tName, typeSym);
+			if(*(tMods) == 0)
+			{
+				if(strcmp(tName, "string") == 0)
+				{
+					prettyTabs(depth);
+					printf("strcpy(%s.%s, %s.%s); \n", nameSoFar1, fields1->bindingName, nameSoFar2, fields2->bindingName);
+				}
+				else if(strcmp(tName, "struct") == 0 || parent != NULL && parent->kind = structSym)
+				{
+					char *tmp1, *tmp2;
+					tmp1 = malloc(128);
+					tmp2 = malloc(128);
+					sprintf(tmp1, "%s.%s", nameSoFar1, fields1->bindingName);
+					sprintf(tmp2, "%s.%s", nameSoFar2, fields2->bindingName);
+					structAssignHelper(fields1, fields2, tmp1, tmp2, depth, table);
+				}
+				else{
+					prettyTabs(depth);
+					printf("%s.%s = %s.%s;\n ", nameSoFar1, fields1->bindingName, nameSoFar2, fields2->bindingName);
+				}
+			}
+			else{
+				if(*(tMods+1) != ']')
+				{
+					char *tmp1, *tmp2;
+					tmp1 = malloc(128);
+					tmp2 = malloc(128);
+					sprintf(tmp1, "%s.%s", nameSoFar1, fields1->bindingName);
+					sprintf(tmp2, "%s.%s", nameSoFar2, fields2->bindingName);
+					arrayAssignHelper(fields1, fields2, tMods, depth, tmp1, tmp2);
+				}
+				else{
+					char *tmp1, *tmp2;
+					tmp1 = malloc(128);
+					tmp2 = malloc(128);
+					sprintf(tmp1, "%s.%s", nameSoFar1, fields1->bindingName);
+					sprintf(tmp2, "%s.%s", nameSoFar2, fields2->bindingName);
+					sliceAssignHelper(tmp1, tmp2, depth);
+				}
+			}
+			fields1 = fields1->next;
+			fields2 = fields2->next;
+		}
+	}
+}
+/*Helps with assignment to arrays.
+nameSoFar should contain the name of the slice variable*/
+void sliceAssignHelper(char *nameSoFar1, char *nameSoFar2, int depth)
+{
+	if(nameSoFar2 == NULL)
+	{
+		prettyTabs(depth);
+		printf("%s.val = NULL; \n", nameSoFar1);
+	}
+	else {
+		prettyTabs(depth);
+		printf("%s.val = %s.val; \n", nameSoFar1, nameSoFar2);
+		prettyTabs(depth);
+		printf("%s.size = %s.size; \n", nameSoFar1, nameSoFar2);
+		prettyTabs(depth);
+		printf("%s.cap = %s.cap; \n", nameSoFar1, nameSoFar2);
+	}
+}
+/*Helps with assignment to arrays.
+sym1 is the symbol of the first array
+sym2 is the symbol of the second array or NULL (for implicit initialization)
+tMods is obtained through a call to getTypeModifiers
+nameSoFar should contain the name of the array variable*/
+void arrayAssignHelper(SYMBOl *sym1, SYMBOL *sym2, char *tMods, int depth, char *nameSoFar1, char *nameSoFar2)
+{
+	if(sym2 == NULL)
+	{
+		if(*(tMods) != 0)
+		{
+			if(*(tMods+1) == ']')
+			{
+				sliceAssignHelper(nameSoFar1, nameSoFar2, depth);
+			}
+			else{
+				char *tmp = malloc(10);
+				char *tmp1 = malloc(128);
+				int size = atoi(*(tMods+1));
+				int offset = 2;
+				while(*(tMods+offset) != ']')
+				{
+					offset++;
+				}
+					offset++;
+				for(int i = 0; i < size; i++)
+				{
+					sprintf(tmp1, "%s.val[%d]", nameSoFar1, i);
+					arrayAssignHelper(sym1, sym2, tMods+offset, depth, tmp1, nameSoFar2);
+				}
+
+			}
+		}
+		else{
+			char *tName = getTypeName(sym1);
+			SYMBOL *parent = getSymbol(table, tName, typeSym);
+			if(strcmp(tName, "string") == 0)
+			{
+				prettyTabs(depth);
+				printf("%s = malloc(128);\n")
+			}
+			else if(strcmp(tName, "struct") == 0 || parent != NULL && parent->kind == structSym) 
+			{
+				structAssignHelper(sym1, sym2, nameSoFar1, nameSoFar2, depth, table);
+			}
+			else if(strcmp(tName, "float64"))
+			{
+				prettyTabs(depth);
+				printf("%s = 0.0;\n", nameSoFar1);
+			}
+			else{
+				prettyTabs(depth);
+				printf("%s = 0;\n", nameSoFar1);
+			}
+		}
+	}
+	else{
+		if(*(tMods) != 0)
+		{
+			if(*(tMods+1) == ']')
+			{
+				sliceAssignHelper(nameSoFar1, nameSoFar2, depth);
+			}
+			else{
+				char *tmp = malloc(10);
+				char *tmp1 = malloc(128);
+				char *tmp2 = malloc(128);
+				int size = atoi(*(tMods+1));
+				int offset = 2;
+				while(*(tMods+offset) != ']')
+				{
+					offset++;
+				}
+					offset++;
+				for(int i = 0; i < size; i++)
+				{
+					sprintf(tmp1, "%s.val[%d]", nameSoFar1, i);
+					sprintf(tmp2, "%s.val[%d]", nameSoFar2, i);
+					arrayAssignHelper(sym1, sym2, tMods+offset, depth, tmp1, tmp2);
+				}
+
+			}
+		}
+		else{
+			char *tName = getTypeName(sym1);
+			SYMBOL *parent = getSymbol(table, tName, typeSym);
+			if(strcmp(tName, "string") == 0)
+			{
+				prettyTabs(depth);
+				printf("strcpy(%s, %s);\n", nameSoFar1, nameSoFar2);
+			}
+			else if(strcmp(tName, "struct") == 0 || parent != NULL && parent->kind == structSym) 
+			{
+				structAssignHelper(sym1, sym2, nameSoFar1, nameSoFar2, depth, table);
+			}
+			else{
+				prettyTabs(depth);
+				printf("%s = %s;\n", nameSoFar1, nameSoFar2);
+			}
+		}
+	}
+}
+void sliceAppendHelper(EXP *target, EXP *value, symTable *table, int depth)
+{
+	char *name = getFullStr(target->symTypeRef, table);
+	char *newName = getNewBinding();
+	char *tName = findExistingBinding(target->symTypeRef, table);
+	SYMBOL *tmp = makeSymbolCopy(target->symTypeRef);
+	tmp->t = tmp->t->val.arg;
+	
+	prettyTabs(depth);
+	printf("struct %s %s;\n", tName, newName, tName);
+	prettyTabs(depth);
+	printf("%s.size = %s.size + 1;\n", newName, name);
+	prettyTabs(depth);
+	printf("if (%s.size+1 == %s.cap){\n", name, name);
+	prettyTabs(depth+1);
+	printf("%s.cap = %s.cap*2;\n", newName, name);
+	
+	prettyTabs(depth);
+	printf("}\n");
+	prettyTabs(depth);
+	printf("else{ %s.cap = %s.cap; }\n", newName, name);
+	prettyTabs(depth);
+	printf("%s.val = malloc(sizeof(struct %s)*%s.cap);\n", newName, findExistingBinding(tmp, table), newName);
+	prettyTabs(depth);
+	printf("for( int codegen_i = 0; codegen_i < %s.cap; codegen_i++){\n", name);
+	prettyTabs(depth+1);
+	printf("%s.val[codegen_i] = %s.val[codegen_i];\n", newName, name);
+	prettyTabs(depth);
+	printf("}\n");
+	printf("%s.val[%s.size-1] = ", newName, newName);
+	codegenExpression(value, table);
+	printf(";\n");
 }
 void codegenFuncCall(EXP *e, SYMBOL* sym, symTable *table)
 {
