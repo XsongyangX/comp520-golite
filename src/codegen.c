@@ -117,6 +117,7 @@ void lookForPlusString(EXP *e, int tabs)
 	}
 }
 
+/*Goes through an expression tree to find appends and create bindings for them*/
 void appendCheck(EXP *e, symTable *table, int depth)
 {
 	SYMBOL *parent;
@@ -1821,7 +1822,7 @@ void codegenExpression(EXP *e, symTable *table){
 			exit(1);
 	}
 }
-
+/*Behaves like codegenExpression, but returns a string instead*/
 char *getFullStr(EXP *e, symTable *table)
 {
 	SYMBOl *ref;

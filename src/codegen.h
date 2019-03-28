@@ -26,6 +26,18 @@ void lookForPlusString(EXP *e, int tabs);
 char *getFullStr(EXP *e, symTable *table);
 void eqExpArrays(SYMBOL *s1, SYMBOL *s2, char *tMods, char *nameSoFar1, char *nameSoFar2, symTable *table);
 SYMBOL *findExistingBindingSym(SYMBOL *sym, symTable *table);
+void appendCheck(EXP *e, symTable *table, int depth);
+SYMBOL *findExistingBindingSym(SYMBOL *sym, symTable *table);
+void codegenFuncDeclArgsCheck(SYMBOL *args, symTable *table);
+void codegenFuncDeclArgs(SYMBOL *args, symTable *table);
+char *eqExpStructsStr(SYMBOL *s1, SYMBOL *s2, char *nameSoFar1, char *nameSoFar2, symTable *table);
+char *eqExpArraysStr(SYMBOL *s1, SYMBOL *s2, char *tMods, char *nameSoFar1, char *nameSoFar2, symTable *table);
+
+
+void structAssignHelper(SYMBOL *sym1, SYMBOL *sym2, char *nameSoFar1, char *nameSoFar2, int depth, symTable *table);
+void sliceAssignHelper(char *nameSoFar1, char *nameSoFar2, int depth);
+void arrayAssignHelper(SYMBOl *sym1, SYMBOL *sym2, char *tMods, int depth, char *nameSoFar1, char *nameSoFar2);
+void sliceAppendHelper(EXP *target, EXP *value, symTable *table, int depth);
 
 
 
