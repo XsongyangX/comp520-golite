@@ -1374,8 +1374,12 @@ void codegenQuickDecl(STATEMENT *stmt, symTable *table, int depth){
 }
 
 
-void codegenProgram(PROGRAM *p){
-
+void codegenProgram(PROGRAM *p, symTable *table){
+	DECL *tmpDecl = p->decList;
+	while(tmpDecl != NULL){
+		codegenDeclaration(tmpDecl);
+		tmpDecl = tmpDecl->next;
+	}
 }
 
 void codegenDeclaration(DECLARATION *decl, symTable *table, int depth){
