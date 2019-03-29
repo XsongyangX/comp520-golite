@@ -27,7 +27,11 @@ fi
 # Invoke the compiler with the provided arguments: mode ($1) and file ($2)
 #
 # You MUST replace the following command with the command for invoking your compiler
-
 chmod +x ./src/minic
-filename="${2%.*}"
-./src/minic "$1" "$filename" < "$2"
+if [[ $1 != "codegen" ]]
+then
+	./src/minic $1 < $2
+else 
+	filename="${2%.*}.c"
+	./src/minic $1 < $2 > $filename
+fi

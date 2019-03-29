@@ -9,6 +9,7 @@ Main file of the GoLite compiler
 #include "weeder.h"
 #include "symbol.h"
 #include "typecheck.h"
+#include "codegen.h"
 
 void yyparse();
 int yylex();
@@ -19,12 +20,10 @@ PROGRAM *my_prog;
 int main(int argc, char** argv)
 {
     // check if an argument is provided
-	if (!(argc == 2 || argc == 3))
+	if (!(argc == 2))
 	{
 		fprintf(stderr, 
 			"Must provide an argument: scan|tokens|parse|pretty|symbol|typecheck|codegen\n");
-		fprintf(stderr,
-			"In the case of codegen, a file name is required as a 2nd argument\n");
 		return 1;
 	}
 
@@ -81,26 +80,26 @@ int main(int argc, char** argv)
 		typeProgram(my_prog);
 		printf("OK\n");
 		return 0;
-	}/*
+	}
 	else if ( 0 == strcmp(argv[1], "codegen"))
 	{
 		isToken = 0;
-		g_symbols = 0;
+		symbolPrint = 0;
 		yyparse();
-		symbolFromProgramStart(root);
-		emitToFile(argv[2]);
-		emitProgramStart(root);
+		weedRoot(my_prog);
+		checkProg(my_prog);
+		typeProgram(my_prog);
+		codegenProgram(my_prog);
 		printf("OK\n");
 		return 0;
 	}
-	*/
+	
 #endif
 	else 
 	{
 		fprintf(stderr, 
 			"Valid arguments are scan|tokens|parse|pretty|symbol|typecheck|codegen\n");
-		fprintf(stderr,
-			"In the case of codegen, a file name is required as a 2nd argument\n");
+
 		return 1;
 	}
 
