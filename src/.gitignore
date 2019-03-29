@@ -5,3 +5,4 @@ minic
 y.*
 *.o
 *.gch
+.DS_Store
