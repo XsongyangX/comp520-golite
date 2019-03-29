@@ -661,7 +661,6 @@ TYPE *makeTYPE_struct(int size, char *name, DECLARATION *args){
 Used e.g. in multiple assignments, or in function headers */
 EXP *makeEXP_idblock(char *identifier, EXP *next){
     EXP *e = malloc(sizeof(EXP));
-    e->t = NULL;
     e->kind = idblockExp;
     e->val.idblock.next = next;
     e->val.idblock.identifier = identifier;
@@ -671,7 +670,6 @@ EXP *makeEXP_idblock(char *identifier, EXP *next){
 EXP *makeEXP_expblock(EXP *e1, EXP *next){
     
     EXP *e = malloc(sizeof(EXP));
-    e->t = NULL;
     e->kind = expblockExp; // was set to 0 (?!?)
     e->val.expblock.next = next;
     e->val.expblock.value = e1;

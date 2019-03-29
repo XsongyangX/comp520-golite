@@ -1,5 +1,5 @@
 
-all: main.o lex.yy.o y.tab.o tree.o pretty.h pretty.o weeder.o symbol.o typecheck.o
+all: main.o lex.yy.o y.tab.o tree.o pretty.h pretty.o weeder.o symbol.o typecheck.o codegen.o
 	gcc -o minic main.o lex.yy.o y.tab.o tree.o pretty.o weeder.o symbol.o typecheck.o codegen.o -lfl  
 
 codegen.o: 
