@@ -6,3 +6,4 @@ y.*
 *.o
 *.gch
 .DS_Store
+.vscode
