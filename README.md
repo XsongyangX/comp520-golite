@@ -10,6 +10,7 @@ There are many scripts from the instructor and some come purely from us:
 * `programs-solution`: Test programs from the solution set of Milestone 1, organized like in `programs`
 * `src`: Source code for your assignment
 * `build.sh`: Builds your compiler using `Make` or similar. You should replace the commands here if necessary to build your compiler
+* `movefiles.sh`: Move test files around both program directories. Only used for grading milestone 2.
 * `prettyChecker.py`: Checks whether two files are identical in content. If not, it reports the line where they differ. Although named for the pretty printer, it can be used to compare any two files. Requires `python3`.
 * `run.sh`: Runs your compiler using two arguments (mode - $1 and input file - $2). You should replace the commands here if necessary to invoke your compiler
 * `test.sh`: Automatically runs your compiler against test programs in the programs directory and checks the output
