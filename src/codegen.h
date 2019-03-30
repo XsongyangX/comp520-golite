@@ -61,6 +61,7 @@ void sliceAssignHelper(char *nameSoFar1, char *nameSoFar2, int depth);
 void arrayAssignHelper(SYMBOL *sym1, SYMBOL *sym2, char *tMods, int depth, char *nameSoFar1, char *nameSoFar2, symTable *table);
 void sliceAppendHelper(EXP *target, EXP *value, symTable *table, int depth);
 char *findExistingBinding(SYMBOL *sym, symTable *table);
+void elementCheck(EXP *e, symTable *table, int depth);
 
 
 

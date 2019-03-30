@@ -20,7 +20,7 @@ PROGRAM *my_prog;
 int main(int argc, char** argv)
 {
     // check if an argument is provided
-	if (!(argc == 2))
+	if (!(argc == 2) && !(argc == 3))
 	{
 		fprintf(stderr, 
 			"Must provide an argument: scan|tokens|parse|pretty|symbol|typecheck|codegen\n");
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 		weedRoot(my_prog);
 		checkProg(my_prog);
 		typeProgram(my_prog);
-		codegenProgram(my_prog);
+		codegenProgram(my_prog, NULL);
 		printf("OK\n");
 		return 0;
 	}
