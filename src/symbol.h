@@ -28,7 +28,7 @@ struct SYMBOL{
         SYMBOL *structFields;
         struct {SYMBOL *funcParams; SYMBOL *returnSymRef;} func;
     } val;
-    int codeBinding;
+    int isNew;
     struct SYMBOL *next;
 };
 struct symTable {

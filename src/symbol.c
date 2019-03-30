@@ -455,6 +455,7 @@ SYMBOL *makeSymbol(char *name, enum SymbolKind kind)
     tmp->kind = kind;
     tmp->isConstant = false;
     tmp->next = NULL;
+    tmp->isNew = 0;
     return tmp;
 }
 SYMBOL *makeSymbolCopy(SYMBOL *template)
@@ -466,6 +467,7 @@ SYMBOL *makeSymbolCopy(SYMBOL *template)
     tmp->val.parentSym = template->val.parentSym;
     tmp->t = template->t;
     tmp->next = NULL;
+    tmp->isNew = 0;
     return tmp;
 }
 void addPredefinitions(symTable *s)
@@ -1003,6 +1005,7 @@ SYMBOL *symStructHelper(DECLARATION *body, symTable *table, char *structName)
                 SYMBOL *bodyList = symStructHelper(structT->val.args, subTable, body->identifier);
                 tmp->val.structFields = bodyList;
                 //putVar(tmp, table, body->lineno);
+                tmp->next = next;
                 return tmp;
     }
     else{
@@ -1243,7 +1246,7 @@ void symElifStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("}\n");
             }
-            stmt->localScope = subsubtable;
+            stmt->localScope = subtable;
 }
 void symElseStmt(STATEMENT *stmt, symTable *table, int depth){
             symTable *subtable = initScopeTable(table);
@@ -1259,7 +1262,7 @@ void symElseStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("}\n");
             }
-            stmt->localScope = subtable;
+            stmt->localScope = table;
 }
 void symForStmt(STATEMENT *stmt, symTable *table, int depth){
             symTable *subtable = initScopeTable(table);
@@ -1288,7 +1291,7 @@ void symForStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("}\n");
             }
-            stmt->localScope = subsubtable;
+            stmt->localScope = subtable;
 }
 void symBlockStmt(STATEMENT *stmt, symTable *table, int depth)
 {
@@ -1320,7 +1323,7 @@ void symWhileStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("}\n");
             }
-            stmt->localScope = subtable;
+            stmt->localScope = table;
 }
 void symSwitchStmt(STATEMENT *stmt, symTable *table, int depth){
             symTable *subtable = initScopeTable(table);
@@ -1355,7 +1358,7 @@ void symCaseStmt(STATEMENT *stmt, symTable *table, int depth){
                 prettyTabs(depth);
                 printf("}\n");
             }
-            stmt->localScope = subtable;
+            stmt->localScope = table;
 }
 void checkExpSValid(STATEMENT *stmt)
 {

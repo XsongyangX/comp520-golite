@@ -24,6 +24,7 @@ void eqExpStructs(SYMBOL *s1, SYMBOL *s2, char *nameSoFar1, char *nameSoFar2, sy
 
 char *getTypeName(SYMBOL *tmp);
 char *getTypeModifiers(SYMBOL *tmp);
+bool structCompatible(SYMBOL *sym1, SYMBOL *sym2);
 
 void codegenVarDecl(DECLARATION *decl, symTable *table, int depth);
 void codegenTypeDecl(DECLARATION *decl, symTable *table, int depth);

@@ -24,13 +24,13 @@ void typeCheckDeclaration(DECLARATION *decl, symTable *table)
         if(strcmp("_", decl->identifier) == 0)
         {
             if(decl->val.right != NULL)
-                typecheckExp(decl->val.right, table, decl->lineno);
+                typecheckExp(decl->val.right, table, decl->lineno, NULL);
             //OK
         }
         else if(decl->t->gType == nilType)
         {
             SYMBOL *declSym = getSymbol(table, decl->identifier, varSym);
-            SYMBOL *declType = typecheckExp(decl->val.right, table, decl->lineno);
+            SYMBOL *declType = typecheckExp(decl->val.right, table, decl->lineno, NULL);
             declSym->t = declType->t;
             decl->t = declType->t;
             if(declType->kind == typeSym || declType->kind == structSym)
@@ -49,7 +49,7 @@ void typeCheckDeclaration(DECLARATION *decl, symTable *table)
         else if(decl->val.right != NULL)
         {
             SYMBOL *declSym = getSymbol(table, decl->identifier, varSym);
-            SYMBOL *declVal = typecheckExp(decl->val.right, table, decl->lineno);
+            SYMBOL *declVal = typecheckExp(decl->val.right, table, decl->lineno, getSymbol(table, decl->identifier, varSym));
             if(!MatchingTypes(declSym, declVal, decl->lineno, false))
             {
                 fprintf(stderr, "Error: (line %d) trying to assign type %s to %s variable.\n", decl->lineno, shortTypeStr(declVal), shortTypeStr(declSym));
@@ -78,13 +78,13 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
     switch(stmt->kind){
         case incrementS:
         case decrementS:
-            symLHS = typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno);
+            symLHS = typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno, NULL);
             incdecHelper(symLHS, stmt->lineno);
             break;
         case assignS:
             typeCheckStatement(stmt->val.assignment.chain, func);
-            symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno);
-            symLHS = typecheckExp(stmt->val.assignment.identifier, stmt->localScope, stmt->lineno);
+            symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno, NULL);
+            symLHS = typecheckExp(stmt->val.assignment.identifier, stmt->localScope, stmt->lineno, NULL);
             if(symLHS->isConstant)
             {
                 fprintf(stderr, "Error: (line %d) trying to assign to constant.\n", stmt->lineno);
@@ -105,8 +105,8 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             break;
         case quickDeclS:
             typeCheckStatement(stmt->val.assignment.chain, func);
-            symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno);
-            symLHS = typecheckExp(stmt->val.assignment.identifier, stmt->localScope, stmt->lineno);
+            symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno, getSymbol(stmt->localScope, stmt->val.assignment.identifier->val.identifier, varSym));
+            symLHS = typecheckExp(stmt->val.assignment.identifier, stmt->localScope, stmt->lineno, NULL);
             if(symLHS == BLANK_SYMBOL)
             {
                 //OK
@@ -117,6 +117,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             }
             else if(symLHS->t->gType == nilType)
             {
+                symLHS->isNew = 1;
                 symLHS->t = symRHS->t;
                 // if(stmt->localScope->next != NULL && getSymbol(stmt->localScope->next, stmt->val.assignment.identifier->val.identifier, varSym) != NULL)//check for type consistency across scopes
                 //     MatchingTypes(symLHS, getSymbol(stmt->localScope->next, stmt->val.assignment.identifier->val.identifier, varSym), stmt->lineno, true); //HANDLED IN SYMBOL.C
@@ -150,7 +151,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
         case ifS:
         case elifS:
             typeCheckStatement(stmt->val.conditional.optDecl, func);
-            symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
+            symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno, NULL);
             symRHS = resolveBaseType(symLHS);
             if(symRHS == NULL)
             {
@@ -175,7 +176,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             typeCheckStatement(stmt->val.conditional.optDecl, func);
             if(stmt->val.conditional.condition != NULL && stmt->val.conditional.condition->kind != emptyExp)
             {
-                symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
+                symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno, NULL);
                 
                 symRHS = resolveBaseType(symLHS);
                 if(symRHS == NULL)
@@ -202,7 +203,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
         case whileS:
             if(stmt->val.conditional.condition != NULL)
             {
-                symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno);
+                symLHS = typecheckExp(stmt->val.conditional.condition, stmt->localScope, stmt->lineno, NULL);
                 
                 symRHS = resolveBaseType(symLHS);
                 if(symRHS == NULL)
@@ -238,7 +239,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
                     expList = expList->val.expblock.next;
                     continue;
                 }
-                symLHS = typecheckExp(expList->val.expblock.value, stmt->localScope, stmt->lineno);
+                symLHS = typecheckExp(expList->val.expblock.value, stmt->localScope, stmt->lineno, NULL);
                 
                 symRHS = resolveBaseType(symLHS);
                 if(symRHS == NULL)
@@ -261,7 +262,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             break;
         case returnS:
             if(stmt->val.expression != NULL)
-                symLHS = typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno);
+                symLHS = typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno, NULL);
             if(func == NULL)//only occurs for _()
             {
                 //OK?
@@ -293,7 +294,7 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
         case breakS:
             break;
         case exprS:
-            typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno);
+            typecheckExp(stmt->val.expression, stmt->localScope, stmt->lineno, NULL);
             break;
         case declS:
             typeCheckDeclaration(stmt->val.declaration, stmt->localScope);
@@ -324,7 +325,7 @@ void switchHelper(STATEMENT *stmt, SYMBOL *func)
     SYMBOL *symLHS = BOOL_SYMBOL;
     if(stmt->val.switchBody.condition != NULL)
     {
-        symLHS = typecheckExp(stmt->val.switchBody.condition, stmt->localScope, stmt->lineno);
+        symLHS = typecheckExp(stmt->val.switchBody.condition, stmt->localScope, stmt->lineno, NULL);
         if(!isComparable(symLHS, stmt->localScope, stmt->lineno))
         {
             fprintf(stderr, "Error: (line %d) expecting a comparable expression.\n", stmt->lineno);
@@ -346,7 +347,7 @@ void caseHelper(STATEMENT *stmt, SYMBOL *func, SYMBOL *key)
             expList = expList->val.expblock.next;
             continue;
         }
-        SYMBOL *symExp = typecheckExp(expList->val.expblock.value, stmt->localScope, stmt->lineno);
+        SYMBOL *symExp = typecheckExp(expList->val.expblock.value, stmt->localScope, stmt->lineno, NULL);
         if(!MatchingTypes(key, symExp, stmt->lineno, false))
         {
             fprintf(stderr, "Error: (line %d) incompatible comparison between switch %s and case %s.\n", stmt->lineno, shortTypeStr(key), shortTypeStr(symExp));
@@ -361,7 +362,7 @@ void caseHelper(STATEMENT *stmt, SYMBOL *func, SYMBOL *key)
 See shortTypeStr, longTypeStr, and lookup methods to do this.
 Arguments passed to function calls must be verified.
 Accessing struct elements should be verified as well.*/
-SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
+SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno, SYMBOL *ref){
     SYMBOL *dummy1, *dummy2, *tmp;
     char* name;
     EXP *expList;
@@ -383,8 +384,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             exp->symTypeRef = RUNE_SYMBOL;
             return RUNE_SYMBOL;
         case plusExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -405,8 +410,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
         case minusExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -426,8 +435,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
         case timesExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -447,8 +460,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
         case divExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -468,8 +485,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
         case modExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -490,8 +511,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
         case eqExp:
         case neqExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             if (isComparable(dummy1, table, lineno))
             {
@@ -507,8 +532,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case leqExp:
         case gtExp:
         case ltExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -525,18 +554,22 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 return BOOL_SYMBOL; 
             }
             else{
-                fprintf(stderr,"Error: (line %d) unexpected type %s in oredered expression. Expecting (int), (float64), (rune), (str).\n", lineno, dummy1->name);
+                fprintf(stderr,"Error: (line %d) unexpected type %s in ordered expression. Expecting (int), (float64), (rune), (str).\n", lineno, dummy1->name);
                 exit(1);
             }
         case orExp:
         case andExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
             {
-                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for bool operator\n", lineno, shortTypeStr(dummy1));
                 exit(1);
             }
             if ( MatchingTypes(dummy2, BOOL_SYMBOL, lineno, false))
@@ -552,8 +585,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
         case bitAndExp:
         case bitOrExp:
         case xorExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -572,8 +609,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             }
         case lshiftExp:
         case rshiftExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             MatchingTypes(dummy1, dummy2, lineno, true);
             dummy2 = resolveBaseType(dummy2);
             if(dummy2 == NULL)
@@ -591,8 +632,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                 exit(1);
             }
         case elementExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             if(dummy1 == BLANK_SYMBOL)
             {
                 fprintf(stderr, "Error: (line %d) Attempting to access blank arraytype.\n", lineno);
@@ -603,8 +648,9 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             return dummy2;
             
         case invocExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             if(dummy1 == BLANK_SYMBOL)
             {
                 
@@ -622,11 +668,13 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             return dummy2;
             break;
         case notExp:
-            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             dummy2 = resolveBaseType(dummy1);
             if(dummy2 == NULL)
             {
-                fprintf(stderr,"Error: (line %d) Invalid types (%s) for + operator\n", lineno, shortTypeStr(dummy1));
+                fprintf(stderr,"Error: (line %d) Invalid types (%s) for ! operator\n", lineno, shortTypeStr(dummy1));
                 exit(1);
             }
             if (MatchingTypes(dummy2, BOOL_SYMBOL, lineno, false))
@@ -641,7 +689,9 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             
         case posExp:
         case negExp:
-            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             dummy2 = resolveBaseType(dummy1);
             if(dummy2 == NULL)
             {
@@ -659,7 +709,9 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             fprintf(stderr,"Error: (line %d) unexpected type %s in unary expression. Expecting (int), (rune).\n", lineno, dummy1->name);
             exit(1);
         case uxorExp:
-            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             dummy2 = resolveBaseType(dummy1);
             if(dummy2 == NULL)
             {
@@ -676,11 +728,15 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
             exit(1);
             
         case parExp:
-            dummy1 =  typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 =  typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             exp->symTypeRef = dummy1;
             return dummy1;
         case indexExp:
-            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             dummy2 = resolveBaseType(dummy1);
             if(dummy2 == NULL)
             {
@@ -728,7 +784,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                         fprintf(stderr, "Error: (line %d) too many arguments to type cast %s.\n", lineno, exp->val.fn->identifier);
                         exit(1);
                     }
-                    dummy2 = typecheckExp(expList->val.expblock.value,table, lineno);
+                    dummy2 = typecheckExp(expList->val.expblock.value,table, lineno, ref);
                     SubTypes(dummy1, dummy2, lineno);
                     exp->symTypeRef = dummy1;
                     return dummy1;
@@ -751,7 +807,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                         fprintf(stderr, "Error: (line %d) too few arguments for function %s.\n", lineno, exp->val.fn->identifier);
                         exit(1);
                     }
-                    tmp = typecheckExp(expList->val.expblock.value,table, lineno);
+                    tmp = typecheckExp(expList->val.expblock.value,table, lineno, ref);
                     MatchingTypes(dummy1, tmp, lineno, true);
                     expList = expList->val.expblock.next;
                     dummy1 = dummy1->next;
@@ -795,7 +851,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                         fprintf(stderr, "Error: (line %d) too many arguments to type cast %s.\n", lineno, name);
                         exit(1);
                     }
-                    dummy2 = typecheckExp(expList->val.expblock.value,table, lineno);
+                    dummy2 = typecheckExp(expList->val.expblock.value,table, lineno, ref);
                     checkDefaultCasts(dummy1, dummy2, lineno);
                     exp->symTypeRef = dummy1;
                     return dummy1;
@@ -818,7 +874,7 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
                         fprintf(stderr, "Error: (line %d) too few arguments for function %s.\n", lineno, name);
                         exit(1);
                     }
-                    tmp = typecheckExp(expList->val.expblock.value,table, lineno);
+                    tmp = typecheckExp(expList->val.expblock.value,table, lineno, ref);
                     MatchingTypes(dummy1, tmp, lineno, true);
                     expList = expList->val.expblock.next;
                     dummy1 = dummy1->next;
@@ -847,18 +903,26 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno){
 
         */
         case appendExp:
-            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno);
-            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.lhs, table, lineno, ref);
+            dummy2 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
+            if(dummy2 == ref)
+                dummy2 = typecheckExp(exp->val.binary.rhs, table->next, lineno, ref);
             sliceTypes(dummy1, dummy2, lineno);
             exp->symTypeRef = dummy1;
             return dummy1;
         case lenExp:
-            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             lenHelper(dummy1, lineno);
             exp->symTypeRef = INT_SYMBOL;
             return INT_SYMBOL;
         case capExp:
-            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno);
+            dummy1 = typecheckExp(exp->val.binary.rhs, table, lineno, ref);
+            if(dummy1 == ref)
+                dummy1 = typecheckExp(exp->val.binary.lhs, table->next, lineno, ref);
             capHelper(dummy1, lineno);
             exp->symTypeRef = INT_SYMBOL;
             return INT_SYMBOL;
