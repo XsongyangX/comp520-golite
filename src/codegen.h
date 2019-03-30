@@ -16,7 +16,7 @@ struct breakLabel{
     breakLabel *next;
 };
 
-void codegenProgram(PROGRAM *p);
+void codegenProgram(PROGRAM *p, FILE *fp);
 void codegenDeclaration(DECLARATION *decl, symTable *table, int depth);
 void codegenStatement(STATEMENT *stmt, int depth);
 void codegenExpression(EXP *e, symTable *table);
