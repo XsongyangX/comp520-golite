@@ -21,7 +21,7 @@ void investigateTypePrint(TYPE *t, int lineno);
 void switchHelper(STATEMENT *stmt, SYMBOL *func);
 void caseHelper(STATEMENT *stmt, SYMBOL *func, SYMBOL *key);
 bool checkDefaultCasts(SYMBOL *sym1, SYMBOL *sym2, int lineno);
-SYMBOL *structAccessHelper(SYMBOL *sym, EXP *id, int lineno);
+SYMBOL *structAccessHelper(SYMBOL *sym, char *id, int lineno);
 void capHelper(SYMBOL *sym, int lineno);
 SYMBOL *elementHelper(SYMBOL *sym, int lineno);
 void incdecHelper(SYMBOL *sym, int lineno);
