@@ -90,6 +90,7 @@ int main(int argc, char** argv)
 		checkProg(my_prog);
 		typeProgram(my_prog);
 		codegenProgram(my_prog, NULL);
+		fprintf(stderr, "OK\n");
 		return 0;
 	}
 	
