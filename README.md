@@ -14,7 +14,7 @@ There are many scripts from the instructor and some come purely from us:
 * `prettyChecker.py`: Checks whether two files are identical in content. If not, it reports the line where they differ. Although named for the pretty printer, it can be used to compare any two files. Requires `python3`.
 * `run.sh`: Runs your compiler using two arguments (mode - $1 and input file - $2). You should replace the commands here if necessary to invoke your compiler
 * `test.sh`: Automatically runs your compiler against test programs in the programs directory and checks the output
-* `test-solution.sh`: Automatically runs your compiler against **Milestone 1 solution test programs** given by the instructor
+* `test-solution.sh`: Automatically runs your compiler against **Solution test programs** given by the instructor
 * `testScan.sh`: Automatically runs the scanner against test programs in the `1-scan+parse` directory. 
   * `tokens`: make the scanner run on the **entire** program. 
   * no arguments given: builds the scanner and runs it for one token.
@@ -23,6 +23,7 @@ There are many scripts from the instructor and some come purely from us:
   * `$2`: (optional) if it is `compare` then the script checks for the invariant
   * `first`: Contains the first pretty printed output of valid `.go` files
   * `second`: Contains the second pretty printed output of valid `.go` files. Requires the first pretty printed output be successfully printed.
+* `verify.sh`: Calls `test.sh` first then `verify.sh` in the `3-semantics+codegen` folder to check for the behavior of the generated code. I made this because the `test.sh` does not work for this phase of testing.
 
 Comments found in both files provide more details as to the requirements. Since a large portion of grading is performed automatically, please ensure to follow the input/output specifications **exactly**. You must be able to run the provided scripts on the SOCS Trottier machines.
 
