@@ -23,6 +23,7 @@ There are many scripts from the instructor and some come purely from us:
   * `$2`: (optional) if it is `compare` then the script checks for the invariant
   * `first`: Contains the first pretty printed output of valid `.go` files
   * `second`: Contains the second pretty printed output of valid `.go` files. Requires the first pretty printed output be successfully printed.
+* `verify.sh`: Calls `test.sh` first then `verify.sh` in the `3-semantics+codegen` folder to check for the behavior of the generated code. I made this because the `test.sh` does not work for this phase of testing.
 
 Comments found in both files provide more details as to the requirements. Since a large portion of grading is performed automatically, please ensure to follow the input/output specifications **exactly**. You must be able to run the provided scripts on the SOCS Trottier machines.
 
