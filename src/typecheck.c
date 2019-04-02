@@ -758,7 +758,12 @@ SYMBOL *typecheckExp(EXP *exp, symTable *table, int lineno, SYMBOL *ref){
                 exp->symTypeRef = NULL;
                 return BLANK_SYMBOL;
             }
+            
             dummy1 = getSymbol(table, exp->val.identifier, varSym);
+            if(dummy1 == ref)
+            {
+                dummy1 = getSymbol(table->next, exp->val.identifier, varSym);
+            }
             if(dummy1 != NULL)//case rhs of invoc
                 exp->symTypeRef = dummy1;
             return dummy1;

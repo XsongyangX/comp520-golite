@@ -44,8 +44,9 @@ void lookForPlusString(EXP *e, int tabs)
 			if(strcmp(type, "string") == 0)
 			{
 				prettyTabular(tabs);
-				printf("char *CODEGEN_BINDING_%d = malloc(128);\n", forwardCounter);
-				forwardCounter++;
+				e->symTypeRef = makeSymbol_Copy(e->symTypeRef);
+				e->symTypeRef->bindingName = getNewBinding();
+				printf("char *%s = malloc(128);\n", e->symTypeRef->bindingName);
 				lookForPlusString(e->val.binary.lhs, tabs);
 				lookForPlusString(e->val.binary.rhs, tabs);
 			}
@@ -136,6 +137,7 @@ void lookForPlusString(EXP *e, int tabs)
 /*Goes through an expression tree to find appends and create bindings for them*/
 void appendCheck(EXP *e, symTable *table, int depth)
 {
+	if(e == NULL) return;
 	SYMBOL *parent;
 	char *tName, *tMods;
 	EXP *tmp;
@@ -221,6 +223,7 @@ void appendCheck(EXP *e, symTable *table, int depth)
 
 void elementCheck(EXP *e, symTable *table, int depth)
 {
+	if(e == NULL) return;
 	SYMBOL *parent;
 	char *tName, *tMods;
 	EXP *tmp;
@@ -514,7 +517,7 @@ void codegenStructHelper(SYMBOL *field, int depth, symTable *table)
 		}
 		else if(strcmp(tName, "string") == 0)
 		{
-			printf("char *%s = malloc(128);\n", field->bindingName);
+			printf("char *%s;\n", field->bindingName);
 		}
 		else{
 			printf("%s %s;\n", tName, field->bindingName);
@@ -832,6 +835,8 @@ void codegenTypeDecl(DECLARATION *decl, symTable *table, int depth)
 	if(tmp->kind == structSym)
 	{
 		char *tMods = getTypeModifiers(tmp);
+		char *name = malloc(128);
+		strcpy(name, "struct ");
 		if(strlen(tMods) == 0 || *tMods != '[')
 		{
 			prettyTabular(depth);
@@ -846,6 +851,8 @@ void codegenTypeDecl(DECLARATION *decl, symTable *table, int depth)
 			prettyTabular(depth);
 			printf("};\n");
 		}
+		
+		tmp->bindingName = strcat(name, tmp->bindingName);
 	}
 	//TODO: May need to account for non struct type declarations...
 }
@@ -1021,17 +1028,17 @@ void structAssignHelper(SYMBOL *sym1, SYMBOL *sym2, char *nameSoFar1, char *name
 				if(strcmp(tName, "string") == 0)
 				{
 					prettyTabular(depth);
-					printf("%s.%s = malloc(128); ", nameSoFar1, fields->bindingName);
+					printf("%s.%s = malloc(128);\n ", nameSoFar1, fields->bindingName);
 				}
 				else if(strcmp(tName, "int") == 0 || strcmp(tName, "rune") == 0 || strcmp(tName, "bool") == 0)
 				{
 					prettyTabular(depth);
-					printf("%s.%s = 0; ", nameSoFar1, fields->bindingName);
+					printf("%s.%s = 0;\n ", nameSoFar1, fields->bindingName);
 				}
 				else if(strcmp(tName, "float64") == 0)
 				{
 					prettyTabular(depth);
-					printf("%s.%s = 0.0; ", nameSoFar1, fields->bindingName);
+					printf("%s.%s = 0.0; \n", nameSoFar1, fields->bindingName);
 				}
 				else if(strcmp(tName, "struct") == 0 || parent != NULL && parent->kind == structSym)
 				{
@@ -1296,6 +1303,10 @@ void codegenFuncCall(EXP *e, SYMBOL* sym, symTable *table)
 	if(e->val.expblock.next != NULL)
 	{
 		codegenFuncCall(e->val.expblock.next, sym->next, table);
+		if(e->val.expblock.next != NULL && e->val.expblock.next->val.expblock.value != NULL && e->val.expblock.value != NULL)
+		{
+			printf(", ");
+		}
 	}
 	if(e->val.expblock.value != NULL)
 	{
@@ -1463,56 +1474,57 @@ void codegenAssign(STATEMENT *stmt, int depth){
 	if(stmt == NULL) return;
 	codegenAssign(stmt->val.assignment.chain, depth);
 	EXP *tmpExp= stmt->val.assignment.identifier;
+	SYMBOL *tmpSym;
 	char *tName, *tMods;SYMBOL *parent;
 	if(tmpExp->symTypeRef != NULL)
 	{
-		tmpExp->symTypeRef = makeSymbol_Copy(tmpExp->symTypeRef);
-		tmpExp->symTypeRef->bindingName = getNewBinding();
-		parent = findExistingBindingSym(tmpExp->symTypeRef, stmt->localScope);
-		tName = getTypeName(tmpExp->symTypeRef);
-		tMods = getTypeModifiers(tmpExp->symTypeRef);
+		tmpSym = makeSymbol_Copy(tmpExp->symTypeRef);
+		tmpSym->bindingName = getNewBinding();
+		parent = findExistingBindingSym(tmpSym, stmt->localScope);
+		tName = getTypeName(tmpSym);
+		tMods = getTypeModifiers(tmpSym);
 	}
 	else{
-		tmpExp->symTypeRef = makeSymbol_Copy(stmt->val.assignment.value->symTypeRef);
-		tmpExp->symTypeRef->bindingName = getNewBinding();
-		parent = findExistingBindingSym(tmpExp->symTypeRef, stmt->localScope);
-		tName = getTypeName(tmpExp->symTypeRef);
-		tMods = getTypeModifiers(tmpExp->symTypeRef);
+		tmpSym = makeSymbol_Copy(stmt->val.assignment.value->symTypeRef);
+		tmpSym->bindingName = getNewBinding();
+		parent = findExistingBindingSym(tmpSym, stmt->localScope);
+		tName = getTypeName(tmpSym);
+		tMods = getTypeModifiers(tmpSym);
 	}
 	if(parent == NULL)
 	{
 		if(strcmp(tName, "string") == 0)
 		{
 			prettyTabular(depth);
-			printf("char *%s = malloc(128); strcpy(%s, ", tmpExp->symTypeRef->bindingName, tmpExp->symTypeRef->bindingName);
+			printf("char *%s = malloc(128); strcpy(%s, ", tmpSym->bindingName, tmpSym->bindingName);
 			codegenExpression(stmt->val.assignment.value, stmt->localScope);
 			printf(");\n");
 		}
 		else if(strcmp(tName, "int") == 0)
 		{
 			prettyTabular(depth);
-			printf("int %s = ", tmpExp->symTypeRef->bindingName);
+			printf("int %s = ", tmpSym->bindingName);
 			codegenExpression(stmt->val.assignment.value, stmt->localScope);
 			printf(";\n");
 		}
 		else if(strcmp(tName, "rune") == 0)
 		{
 			prettyTabular(depth);
-			printf("char %s = ", tmpExp->symTypeRef->bindingName);
+			printf("char %s = ", tmpSym->bindingName);
 			codegenExpression(stmt->val.assignment.value, stmt->localScope);
 			printf(";\n");
 		}
 		else if(strcmp(tName, "float64") == 0)
 		{
 			prettyTabular(depth);
-			printf("float %s = ", tmpExp->symTypeRef->bindingName);
+			printf("float %s = ", tmpSym->bindingName);
 			codegenExpression(stmt->val.assignment.value, stmt->localScope);
 			printf(";\n");
 		}
 		else if(strcmp(tName, "bool") == 0)
 		{
 			prettyTabular(depth);
-			printf("int %s = ", tmpExp->symTypeRef->bindingName);
+			printf("int %s = ", tmpSym->bindingName);
 			codegenExpression(stmt->val.assignment.value, stmt->localScope);
 			printf(";\n");
 		}
@@ -1522,60 +1534,67 @@ void codegenAssign(STATEMENT *stmt, int depth){
 		{
 			if(*(tMods+1) == ']')
 			{
-				printf("struct %s %s;\n", parent->bindingName, tmpExp->symTypeRef->bindingName);
-				sliceAssignHelper(tmpExp->symTypeRef->bindingName, NULL, depth);
-				sliceAssignHelper(tmpExp->symTypeRef->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth);
+				printf("struct %s %s;\n", parent->bindingName, tmpSym->bindingName);
+				sliceAssignHelper(tmpSym->bindingName, NULL, depth);
+				sliceAssignHelper(tmpSym->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth);
 			}
 			else{
-				printf("struct %s %s;\n", parent->bindingName, tmpExp->symTypeRef->bindingName);
-				arrayAssignHelper(tmpExp->symTypeRef, NULL, tMods, depth, tmpExp->symTypeRef->bindingName, NULL, stmt->localScope);
-				arrayAssignHelper(tmpExp->symTypeRef, stmt->val.assignment.value->symTypeRef, tMods, depth, tmpExp->symTypeRef->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), stmt->localScope);
+				printf("struct %s %s;\n", parent->bindingName, tmpSym->bindingName);
+				arrayAssignHelper(tmpSym, NULL, tMods, depth, tmpSym->bindingName, NULL, stmt->localScope);
+				arrayAssignHelper(tmpSym, stmt->val.assignment.value->symTypeRef, tMods, depth, tmpSym->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), stmt->localScope);
 			}
 		}
 		else if(parent->kind == structSym || parent->kind == varstructSym)
 		{
-			printf("struct %s %s;\n", parent->bindingName, tmpExp->symTypeRef->bindingName);
-			structAssignHelper(tmpExp->symTypeRef, NULL, tmpExp->symTypeRef->bindingName, NULL, depth, stmt->localScope);
-			structAssignHelper(tmpExp->symTypeRef, stmt->val.assignment.value->symTypeRef, tmpExp->symTypeRef->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth, stmt->localScope);
+			printf("struct %s %s;\n", parent->bindingName, tmpSym->bindingName);
+			structAssignHelper(tmpSym, NULL, tmpSym->bindingName, NULL, depth, stmt->localScope);
+			structAssignHelper(tmpSym, stmt->val.assignment.value->symTypeRef, tmpSym->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth, stmt->localScope);
 		}
 		else{
 			if(strcmp(tName, "string") == 0)
 			{
 				prettyTabular(depth);
-				printf("char *%s = malloc(128); strcpy(%s, ", tmpExp->symTypeRef->bindingName, tmpExp->symTypeRef->bindingName);
+				printf("char *%s = malloc(128); strcpy(%s, ", tmpSym->bindingName, tmpSym->bindingName);
 				codegenExpression(stmt->val.assignment.value, stmt->localScope);
 				printf(");\n");
 			}
 			else if(strcmp(tName, "int") == 0)
 			{
 				prettyTabular(depth);
-				printf("int %s = ", tmpExp->symTypeRef->bindingName);
+				printf("int %s = ", tmpSym->bindingName);
 				codegenExpression(stmt->val.assignment.value, stmt->localScope);
 				printf(";\n");
 			}
 			else if(strcmp(tName, "rune") == 0)
 			{
 				prettyTabular(depth);
-				printf("char %s = ", tmpExp->symTypeRef->bindingName);
+				printf("char %s = ", tmpSym->bindingName);
 				codegenExpression(stmt->val.assignment.value, stmt->localScope);
 				printf(";\n");
 			}
 			else if(strcmp(tName, "float64") == 0)
 			{
 				prettyTabular(depth);
-				printf("float %s = ", tmpExp->symTypeRef->bindingName);
+				printf("float %s = ", tmpSym->bindingName);
 				codegenExpression(stmt->val.assignment.value, stmt->localScope);
 				printf(";\n");
 			}
 			else if(strcmp(tName, "bool") == 0)
 			{
 				prettyTabular(depth);
-				printf("int %s = ", tmpExp->symTypeRef->bindingName);
+				printf("int %s = ", tmpSym->bindingName);
+				codegenExpression(stmt->val.assignment.value, stmt->localScope);
+				printf(";\n");
+			}
+			else{
+				prettyTabular(depth);
+				printf("%s %s = ", tName, tmpSym->bindingName);
 				codegenExpression(stmt->val.assignment.value, stmt->localScope);
 				printf(";\n");
 			}
 		}
 	}
+	stmt->val.assignment.value->symTypeRef = tmpSym;
 	
 }
 void codegenAssignLast(STATEMENT *stmt, int depth)
@@ -1591,7 +1610,7 @@ void codegenAssignLast(STATEMENT *stmt, int depth)
 		return;
 	}
 	prettyTabular(depth);
-	printf("%s = %s;\n", tmp, stmt->val.assignment.identifier->symTypeRef->bindingName);
+	printf("%s = %s;\n", tmp, stmt->val.assignment.value->symTypeRef->bindingName);
 }
 
 /*Handles if statements*/
@@ -1649,6 +1668,9 @@ void codegenElif(STATEMENT *stmt, int depth){
 	}
 	prettyTabular(depth+1);
 	printf("}\n");
+	if(stmt->val.conditional.elif != NULL){
+		codegenStatement(stmt->val.conditional.elif, depth+1);
+	}
 	prettyTabular(depth);
 	printf("}\n");
 }
@@ -1681,12 +1703,27 @@ void codegenQuickDecl(STATEMENT *stmt, int depth){
 		if(strlen(tName) > 0)
 		{
 			prettyTabular(depth);
-			printf("struct %s %s = %s;\n", tName, getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.identifier->symTypeRef->bindingName);
+			printf("struct %s %s = %s;\n", tName, getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
 		}
 		else{
 			tName = getTypeName(stmt->val.assignment.identifier->symTypeRef);
 			//tMods = getTypeModifiers(stmt->val.assignment.identifier->symTypeRef);
-			printf("%s %s = %s;\n",tName, getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.identifier->symTypeRef->bindingName);
+			if(strcmp(tName, "float64") == 0)
+			{
+				printf("float %s = %s;\n",getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+			}
+			else if(strcmp(tName, "string") == 0)
+			{
+				printf("char *%s = %s;\n",getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+			}
+			else if(strcmp(tName, "rune") == 0)
+			{
+				printf("char %s = %s;\n",getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+			}
+			else
+			{
+				printf("%s %s = %s;\n",tName, getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+			}
 		}
 	}
 	
@@ -1704,6 +1741,7 @@ void codegenProgram(PROGRAM *p, FILE *fp){
 	printf("#include <string.h>\n");
 	printf("#include <stdlib.h>\n");
 	printf("#include <math.h>\n");
+	printf("#include <stdbool.h>\n");
 	
 	DECLARATION *tmpDecl = p->declList;
 	while(tmpDecl != NULL)
@@ -1764,7 +1802,7 @@ void codegenPrint(EXP *e, symTable *table, bool hasNewline, int depth)
 	else if(strcmp(tName, "float64") == 0)
 	{
 		prettyTabular(depth);
-		printf("printf(\"%%f\",");
+		printf("printf(\"%%+1.6e\",");
 		codegenExpression(tmpe, table);
 		printf("); ");
 	}
@@ -1773,7 +1811,7 @@ void codegenPrint(EXP *e, symTable *table, bool hasNewline, int depth)
 		prettyTabular(depth);
 		printf("if(");
 		codegenExpression(tmpe, table);
-		printf("){ printf(\"True\");} else{ printf(\"False\");}");
+		printf("){ printf(\"true\");} else{ printf(\"false\");}");
 	}
 	else{
 		prettyTabular(depth);
@@ -1907,7 +1945,11 @@ void codegenSwitch(STATEMENT *stmt, int depth)
 	else{
 		breakId = breakList->id;
 	}
+	lookForPlusString(stmt->val.switchBody.condition, depth);
+	appendCheck(stmt->val.switchBody.condition, stmt->localScope, depth);
+	elementCheck(stmt->val.switchBody.condition, stmt->localScope, depth);
 	codegenCase(stmt->val.switchBody.cases, stmt->val.switchBody.condition, depth+1);
+	codegenDefault(stmt->val.switchBody.cases, depth+1);
 	//close the else branches that are still open
 	STATEMENT *list = stmt->val.switchBody.cases;
 	while(list != NULL)
@@ -1930,7 +1972,17 @@ void codegenSwitch(STATEMENT *stmt, int depth)
 	prettyTabular(depth);
 	printf("}\n");
 }
-
+void codegenDefault(STATEMENT *stmt, int depth)
+{
+	if(stmt == NULL) return;
+	while(stmt->val.caseBody.condition != NULL)
+	{
+		stmt = stmt->next;
+		if(stmt == NULL) return;
+	}
+	breakLabel *bl;
+	codegenStatement(stmt->val.caseBody.body, depth);
+}
 void codegenCase(STATEMENT *stmt, EXP *ref, int depth)
 {
 	if(stmt == NULL) return;
@@ -1938,9 +1990,23 @@ void codegenCase(STATEMENT *stmt, EXP *ref, int depth)
 	prettyTabular(depth);
 	if(stmt->val.caseBody.condition != NULL)
 	{
+		EXP *cur = stmt->val.caseBody.condition;
+		while(cur != NULL)
+		{
+			if(cur->val.expblock.value == NULL)
+			{
+				cur = cur->val.expblock.next;
+				continue;
+			}
+			lookForPlusString(cur->val.expblock.value, depth);
+			appendCheck(cur->val.expblock.value, stmt->localScope, depth);
+			elementCheck(cur->val.expblock.value, stmt->localScope, depth);
+			
+			cur = cur->val.expblock.next;
+		}
 		printf("if ( ");
 		EXP *condition;
-		EXP *cur = stmt->val.caseBody.condition;
+		cur = stmt->val.caseBody.condition;
 		while(cur != NULL)
 		{
 			if(cur->val.expblock.value == NULL)
@@ -1958,25 +2024,30 @@ void codegenCase(STATEMENT *stmt, EXP *ref, int depth)
 			cur = cur->val.expblock.next;
 			
 			codegenExpression(condition, stmt->localScope);
+			if(cur != NULL && cur->val.expblock.next != NULL && cur->val.expblock.next->val.expblock.value != NULL)
+			{
+				printf("||");
+			}
 		}
 		printf("){\n");
 		codegenStatement(stmt->val.caseBody.body, depth+1);
 		prettyTabular(depth);
+
 		printf("}\n");
 		prettyTabular(depth);
 		printf("else{\n");
 
 	}
 	else{
-		breakLabel *bl;
-		codegenStatement(stmt->val.caseBody.body, depth);
-		prettyTabular(depth);
-		printf("goto BREAK_LABEL%d;\n", bindingCounter);
-		bl = malloc(sizeof(breakLabel));
-		bl->next = breakList;
-		breakList = bl;
-		bl->id = bindingCounter;
-		bindingCounter++;
+		// breakLabel *bl;
+		// codegenStatement(stmt->val.caseBody.body, depth);
+		// prettyTabular(depth);
+		// printf("goto BREAK_LABEL%d;\n", bindingCounter);
+		// bl = malloc(sizeof(breakLabel));
+		// bl->next = breakList;
+		// breakList = bl;
+		// bl->id = bindingCounter;
+		// bindingCounter++;
 	}
 }
 void codegenStatement(STATEMENT *stmt, int depth){
@@ -2037,13 +2108,16 @@ void codegenStatement(STATEMENT *stmt, int depth){
 		case exprS:
 			lookForPlusString(stmt->val.expression, depth);
 			appendCheck(stmt->val.expression, stmt->localScope, depth);
+			elementCheck(stmt->val.expression, stmt->localScope, depth);
 			codegenExpression(stmt->val.expression, stmt->localScope);
+			printf(";");
 			break;
 		case returnS:
 			if(stmt->val.expression != NULL)
 			{
 				lookForPlusString(stmt->val.expression, depth);
 				appendCheck(stmt->val.expression, stmt->localScope, depth);
+				elementCheck(stmt->val.expression, stmt->localScope, depth);
 				prettyTabular(depth);
 				printf(" return ");
 				codegenExpression(stmt->val.expression, stmt->localScope);
@@ -2114,10 +2188,10 @@ void codegenExpression(EXP *e, symTable *table){
 			break; 
 		case boolExp: 
 			if (e->val.intLiteral != 0){
-				printf("True");
+				printf("true");
 			}
 			else{
-				printf("False");
+				printf("false");
 			}
 			break;
 		case runeExp:
@@ -2128,7 +2202,7 @@ void codegenExpression(EXP *e, symTable *table){
 			if(strcmp(tName, "string") == 0)
 			{
 				laggingCounter++;
-				printf("strcat(strcat(CODEGEN_BINDING%d, ", laggingCounter-1);
+				printf("strcat(strcat(%s, ", e->symTypeRef->bindingName);
 				codegenExpression(e->val.binary.lhs, table);
 				printf("), ");
 				codegenExpression(e->val.binary.rhs, table);
@@ -2334,8 +2408,19 @@ void codegenExpression(EXP *e, symTable *table){
 			printf(")");
 			break;
 		case idExp:
+			if(e->symTypeRef->bindingName != NULL){ printf("%s", e->symTypeRef->bindingName); break;}
 			parent = getSymbol(table, e->val.identifier, varSym);
-			printf("%s", parent->bindingName);
+			if(parent->bindingName != NULL){ printf("%s", parent->bindingName); break;}
+			else
+			{
+				if(table->next != NULL)
+				{
+					parent = getSymbol(table->next, e->val.identifier, varSym);
+					if(parent != NULL && parent->bindingName != NULL)
+					{printf("%s", parent->bindingName); break;}
+
+				}
+			} printf("%s", e->val.identifier); 
 			break;
 		/*
 		-------------------------
@@ -2517,7 +2602,7 @@ char *getFullStr(EXP *e, symTable *table)
 			if(strcmp(tName, "string") == 0)
 			{
 				laggingCounter++;
-				sprintf(returnVal, "strcat(strcat(CODEGEN_BINDING_%d, %s), %s)", laggingCounter-1, getFullStr(e->val.binary.lhs, table), getFullStr(e->val.binary.rhs, table));
+				sprintf(returnVal, "strcat(strcat(%s, %s), %s)", e->symTypeRef->bindingName, getFullStr(e->val.binary.lhs, table), getFullStr(e->val.binary.rhs, table));
 			}
 			else{
 				sprintf(returnVal, "%s+%s", getFullStr(e->val.binary.lhs, table), getFullStr(e->val.binary.rhs, table));
@@ -2670,9 +2755,15 @@ char *getFullStr(EXP *e, symTable *table)
 			{
 				return e->val.identifier;
 			}
+			if(e->symTypeRef->bindingName != NULL){ sprintf(returnVal, "%s", e->symTypeRef->bindingName); return returnVal;}
 			ref = getSymbol(table, e->val.identifier, varSym);
-			
-			sprintf(returnVal, "%s", ref->bindingName);
+			if(ref->bindingName != NULL){ sprintf(returnVal, "%s", ref->bindingName); return returnVal;}
+			else if(table->next != NULL)
+			{	
+				ref = getSymbol(table->next, e->val.identifier, varSym);
+				if(ref != NULL && ref->bindingName != NULL){ sprintf(returnVal, "%s", ref->bindingName); return returnVal;}
+			}
+			sprintf(returnVal, "%s", e->val.identifier);
 			return returnVal;
 		
 		//case idblockExp:

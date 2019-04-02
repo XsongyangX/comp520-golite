@@ -43,6 +43,7 @@ void codegenPrint(EXP *e, symTable *table, bool hasNewline, int depth);
 void codegenWhile(STATEMENT *stmt, int depth);
 void codegenFor(STATEMENT *stmt, int depth);
 void codegenSwitch(STATEMENT *stmt, int depth);
+void codegenDefault(STATEMENT *stmt, int depth);
 void codegenCase(STATEMENT *stmt, EXP *ref, int depth);
 SYMBOL *makeSymbol_Copy(SYMBOL *sym);
 void lookForPlusString(EXP *e, int tabs);
