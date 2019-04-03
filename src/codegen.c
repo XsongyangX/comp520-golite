@@ -537,7 +537,10 @@ SYMBOL *makeSymbol_Copy(SYMBOL *sym)
 	copy->name = sym->name;
 	copy->kind = sym->kind;
 	copy->t = sym->t;
-	copy->val = sym->val;
+	if(sym->kind == structSym || sym->kind == varstructSym)
+		copy->val.structFields = sym->val.structFields;
+	else
+		copy->val.parentSym = sym->val.parentSym;
 	copy->isNew = sym->isNew;
 	return copy;
 }
@@ -676,28 +679,28 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 		{
 			if(strlen(tMods) == 0 || *tMods != '[')
 			{
-				structAssignHelper(tmp, decl->val.right->symTypeRef, tmp->bindingName, getFullStr(decl->val.right, table), depth, table);
+				structAssignHelper(parent, decl->val.right->symTypeRef, tmp->bindingName, getFullStr(decl->val.right, table), depth, table);
 			}
 			else if(*(tMods+1) == ']')
 			{
-				sliceAssignHelper(tmp->bindingName, getFullStr(decl->val.right, table), depth);
+				sliceAssignHelper(parent->bindingName, getFullStr(decl->val.right, table), depth);
 			}
 			else{
-				arrayAssignHelper(tmp, decl->val.right->symTypeRef, tMods, depth, tmp->bindingName, getFullStr(decl->val.right, table), table);
+				arrayAssignHelper(parent, decl->val.right->symTypeRef, tMods, depth, tmp->bindingName, getFullStr(decl->val.right, table), table);
 			}
 		}
 		else
 		{
 			if(strlen(tMods) == 0 || *tMods != '[')
 			{
-				structAssignHelper(tmp, NULL, tmp->bindingName, NULL, depth, table);
+				structAssignHelper(parent, NULL, tmp->bindingName, NULL, depth, table);
 			}
 			else if(*(tMods+1) == ']')
 			{
-				sliceAssignHelper(tmp->bindingName, NULL, depth);
+				sliceAssignHelper(parent->bindingName, NULL, depth);
 			}
 			else{
-				arrayAssignHelper(tmp, NULL, tMods, depth, tmp->bindingName, NULL, table);
+				arrayAssignHelper(parent, NULL, tMods, depth, tmp->bindingName, NULL, table);
 			}
 		}
 		
@@ -870,7 +873,18 @@ void codegenFuncDeclArgsCheck(SYMBOL *args, symTable *table)
 	}
 	
 	args->bindingName = strcat(getNewBinding(), args->name);
-	
+	if(args->kind == varstructSym)
+	{
+		SYMBOL *copy = makeSymbol_Copy(args);
+		copy->bindingName = getNewBinding();
+		printf("struct %s{\n", copy->bindingName);
+		codegenStructHelper(copy->val.structFields, 0, table);
+		printf("};\n");
+		copy->next = table->bindingsList;
+		table->bindingsList = copy;
+		table->bindingsSize++;
+		return;
+	}
 	char *tMods = getTypeModifiers(args);
 	//No binding necessary
 	if(strlen(tMods) == 0 || *tMods != '[')
@@ -912,7 +926,7 @@ void codegenFuncDeclArgs(SYMBOL *args, symTable *table)
 	//binding already exists
 	if(strlen(tName) != 0)
 	{
-		printf("%s %s", tName, args->bindingName);
+		printf("struct %s %s", tName, args->bindingName);
 	}
 	else
 	{
@@ -921,29 +935,28 @@ void codegenFuncDeclArgs(SYMBOL *args, symTable *table)
 	}
 	
 }
-void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
+void codegenFuncHeader(DECLARATION *decl, symTable *table, int depth)
 {
 	SYMBOL *tmp = getSymbol(table, decl->val.f->identifier, funcSym);
 	if(tmp != NULL && strcmp(tmp->name, "main") != 0 && strcmp(tmp->name, "init") != 0)
 	{
 		tmp->bindingName = strcat(getNewBinding(), tmp->name);
 	}
-	else if (tmp != NULL && strcmp(tmp->name, "init") != 0){
-		tmp->bindingName = tmp->name;
+	else if (strcmp(decl->val.f->identifier, "init") == 0){
+		printf("void %s();\n", inits->binding);
+		return;
 	}
-	else
+	else if(strcmp(tmp->name, "main") == 0)
 	{
-		printf("void %s(){\n", inits->binding);
-		inits = inits->next;
-		codegenStatement(decl->val.f->body, depth+1);
-		printf("}\n");
+		tmp->bindingName = malloc(128);
+		strcpy(tmp->bindingName, "main");
 		return;
 	}
 	codegenFuncDeclArgsCheck(tmp->val.func.funcParams, table);
 	char *tName = findExistingBinding(tmp->val.func.returnSymRef, table);
 	if(strlen(tName) != 0)
 	{
-		printf("%s %s(", tName, tmp->bindingName);
+		printf( "%s %s(", tName, tmp->bindingName);
 	}
 	else if(tmp->val.func.returnSymRef->t->gType != nilType)
 	{
@@ -953,25 +966,24 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 		{
 			if(strcmp(tName, "int") == 0)
 			{
-				printf("int ");
+				printf("int %s(", tmp->bindingName);
 			}
 			else if(strcmp(tName, "float64") == 0)
 			{
-				printf("float ");
+				printf("float %s(", tmp->bindingName);
 			}
 			else if(strcmp(tName, "rune") == 0)
 			{
-				printf("char ");
+				printf("char %s(", tmp->bindingName);
 			}
 			else if(strcmp(tName, "string") == 0)
 			{
-				printf("char *");
+				printf("char *%s(", tmp->bindingName);
 			}
 			else if(strcmp(tName, "bool") == 0)
 			{
-				printf("bool ");
+				printf("bool %s(", tmp->bindingName);
 			}
-			printf("%s(", tmp->bindingName);
 		}
 		else{
 			SYMBOL *copy = makeSymbol_Copy(tmp->val.func.returnSymRef);
@@ -981,7 +993,69 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 			table->bindingsSize++;
 			genStructureHelper(tName, tMods, tmp->val.func.returnSymRef, 0, copy->bindingName, true, table);
 			printf("};\n");
-			printf("%s %s(", tName, tmp->bindingName);
+			printf( "%s %s(", copy->bindingName, tmp->bindingName);
+
+		}
+	}
+	else{
+		printf("void %s(", tmp->bindingName);
+	}
+	codegenFuncDeclArgs(tmp->val.func.funcParams, table);
+	printf(");\n");
+}
+void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
+{
+	SYMBOL *tmp = getSymbol(table, decl->val.f->identifier, funcSym);
+	char *tName;
+	if(tmp != NULL)
+		tName = findExistingBinding(tmp->val.func.returnSymRef, table);
+	else{
+		printf("void %s(){\n", inits->binding);
+		codegenStatement(decl->val.f->body, depth+1);
+		printf("}\n");
+		inits = inits->next;
+		return;
+	}
+	if(strlen(tName) != 0)
+	{
+		printf( "%s %s(", tName, tmp->bindingName);
+	}
+	else if(tmp->val.func.returnSymRef->t->gType != nilType)
+	{
+		tName = getTypeName(tmp->val.func.returnSymRef);
+		char *tMods = getTypeModifiers(tmp->val.func.returnSymRef);
+		if(strlen(tMods) == 0 || *tMods != '[')
+		{
+			if(strcmp(tName, "int") == 0)
+			{
+				printf("int %s(", tmp->bindingName);
+			}
+			else if(strcmp(tName, "float64") == 0)
+			{
+				printf("float %s(", tmp->bindingName);
+			}
+			else if(strcmp(tName, "rune") == 0)
+			{
+				printf("char %s(", tmp->bindingName);
+			}
+			else if(strcmp(tName, "string") == 0)
+			{
+				printf("char *%s(", tmp->bindingName);
+			}
+			else if(strcmp(tName, "bool") == 0)
+			{
+				printf("bool %s(", tmp->bindingName);
+			}
+		}
+		else{
+			SYMBOL *copy = makeSymbol_Copy(tmp->val.func.returnSymRef);
+			copy->bindingName = getNewBinding();
+			copy->next = table->bindingsList;
+			table->bindingsList = copy;
+			table->bindingsSize++;
+			genStructureHelper(tName, tMods, tmp->val.func.returnSymRef, 0, copy->bindingName, true, table);
+			printf("};\n");
+			printf( "%s %s(", copy->bindingName, tmp->bindingName);
 
 		}
 	}
@@ -990,7 +1064,7 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 	}
 	codegenFuncDeclArgs(tmp->val.func.funcParams, table);
 	printf("){\n");
-	if(strcmp("main", tmp->name) == 0)
+	if(strcmp("main", tmp->bindingName) == 0)
 	{
 		while(inits2 != NULL){
 			prettyTabular(depth);
@@ -998,6 +1072,7 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 			inits2 = inits2->next;
 		}
 	}
+
 	codegenStatement(decl->val.f->body, depth+1);
 	printf("}\n");
 	
@@ -1547,8 +1622,8 @@ void codegenAssign(STATEMENT *stmt, int depth){
 		else if(parent->kind == structSym || parent->kind == varstructSym)
 		{
 			printf("struct %s %s;\n", parent->bindingName, tmpSym->bindingName);
-			structAssignHelper(tmpSym, NULL, tmpSym->bindingName, NULL, depth, stmt->localScope);
-			structAssignHelper(tmpSym, stmt->val.assignment.value->symTypeRef, tmpSym->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth, stmt->localScope);
+			structAssignHelper(parent, NULL, tmpSym->bindingName, NULL, depth, stmt->localScope);
+			structAssignHelper(parent, stmt->val.assignment.value->symTypeRef, tmpSym->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth, stmt->localScope);
 		}
 		else{
 			if(strcmp(tName, "string") == 0)
@@ -1759,9 +1834,11 @@ void codegenProgram(PROGRAM *p, FILE *fp){
 				tmp2->next = inits2;
 				inits2 = tmp2;
 			}
+			codegenFuncHeader(tmpDecl, p->globalScope, 0);
 		}
 		tmpDecl = tmpDecl->next;
 	}
+
 	codegenDeclaration(p->declList, p->globalScope, 0);
 }
 
@@ -2482,7 +2559,16 @@ void codegenExpression(EXP *e, symTable *table){
 		case invocExp:
 			codegenExpression(e->val.binary.lhs, table);
 			printf(".");
-			parent = e->val.binary.lhs->symTypeRef;
+			if(e->val.binary.lhs->kind == idExp)
+				{
+					parent = findExistingBindingSym(e->val.binary.lhs->symTypeRef, table);
+					if(parent == NULL)
+					{
+						parent = e->val.binary.lhs->symTypeRef;
+					}
+				}
+			else
+				parent = e->val.binary.lhs->symTypeRef;
 			while(parent->kind != varstructSym && parent->kind != structSym)
 			{
 				parent= parent->val.parentSym;
@@ -2793,7 +2879,16 @@ char *getFullStr(EXP *e, symTable *table)
 			return returnVal;
 		case invocExp:
 			sprintf(returnVal, "%s.", getFullStr(e->val.binary.lhs, table));
-			ref = e->val.binary.lhs->symTypeRef;
+			if(e->val.binary.lhs->kind == idExp)
+				{
+					ref = findExistingBindingSym(e->val.binary.lhs->symTypeRef, table);
+					if (ref == NULL)
+					{
+						ref = e->val.binary.lhs->symTypeRef;
+					}
+				}
+			else
+				ref = e->val.binary.lhs->symTypeRef;
 			while(ref->kind != varstructSym && ref->kind != structSym)
 			{
 				ref= ref->val.parentSym;

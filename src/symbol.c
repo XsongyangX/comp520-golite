@@ -1046,12 +1046,19 @@ SYMBOL *symFuncHelper(DECLARATION *params, symTable *table, char *funcName)
         exit(1);
     }
     SYMBOL *parent = getSymbol(table, getName(params->t), typeSym);
-    if(parent == NULL)
+    if(parent == NULL && params->t->gType != structType)
     {
         fprintf(stderr, "Error: (line %d) type %s undefined.\n", params->lineno, getName(params->t));
         exit(1);
     }
-    tmp->val.parentSym = parent;
+    if(params->t->gType == structType)
+    {
+        tmp->kind = varstructSym;
+        tmp->val.structFields = symStructHelper(params->t->val.args, table, tmp->name);
+    }
+    else{
+        tmp->val.parentSym = parent;
+    }    
     tmp->next = next;
     tmp->t = params->t;
     return tmp;
