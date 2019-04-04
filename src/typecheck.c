@@ -105,7 +105,12 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             break;
         case quickDeclS:
             typeCheckStatement(stmt->val.assignment.chain, func);
-            symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno, getSymbol(stmt->localScope, stmt->val.assignment.identifier->val.identifier, varSym));
+            symLHS = getSymbol(stmt->localScope, stmt->val.assignment.identifier->val.identifier, varSym);
+            if(strcmp(stmt->val.assignment.identifier->val.identifier, "_") != 0 && symLHS->t->gType == nilType)
+                symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno, symLHS);
+            else
+                symRHS = typecheckExp(stmt->val.assignment.value, stmt->localScope, stmt->lineno, NULL);
+
             symLHS = typecheckExp(stmt->val.assignment.identifier, stmt->localScope, stmt->lineno, NULL);
             if(symLHS == BLANK_SYMBOL)
             {

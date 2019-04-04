@@ -1837,7 +1837,7 @@ void codegenQuickDecl(STATEMENT *stmt, int depth){
 	if(!(stmt->val.assignment.identifier->symTypeRef->isNew))
 	{
 		prettyTabular(depth);
-		printf("%s = %s;\n", getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.identifier->symTypeRef->bindingName);
+		printf("%s = %s;\n", getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
 	}
 	else{
 		char *tName, *tMods;
