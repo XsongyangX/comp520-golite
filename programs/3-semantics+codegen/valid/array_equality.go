@@ -3,7 +3,7 @@
 //~true
 //~false
 //~true
-
+//~true
 package main
 
 func main() {
