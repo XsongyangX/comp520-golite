@@ -60,7 +60,7 @@ char *eqExpArraysStr(SYMBOL *s1, SYMBOL *s2, char *tMods, char *nameSoFar1, char
 void structAssignHelper(SYMBOL *sym1, SYMBOL *sym2, char *nameSoFar1, char *nameSoFar2, int depth, symTable *table);
 void sliceAssignHelper(char *nameSoFar1, char *nameSoFar2, int depth);
 void arrayAssignHelper(SYMBOL *sym1, SYMBOL *sym2, char *tMods, int depth, char *nameSoFar1, char *nameSoFar2, symTable *table);
-void sliceAppendHelper(EXP *target, EXP *value, symTable *table, int depth);
+void sliceAppendHelper(EXP *root, symTable *table, int depth);
 char *findExistingBinding(SYMBOL *sym, symTable *table);
 void elementCheck(EXP *e, symTable *table, int depth);
 
