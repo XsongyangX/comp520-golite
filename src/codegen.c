@@ -1973,6 +1973,7 @@ void codegenPrint(EXP *e, symTable *table, bool hasNewline, int depth)
 
 void codegenFor(STATEMENT *stmt, int depth)
 {
+	int bFlag = 0;
 	prettyTabular(depth);
 	printf("{\n");
 	prettyTabular(depth+1);
@@ -2006,24 +2007,30 @@ void codegenFor(STATEMENT *stmt, int depth)
 		breakId = breakList->id;
 	}
 	codegenStatement(stmt->val.conditional.body, depth+2);
-	while(continueList != NULL || continueList->id != contId)
+	while(continueList != NULL && continueList->id != contId)
 	{
+		//cFlag = 1;
 		prettyTabular(depth+2);
-		printf("CONTINUE_LABEL%d:\n", continueList->id);
+		printf("CONTINUE_LABEL%d:;\n", continueList->id);
 		continueList = continueList->next;
 	}
 	codegenStatement(stmt->val.conditional.elif, depth+1);
-	prettyTabular(depth+2);
-	printf("continue;\n");
+	
+		prettyTabular(depth+2);
+		printf("continue;\n");
+	
 	while(breakList != NULL && breakList->id != breakId)
 	{
+		bFlag = 1;
 		prettyTabular(depth+2);
-		printf("BREAK_LABEL%d:\n", breakList->id);
+		printf("BREAK_LABEL%d:;\n", breakList->id);
 		breakList = breakList->next;
 	}
 	codegenStatement(stmt->val.conditional.elif, depth+1);
-	prettyTabular(depth+2);
-	printf("break;\n");
+	if(bFlag){
+		prettyTabular(depth+2);
+		printf("break;\n");
+	}
 	prettyTabular(depth+1);
 	printf("}\n");
 	prettyTabular(depth);
@@ -2033,6 +2040,7 @@ void codegenFor(STATEMENT *stmt, int depth)
 
 void codegenWhile(STATEMENT *stmt, int depth)
 {
+	int bFlag = 0;
 	prettyTabular(depth);
 	printf("while(");
 	if(stmt->val.conditional.condition == NULL)
@@ -2064,22 +2072,29 @@ void codegenWhile(STATEMENT *stmt, int depth)
 	codegenStatement(stmt->val.conditional.body, depth+1);
 	while(continueList != NULL && continueList->id != contId)
 	{
+		//cFlag = 1;
 		prettyTabular(depth+1);
-		printf("CONTINUE_LABEL%d:\n", continueList->id);
+		printf("CONTINUE_LABEL%d:;\n", continueList->id);
 		continueList = continueList->next;
 	}
 	codegenStatement(stmt->val.conditional.elif, depth+1);
-	prettyTabular(depth+1);
-	printf("continue;\n");
-	while(breakList != NULL || breakList->id != breakId)
-	{
+	
 		prettyTabular(depth+1);
-		printf("BREAK_LABEL%d:\n", breakList->id);
+		printf("continue;\n");
+	
+	while(breakList != NULL && breakList->id != breakId)
+	{
+		bFlag = 1;
+		prettyTabular(depth+1);
+		printf("BREAK_LABEL%d:;\n", breakList->id);
 		breakList = breakList->next;
 	}
+
 	codegenStatement(stmt->val.conditional.elif, depth+1);
-	prettyTabular(depth+1);
-	printf("break;\n");
+	if(bFlag){
+		prettyTabular(depth+1);
+		printf("break;\n");
+	}
 	prettyTabular(depth);
 	printf("}\n");
 
@@ -2120,7 +2135,7 @@ void codegenSwitch(STATEMENT *stmt, int depth)
 	while(breakList != NULL && breakList->id != breakId)
 	{
 		prettyTabular(depth+1);
-		printf("BREAK_LABEL%d:\n", breakList->id);
+		printf("BREAK_LABEL%d:;\n", breakList->id);
 		breakList = breakList->next;
 	}
 	prettyTabular(depth);
@@ -2178,7 +2193,7 @@ void codegenCase(STATEMENT *stmt, EXP *ref, int depth)
 			cur = cur->val.expblock.next;
 			
 			codegenExpression(condition, stmt->localScope);
-			if(cur != NULL && cur->val.expblock.next != NULL && cur->val.expblock.next->val.expblock.value != NULL)
+			if(cur != NULL && cur->val.expblock.value != NULL)
 			{
 				printf("||");
 			}
