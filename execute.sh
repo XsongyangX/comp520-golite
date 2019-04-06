@@ -23,7 +23,7 @@ rm ${1%.*}.out 2> /dev/null
 #   programs/3-semantics+codegen/valid/test.min -> programs/3-semantics+codegen/valid/test.c
 # stdout is redirected to /dev/null
 FILENAME="${1%.*}.c"
-gcc -std=c11 -o ${1%.*}.out $FILENAME > /dev/null
+gcc -w -std=c11 -o ${1%.*}.out $FILENAME > /dev/null
 
 # You MUST replace the following line with the command to execute your compiled code
 # Note the bash replacement which changes:
