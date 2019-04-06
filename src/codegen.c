@@ -337,7 +337,15 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 		{
 			char *name1;
 			prettyTabular(depth);
-			if(isTypeDef) printf("struct %s {\n", typeName);
+			if(isTypeDef){
+				printf("struct %s {\n", typeName);
+				if(strcmp(table->bindingsList->bindingName, typeName) != 0)
+				{
+					copy->bindingName = typeName;
+					copy->next = table->bindingsList;
+					table->bindingsList = copy;
+				}
+			} 
 			else{
 				name1 = findExistingBinding(copy, table);
 				if(strlen(name1) == 0)
@@ -410,7 +418,9 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 					}
 				}
 				else{
-					genStructureHelper(tName, tMods, copy, depth+1, "", false, table);
+					name1 = getNewBinding();
+
+					genStructureHelper(tName, tMods, copy, depth+1, name1, true, table);
 					prettyTabular(depth);
 					printf("};\n");	
 					prettyTabular(depth);
@@ -707,20 +717,25 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 	SYMBOL *parent = findExistingBindingSym(tmp, table);
 	if(parent != NULL)
 	{
+		char *tName;
 		prettyTabular(depth);
 		printf("struct %s %s;\n", parent->bindingName, tmp->bindingName);
 		if(decl->val.right != NULL)
 		{
+			tName = getNewBinding();
 			if(strlen(tMods) == 0 || *tMods != '[')
 			{
-				structAssignHelper(parent, parent, tmp->bindingName, getFullStr(decl->val.right, table), depth, table);
+				printf("struct %s %s = %s;\n", parent->bindingName, tName, getFullStr(decl->val.right, table));
+				structAssignHelper(parent, parent, tmp->bindingName, tName, depth, table);
 			}
 			else if(*(tMods+1) == ']')
 			{
-				sliceAssignHelper(tmp->bindingName, getFullStr(decl->val.right, table), depth);
+				printf("struct %s %s = %s;\n", parent->bindingName, tName, getFullStr(decl->val.right, table));
+				sliceAssignHelper(tmp->bindingName, tName, depth);
 			}
 			else{
-				arrayAssignHelper(parent, parent, tMods, depth, tmp->bindingName, getFullStr(decl->val.right, table), table);
+				printf("struct %s %s = %s;\n", parent->bindingName, tName, getFullStr(decl->val.right, table));
+				arrayAssignHelper(parent, parent, tMods, depth, tmp->bindingName, tName, table);
 			}
 		}
 		else if(table->next->next != NULL)
@@ -867,7 +882,9 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 						structAssignHelper(parent, NULL, tmp->bindingName, NULL, depth, table);
 					else
 					{
-						structAssignHelper(parent, decl->val.right->symTypeRef, tmp->bindingName, getFullStr(decl->val.right, table), depth, table);
+						tName = getNewBinding();
+						printf("struct %s %s = %s;\n", parent->bindingName, tName, getFullStr(decl->val.right, table));
+						structAssignHelper(parent, decl->val.right->symTypeRef, tmp->bindingName, tName, depth, table);
 					}
 				}
 					
@@ -894,12 +911,15 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 					}
 				}
 				else{
+					tName = getNewBinding();
 					if(*(tMods+1) == ']')
 					{
-						sliceAssignHelper(tmp->bindingName, getFullStr(decl->val.right,table), depth);
+						printf("struct %s %s = %s;\n", parent->bindingName, tName, getFullStr(decl->val.right, table));
+						sliceAssignHelper(tmp->bindingName, tName, depth);
 					}
 					else{
-						arrayAssignHelper(tmp, tmp, tMods, depth, tmp->bindingName, getFullStr(decl->val.right,table), table);
+						printf("struct %s %s = %s;\n", parent->bindingName, tName, getFullStr(decl->val.right, table));
+						arrayAssignHelper(tmp, tmp, tMods, depth, tmp->bindingName, tName, table);
 					}
 				}
 			}
@@ -1107,6 +1127,17 @@ void codegenFuncHeader(DECLARATION *decl, symTable *table, int depth)
 		printf("void %s(", tmp->bindingName);
 	}
 	codegenFuncDeclArgs(tmp->val.func.funcParams, table);
+	if(decl->val.f->body != NULL)
+	{
+		SYMBOL *tmp1, *tmp2;
+		tmp1 = tmp->val.func.funcParams;
+		while(tmp1 != NULL)
+		{
+			tmp2 = getSymbol(decl->val.f->body->localScope, tmp1->name, varSym);
+			tmp2->bindingName = tmp1->bindingName;
+			tmp1=tmp1->next;
+		}
+	}
 	printf(");\n");
 }
 void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
@@ -1189,7 +1220,9 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 				{
 					if(dinits->decl->val.right != NULL)
 					{
-						structAssignHelper(dinits->parent, dinits->parent, dinits->ref->bindingName, getFullStr(dinits->decl->val.right, table), depth, table);	
+						dinits->tName = getNewBinding();
+						printf("struct %s %s = %s;\n", dinits->parent->bindingName, dinits->tName, getFullStr(dinits->decl->val.right, table));
+						structAssignHelper(dinits->parent, dinits->parent, dinits->ref->bindingName, dinits->tName, depth, table);	
 					}
 					else{
 						structAssignHelper(dinits->parent, NULL, dinits->ref->bindingName, NULL, depth, table);
@@ -1203,14 +1236,18 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 			{
 				if(dinits->parent != NULL)
 				{
-					if(dinits->decl->val.right)
+					if(dinits->decl->val.right != NULL)
 					{
 						if(*(dinits->tMods+1) == ']')
 						{
-							sliceAssignHelper(dinits->parent->bindingName, getFullStr(dinits->decl->val.right, table), depth);
+							dinits->tName = getNewBinding();
+							printf("struct %s %s = %s;\n", dinits->parent->bindingName, dinits->tName, getFullStr(dinits->decl->val.right, table));
+							sliceAssignHelper(dinits->parent->bindingName, dinits->tName, depth);
 						}
 						else{
-							arrayAssignHelper(dinits->parent, dinits->parent, dinits->tMods, depth, dinits->ref->bindingName, getFullStr(dinits->decl->val.right, table), table);
+							dinits->tName = getNewBinding();
+							printf("struct %s %s = %s;\n", dinits->parent->bindingName, dinits->tName, getFullStr(dinits->decl->val.right, table));
+							arrayAssignHelper(dinits->parent, dinits->parent, dinits->tMods, depth, dinits->ref->bindingName, dinits->tName, table);
 						}
 					}
 					else{
@@ -1236,10 +1273,14 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 					else{
 						if(*(dinits->tMods+1) == ']')
 						{
-							sliceAssignHelper(dinits->ref->bindingName, getFullStr(dinits->decl->val.right, table), depth);
+							dinits->tName = getNewBinding();
+							printf("struct %s %s = %s;\n", dinits->parent->bindingName, dinits->tName, getFullStr(dinits->decl->val.right, table));
+							sliceAssignHelper(dinits->ref->bindingName, dinits->tName, depth);
 						}
 						else{
-							arrayAssignHelper(dinits->ref, dinits->ref, dinits->tMods, depth, dinits->ref->bindingName, getFullStr(dinits->decl->val.right, table), table);
+							dinits->tName = getNewBinding();
+							printf("struct %s %s = %s;\n", dinits->parent->bindingName, dinits->tName, getFullStr(dinits->decl->val.right, table));
+							arrayAssignHelper(dinits->ref, dinits->ref, dinits->tMods, depth, dinits->ref->bindingName, dinits->tName, table);
 						}
 					}
 				}
@@ -1296,8 +1337,10 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 				else{
 					if(dinits->decl->val.right != NULL)
 					{
+						dinits->tName = getNewBinding();
+						printf("struct %s %s = %s;\n", dinits->parent->bindingName, dinits->tName, getFullStr(dinits->decl->val.right, table));
 						dinits->parent = getSymbol(table, dinits->tName, typeSym);
-						structAssignHelper(dinits->parent, dinits->parent, dinits->ref->bindingName, getFullStr(dinits->decl->val.right, table), depth, table);
+						structAssignHelper(dinits->parent, dinits->parent, dinits->ref->bindingName, dinits->tName, depth, table);
 					}
 					else{
 						structAssignHelper(getSymbol(table, dinits->tName, typeSym), NULL, dinits->ref->bindingName, NULL, depth, table);
@@ -1600,16 +1643,11 @@ void sliceAppendHelper(EXP *root, symTable *table, int depth)
 	prettyTabular(depth);
 	printf("%s.size = %s.size + 1;\n", newName, name);
 	prettyTabular(depth);
-	printf("if (%s.size+1 >= %s.cap){\n", name, name);
+	printf("if (%s.size+1 > %s.cap){\n", name, name);
 	prettyTabular(depth+1);
 	printf("if(%s.cap == 0) %s.cap = 2;\n", name, newName);
 	prettyTabular(depth+1);
 	printf("else %s.cap = %s.cap*2;\n", newName, name);
-	
-	prettyTabular(depth);
-	printf("}\n");
-	prettyTabular(depth);
-	printf("else{ %s.cap = %s.cap; }\n", newName, name);
 	prettyTabular(depth);
 	tName = findExistingBinding(tmp, table);
 	if(strlen(tName) > 0)
@@ -1617,10 +1655,15 @@ void sliceAppendHelper(EXP *root, symTable *table, int depth)
 	else{
 		tName = getTypeName(tmp);
 		if(strcmp(tName, "float64") == 0) printf("%s.val = malloc(sizeof(float)*%s.cap);\n", newName, newName);
-		else if(strcmp(tName, "rune") == 0)printf("%s.val = malloc(sizeof(rune)*%s.cap);\n", newName, newName);
+		else if(strcmp(tName, "rune") == 0)printf("%s.val = malloc(sizeof(char)*%s.cap);\n", newName, newName);
 		else if(strcmp(tName, "string") == 0) printf("%s.val = malloc(sizeof(int)*%s.cap);\n", newName, newName);
 		else printf("%s.val = malloc(sizeof(%s)*%s.cap);\n", newName, tName, newName);
 	}
+	prettyTabular(depth);
+	printf("}\n");
+	prettyTabular(depth);
+	printf("else{ %s.cap = %s.cap; %s.val = %s.val;}\n", newName, name, newName, name);
+	
 	prettyTabular(depth);
 	printf("for( int codegen_i = 0; codegen_i < %s.cap; codegen_i++){\n", name);
 	prettyTabular(depth+1);
@@ -1630,7 +1673,7 @@ void sliceAppendHelper(EXP *root, symTable *table, int depth)
 	printf("%s.val[%s.size-1] = ", newName, newName);
 	codegenExpression(value, table);
 	printf(";\n");
-
+	root->symTypeRef = makeSymbol_Copy(root->symTypeRef);
 	root->symTypeRef->bindingName = newName;
 }
 void codegenFuncCall(EXP *e, SYMBOL* sym, symTable *table)
@@ -2091,6 +2134,7 @@ void codegenQuickDecl(STATEMENT *stmt, int depth){
 	}
 	else{
 		stmt->val.assignment.identifier->symTypeRef->isNew = 0;
+		stmt->val.assignment.identifier->symTypeRef->bindingName = strcat(getNewBinding(), stmt->val.assignment.identifier->val.identifier);
 		// char *tName, *tMods;
 		// SYMBOL *parent;
 		// tName = findExistingBinding(stmt->val.assignment.identifier->symTypeRef, stmt->localScope);
@@ -2101,48 +2145,110 @@ void codegenQuickDecl(STATEMENT *stmt, int depth){
 		{
 			if(*(tMods+1) == ']')
 			{
-				printf("struct %s %s;\n", parent->bindingName, tmp);
-				sliceAssignHelper(tmp, NULL, depth);
-				sliceAssignHelper(tmp, getFullStr(stmt->val.assignment.value, stmt->localScope), depth);
+				printf("struct %s %s;\n", parent->bindingName, stmt->val.assignment.identifier->symTypeRef->bindingName);
+				sliceAssignHelper(stmt->val.assignment.identifier->symTypeRef->bindingName, NULL, depth);
+				sliceAssignHelper(stmt->val.assignment.identifier->symTypeRef->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth);
 			}
 			else{
-				printf("struct %s %s;\n", parent->bindingName, tmp);
-				arrayAssignHelper(parent, NULL, tMods, depth, tmp, NULL, stmt->localScope);
-				arrayAssignHelper(parent, parent, tMods, depth, tmp, getFullStr(stmt->val.assignment.value, stmt->localScope), stmt->localScope);
+				printf("struct %s %s;\n", parent->bindingName, stmt->val.assignment.identifier->symTypeRef->bindingName);
+				arrayAssignHelper(parent, NULL, tMods, depth, stmt->val.assignment.identifier->symTypeRef->bindingName, NULL, stmt->localScope);
+				arrayAssignHelper(parent, parent, tMods, depth, stmt->val.assignment.identifier->symTypeRef->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), stmt->localScope);
 			}
 		}
 		else if(parent != NULL && (parent->kind == structSym || parent->kind == varstructSym))
 		{
-				printf("struct %s %s;\n", parent->bindingName, tmp);
-				structAssignHelper(parent, NULL, tmp, NULL, depth, stmt->localScope);
+				printf("struct %s %s;\n", parent->bindingName, stmt->val.assignment.identifier->symTypeRef->bindingName);
+				structAssignHelper(parent, NULL, stmt->val.assignment.identifier->symTypeRef->bindingName, NULL, depth, stmt->localScope);
 
-			structAssignHelper(parent, parent, tmp, getFullStr(stmt->val.assignment.value, stmt->localScope), depth, stmt->localScope);
+			structAssignHelper(parent, parent, stmt->val.assignment.identifier->symTypeRef->bindingName, getFullStr(stmt->val.assignment.value, stmt->localScope), depth, stmt->localScope);
 		}
 		else{
 			char *tName = getTypeName(stmt->val.assignment.identifier->symTypeRef);
 			//tMods = getTypeModifiers(stmt->val.assignment.identifier->symTypeRef);
 			if(strcmp(tName, "float64") == 0)
 			{
-				printf("float %s = %s;\n",getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+				printf("float %s = %s;\n",stmt->val.assignment.identifier->symTypeRef->bindingName, stmt->val.assignment.value->symTypeRef->bindingName);
 			}
 			else if(strcmp(tName, "string") == 0)
 			{
-				printf("char *%s = %s;\n",getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+				printf("char *%s = %s;\n",stmt->val.assignment.identifier->symTypeRef->bindingName, stmt->val.assignment.value->symTypeRef->bindingName);
 			}
 			else if(strcmp(tName, "rune") == 0)
 			{
-				printf("char %s = %s;\n",getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+				printf("char %s = %s;\n",stmt->val.assignment.identifier->symTypeRef->bindingName, stmt->val.assignment.value->symTypeRef->bindingName);
 			}
 			else
 			{
-				printf("%s %s = %s;\n",tName, getFullStr(stmt->val.assignment.identifier, stmt->localScope), stmt->val.assignment.value->symTypeRef->bindingName);
+				printf("%s %s = %s;\n",tName, stmt->val.assignment.identifier->symTypeRef->bindingName, stmt->val.assignment.value->symTypeRef->bindingName);
 			}
 		}
 	}
 	
 }
 
-
+char *rawString_Helper(char *s, int len)
+{
+	char *tmp = malloc(len*2);
+	tmp[0] = '"';
+	int offset = 0;
+	for(int i = 1; i < len; i++){
+		switch(s[i]){
+			case '\0':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = '0';
+				offset+=2;
+				break;
+			case '\n':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = 'n';
+				offset+=2;
+				break;
+			case '\r':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = 'r';
+				offset+=2;
+				break;
+			case '\t':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = 't';
+				offset+=2;
+				break;
+			case '\b':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = 'b';
+				offset+=2;
+				break;
+			case '\f':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = 'f';
+				offset+=2;
+				break;
+			case '\v':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				tmp[i+offset+2] = 'v';
+				offset+=2;
+				break;
+			case '\\':
+				tmp[i+offset] = '\\';
+				tmp[i+offset+1] = '\\';
+				offset++;
+				break;
+			default:
+				tmp[i+offset] = s[i];
+				break;
+		}
+	}
+	tmp[len+offset-1] = '"';
+	tmp[len+offset] = '\0';
+	return tmp;
+}
 void codegenProgram(PROGRAM *p, FILE *fp){
 	//ofile = fp;
 	laggingCounter = 0;
@@ -2155,7 +2261,9 @@ void codegenProgram(PROGRAM *p, FILE *fp){
 	printf("#include <stdlib.h>\n");
 	printf("#include <math.h>\n");
 	printf("#include <stdbool.h>\n");
-	
+	printf("char *my_itoa(int a){ char *tmp=malloc(16); sprintf(tmp, \"%%d\", a); return tmp;}\n");
+	printf("char *ftoa(float a){ char *tmp = malloc(32); sprintf(tmp, \"%%+1.6e\", a); return tmp;}\n");
+	printf("char *ctoa(char a){ char *tmp = malloc(2); tmp[0] = a; tmp[1] = '\\0'; return tmp;}\n");
 	DECLARATION *tmpDecl = p->declList;
 	while(tmpDecl != NULL)
 	{
@@ -2620,6 +2728,7 @@ void codegenExpression(EXP *e, symTable *table){
 			printf("%s", e->val.strLiteral);
 			break; 
 		case rawstrExp:
+			e->val.strLiteral = rawString_Helper(e->val.strLiteral, strlen(e->val.strLiteral));
 			printf("%s", e->val.strLiteral);
 			break; 
 		case boolExp: 
@@ -2759,7 +2868,7 @@ void codegenExpression(EXP *e, symTable *table){
 			}
 			break;
 		case geqExp:
-			tName = getTypeName(e->symTypeRef);
+			tName = getTypeName(e->val.binary.lhs->symTypeRef);
 			if(strcmp(tName, "string") == 0)
 			{
 				printf("strcmp(");
@@ -2777,7 +2886,7 @@ void codegenExpression(EXP *e, symTable *table){
 			
 			break;
 		case leqExp:
-			tName = getTypeName(e->symTypeRef);
+			tName = getTypeName(e->val.binary.lhs->symTypeRef);
 			if(strcmp(tName, "string") == 0)
 			{
 				printf("strcmp(");
@@ -2794,7 +2903,7 @@ void codegenExpression(EXP *e, symTable *table){
 			}
 			break;
 		case gtExp:
-			tName = getTypeName(e->symTypeRef);
+			tName = getTypeName(e->val.binary.lhs->symTypeRef);
 			if(strcmp(tName, "string") == 0)
 			{
 				printf("strcmp(");
@@ -2811,7 +2920,7 @@ void codegenExpression(EXP *e, symTable *table){
 			}
 			break;
 		case ltExp:
-			tName = getTypeName(e->symTypeRef);
+			tName = getTypeName(e->val.binary.lhs->symTypeRef);
 			if(strcmp(tName, "string") == 0)
 			{
 				printf("strcmp(");
@@ -2955,6 +3064,12 @@ void codegenExpression(EXP *e, symTable *table){
 				{
 					parent->bindingName = malloc(10);
 					strcpy(parent->bindingName, "float");
+					tName = getTypeName(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value->symTypeRef);
+					if(strcmp(tName, "string") == 0)
+					{
+						printf("atof(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+						break;
+					}
 				}
 				else if(strcmp(tName, "rune") == 0)
 				{
@@ -2965,6 +3080,26 @@ void codegenExpression(EXP *e, symTable *table){
 				{
 					parent->bindingName = malloc(10);
 					strcpy(parent->bindingName, "char *");
+					tName = getTypeName(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value->symTypeRef);
+					if(strcmp(tName, "int") == 0 || strcmp(tName, "bool") == 0)
+					{
+						printf("my_itoa(");
+						codegenExpression(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table);
+						printf(")");
+					}
+					else if(strcmp(tName, "float64") == 0)
+					{
+						printf("ftoa(");
+						codegenExpression(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table);
+						printf(")");
+					}
+					else if(strcmp(tName, "rune") == 0)
+					{
+						printf("ctoa(");
+						codegenExpression(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table);
+						printf(")");
+					}
+					break;
 				}
 				else if(strcmp(tName, "bool") == 0)
 				{
@@ -2973,7 +3108,14 @@ void codegenExpression(EXP *e, symTable *table){
 				}
 				else{
 					parent->bindingName = tName;
+					tName = getTypeName(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value->symTypeRef);
+					if(strcmp(tName, "string") == 0)
+					{
+						printf("atoi(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+						break;
+					}
 				}
+				
 				printf("(%s) ", parent->bindingName);
 				if(e->val.fnblock.fn->params != NULL && e->val.fnblock.fn->params->val.fnCallBlock != NULL)
 				{
@@ -2986,23 +3128,36 @@ void codegenExpression(EXP *e, symTable *table){
 				{
 					codegenFuncCall(e->val.fnblock.fn->params->val.fnCallBlock, parent->val.func.funcParams, table);
 				}
+				printf(")");
 			}
-			printf(")");
 			break;
 		case appendExp:
 			printf("%s", e->symTypeRef->bindingName);
 			break;
 		case lenExp:
-			codegenExpression(e->val.binary.rhs, table);
-			printf(".size");
+			tName = getTypeName(e->val.binary.rhs->symTypeRef);
+			if(strcmp(tName, "string") == 0 && strlen(getTypeModifiers(e->val.binary.rhs->symTypeRef)) == 0)
+			{
+				printf("strlen(");
+				codegenExpression(e->val.binary.rhs, table);
+				printf(")");
+			}
+			else{
+				codegenExpression(e->val.binary.rhs, table);
+				printf(".size");
+			}
 			break;
 		case capExp:
 			codegenExpression(e->val.binary.rhs, table);
-			printf(".cap");
+			if(*(getTypeModifiers(e->val.binary.rhs->symTypeRef)+1) == ']')
+				printf(".cap");
+			else{
+				printf( ".size");
+			}
 			break;
 		case uxorExp:
 			//As far as I can tell, 1111111... in C
-			printf("2147483647^(");
+			printf("-1^(");
 			codegenExpression(e->val.binary.rhs, table);
 			printf(")");
 			break;
@@ -3034,6 +3189,7 @@ char *getFullStr(EXP *e, symTable *table)
 			sprintf(returnVal, "%s", e->val.strLiteral);
 			return returnVal;
         case rawstrExp:
+			e->val.strLiteral = rawString_Helper(e->val.strLiteral, strlen(e->val.strLiteral));
 			sprintf(returnVal, "%s", e->val.strLiteral);
 			return returnVal;
         case boolExp:
@@ -3275,16 +3431,37 @@ char *getFullStr(EXP *e, symTable *table)
 				{
 					ref->bindingName = malloc(10);
 					strcpy(ref->bindingName, "float");
+					tName = getTypeName(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value->symTypeRef);
+					if(strcmp(tName, "string") == 0)
+					{
+						sprintf(returnVal, "atof(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+						return returnVal;
+					}
 				}
 				else if(strcmp(tName, "rune") == 0)
 				{
 					ref->bindingName = malloc(10);
 					strcpy(ref->bindingName, "char");
+					
 				}
 				else if(strcmp(tName, "string") == 0)
 				{
 					ref->bindingName = malloc(10);
-					strcpy(ref->bindingName, "char");
+					strcpy(ref->bindingName, "char *");
+					tName = getTypeName(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value->symTypeRef);
+					if(strcmp(tName, "int") == 0 || strcmp(tName, "bool") == 0)
+					{
+						sprintf(returnVal, "my_itoa(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+					}
+					else if(strcmp(tName, "float64") == 0)
+					{
+						sprintf(returnVal, "ftoa(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+					}
+					else if(strcmp(tName, "rune") == 0)
+					{
+						sprintf(returnVal, "ctoa(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+					}
+					return returnVal;
 				}
 				else if(strcmp(tName, "bool") == 0)
 				{
@@ -3292,6 +3469,12 @@ char *getFullStr(EXP *e, symTable *table)
 					strcpy(ref->bindingName, "int");
 				}
 				else{
+					tName = getTypeName(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value->symTypeRef);
+					if(strcmp(tName, "string") == 0)
+					{
+						sprintf(returnVal, "atoi(%s)", getFullStr(e->val.fnblock.fn->params->val.fnCallBlock->val.expblock.value, table));
+						return returnVal;
+					}
 					ref->bindingName = tName;
 				}
 				sprintf(returnVal, "(%s) ", ref->bindingName);
@@ -3306,16 +3489,30 @@ char *getFullStr(EXP *e, symTable *table)
 				{
 					returnVal = strFuncCall(e->val.fnblock.fn->params->val.fnCallBlock, ref->val.func.funcParams, table);
 				}
+				sprintf(returnVal, "%s)", returnVal);
 			}
-			sprintf(returnVal, "%s)", returnVal);
 			return returnVal;
 		case lenExp:
+			tName = getTypeName(e->val.binary.rhs->symTypeRef);
 			tmp1 = getFullStr(e->val.binary.rhs, table);
-			sprintf(returnVal, "%s.size", tmp1);
+			if(strcmp(tName, "string") == 0 && strlen(getTypeModifiers(e->val.binary.rhs->symTypeRef)) == 0)
+			{
+				sprintf(returnVal, "strlen(%s)", tmp1);
+			}
+			else{
+				sprintf(returnVal, "%s.size", tmp1);
+			}
+			
 			return returnVal;
 		case capExp:
-			tmp1 = getFullStr(e->val.binary.rhs, table);
-			sprintf(returnVal, "%s.cap", tmp1);
+			if(*(getTypeModifiers(e->val.binary.rhs->symTypeRef)+1) == ']'){
+				tmp1 = getFullStr(e->val.binary.rhs, table);
+				sprintf(returnVal, "%s.cap", tmp1);
+			}
+			else{
+				tmp1 = getFullStr(e->val.binary.rhs, table);
+				sprintf(returnVal, "%s.size", tmp1);
+			}
 			return returnVal;
 			
 		case appendExp:
@@ -3325,7 +3522,7 @@ char *getFullStr(EXP *e, symTable *table)
 		
 		case uxorExp:
 			//As far as I can tell, 1111111... in C
-			sprintf(returnVal, "2147483647^(%s)", getFullStr(e->val.binary.rhs, table));
+			sprintf(returnVal, "-1^(%s)", getFullStr(e->val.binary.rhs, table));
 			return returnVal;
 		case funcExp:
 		default:
