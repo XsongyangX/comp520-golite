@@ -1134,7 +1134,8 @@ void codegenFuncHeader(DECLARATION *decl, symTable *table, int depth)
 		while(tmp1 != NULL)
 		{
 			tmp2 = getSymbol(decl->val.f->body->localScope, tmp1->name, varSym);
-			tmp2->bindingName = tmp1->bindingName;
+			if(tmp2 != NULL)
+				tmp2->bindingName = tmp1->bindingName;
 			tmp1=tmp1->next;
 		}
 	}
