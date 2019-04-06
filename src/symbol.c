@@ -814,6 +814,12 @@ void symFuncDecl(DECLARATION *decl, symTable *table, int depth)
             SYMBOL *tmp = makeSymbol(decl->val.f->identifier, funcSym);
             char *typename = getName(decl->val.f->returnt);
             SYMBOL *typeref = getSymbol(table, typename, typeSym);
+            if(typeref == NULL && strcmp(typename, "struct") == 0)
+            {
+                typeref = makeSymbol("struct", varstructSym);
+                typeref->val.structFields = symStructHelper(decl->val.f->returnt->val.args, initScopeTable(table), "-");
+                
+            }
             if(typeref == NULL && strlen(typename) != 0)
             {
                 fprintf(stderr, "Error: (line %d) undefined type %s.\n", decl->lineno, typename);

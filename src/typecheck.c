@@ -287,9 +287,15 @@ void typeCheckStatement(STATEMENT *stmt, SYMBOL *func){
             {
                 //OK
             }
-            else{                    
-                    fprintf(stderr, "Error: (line %d) incompatible return type %s in function %s.\n", stmt->lineno, shortTypeStr(symLHS), func->name);
-                    exit(1);
+            else{            
+                    if(func->val.func.returnSymRef->val.parentSym->kind == varstructSym && MatchingTypes(symLHS, func->val.func.returnSymRef->val.parentSym, stmt->lineno, false))
+                    {
+                        //OK
+                    }
+                    else{
+                        fprintf(stderr, "Error: (line %d) incompatible return type %s in function %s.\n", stmt->lineno, shortTypeStr(symLHS), func->name);
+                        exit(1);
+                    }
             }
             break;
         case blockS:
