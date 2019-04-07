@@ -11,7 +11,7 @@ func merge(left []int, right []int) []int {
 	var combined []int
 
 	for index < length {
-		
+
 		if left[leftIndex] <= right[rightIndex] {
 			combined = append(combined, left[leftIndex])
 			leftIndex++
@@ -57,7 +57,7 @@ func mergeSort(slice []int) []int {
 		}
 		return newSlice
 	}
-	
+
 	// cutting the slice
 	var leftHalf []int
 	for i := 0; i < len(slice)/2; i++{
@@ -83,3 +83,4 @@ func main() {
 		print(" ")
 	}
 }
+

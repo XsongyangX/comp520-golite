@@ -60,3 +60,4 @@ Rubric: https://www.cs.mcgill.ca/~cs520/2019/project/Milestone4_Rubric.pdf
 
 Report guidelines: https://www.cs.mcgill.ca/~cs520/2019/project/Report.pdf
 
+Report Google doc: https://docs.google.com/document/d/1A5af4S31CZ0YImwoFrAFps7LKQl4jKlOEh6hM9-60GM/edit?usp=sharing

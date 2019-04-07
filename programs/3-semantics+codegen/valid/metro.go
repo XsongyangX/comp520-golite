@@ -32,18 +32,18 @@ type (
 )
 
 func initialize() System{
-	
+
 	var (
 		m1, m2, m3 Metro = Metro("The mountain"), Metro("The waterfall"), Metro("The field")
 		n1, n2, n3, n4 Metro = Metro("Downtown"), Metro("Suburb"), Metro("Outskirts"), Metro("Port")
 		mLine Line
 		nLine Line
 		lines []Line
-		
+
 		train1 Train
 		train2 Train
 		trains []Train
-		
+
 		sys System
 	)
 
@@ -57,7 +57,7 @@ func initialize() System{
 	nLine = append(nLine, n4)
 	lines = append(lines, mLine)
 	lines = append(lines, nLine)
-	
+
 	// create the trains
 	train1.departureTime = 0
 	train1.line = mLine
@@ -65,11 +65,11 @@ func initialize() System{
 	train2.line = nLine
 	trains = append(trains, train1)
 	trains = append(trains, train2)
-	
+
 	// form the system
 	sys.trains = trains
 	sys.lines = lines
-	
+
 	return sys
 }
 
@@ -79,7 +79,7 @@ func createIncident(message string, location Line, station Metro, time int) Inci
 	problem.location = location
 	problem.station = station
 	problem.time = time
-	
+
 	return problem
 }
 
@@ -97,3 +97,4 @@ func main() {
 	report(problem)
 	println("Hello, playground")
 }
+

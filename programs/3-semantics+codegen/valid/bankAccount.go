@@ -22,7 +22,7 @@ func withdraw(pass string, amount float64, acct Account){
 		}else {
 			print("Not enough funds");
 		}
-		
+
 	}else {
 		print("Wrong password");
 	}
