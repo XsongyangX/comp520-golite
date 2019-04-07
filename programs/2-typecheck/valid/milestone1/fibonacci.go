@@ -1,3 +1,5 @@
+//~Prints fibonacci of 10
+//~55
 /* Computes the fibonacci of 10 */
 package main
 

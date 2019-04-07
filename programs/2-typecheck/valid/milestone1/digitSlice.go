@@ -1,5 +1,6 @@
+//~13211
 /*Takes a number as input and creates a slice
-with all the digits of that number*/
+with all the digits of that number in reverse order*/
 package main
 
 func intToSlice(num int) []rune{

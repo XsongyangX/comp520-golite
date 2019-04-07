@@ -1,3 +1,4 @@
+//~0 3 5 7 9
 package main
 
 func merge(left []int, right []int) []int {

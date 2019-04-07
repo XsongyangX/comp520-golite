@@ -1,3 +1,4 @@
+//~New balance:+1.000000e+02
 package main
 
 type Account struct {balance float64; password string;}

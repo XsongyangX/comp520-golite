@@ -1,3 +1,10 @@
+//~Incident because of "cellphone on the tracks"
+//~ located on the line belonging to "The mountain"
+//~ at station "The waterfall"
+//~ at time: 3
+//~Hello, playground
+
+
 /* Simulates a metro system and its incident reporting */
 package main
 
