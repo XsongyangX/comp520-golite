@@ -6,7 +6,7 @@
 //~	Cluster 0: mu = +4.965751e+000 sigma^2 = +9.510358e-001
 //~	Cluster 1: mu = +1.007746e+001 sigma^2 = +8.855578e-001
 //~	Cluster 2: mu = +1.496014e+001 sigma^2 = +9.855990e-001
-//Expected runtime: 1.189s
+//&1.189s
 //A library of functions for the k-means algorithm on 1-dimensional vectors
 package main
 

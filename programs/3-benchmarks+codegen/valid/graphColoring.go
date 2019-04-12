@@ -1,5 +1,5 @@
 //~false
-//Expected run time: 1.474s
+//&1.474s
 //A small library for two-coloring graphs
 package main
 
@@ -42,8 +42,8 @@ func twoColorable(myGraph graph) bool{
 	startNode = myGraph.nodes[0];
 	startNode.color = 1;
 	return twoColor(startNode);
-	
-	
+
+
 }
 
 func main() {
@@ -1852,5 +1852,5 @@ func main() {
 	triangleGraph.nodes = append(triangleGraph.nodes, node199a);
 	triangleGraph.nodes = append(triangleGraph.nodes, node199b);
 	print(twoColorable(triangleGraph));
-	
+
 }

@@ -2,7 +2,11 @@
 //&4.982s
 /* Performs merge sort on a slice of 2.5 million elements 
 The starting slice is already ordered, but in the opposite order. */
+// Size of input reduced for debugging
 package main
+
+// input size
+var element int = 10000
 
 func merge(left []int, right []int) []int {
 
@@ -77,7 +81,6 @@ var test []int
 
 func init() {
 	// create a very large slice of number in decreasing order
-	var element int = 2500000
 
 	for element >= 0 {
 		test = append(test, element)
