@@ -1,6 +1,7 @@
 //~3, 3, 3
 //~1, 1, 1
 //A library of functions for making images black and white or blurring them
+//Expected runtime: 2.683s
 package main
 
 type Pixel struct{
