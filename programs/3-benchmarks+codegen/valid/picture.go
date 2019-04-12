@@ -1,7 +1,8 @@
-//~3, 3, 3
-//~1, 1, 1
+//~13, 13, 13
+//~12, 12, 12
+//~10, 10, 10
 //A library of functions for making images black and white or blurring them
-//Expected runtime: 2.683s
+//Expected runtime: 2.5s
 package main
 
 type Pixel struct{
@@ -67,7 +68,7 @@ func blur(picture Image, radius int) Image {
 			tmpB = 0;
 			for tmpi:=i - radius; tmpi < i + radius; tmpi++ {
 				for tmpj:=j - radius; tmpj < j + radius; tmpj++ {
-					if(!(tmpi > picture.xLen || tmpi < 0 || tmpj > picture.yLen || tmpj < 0)){
+					if(!(tmpi > picture.xLen - 1 || tmpi < 0 || tmpj > picture.yLen - 1 || tmpj < 0)){
 						tmpR += picture.grid[tmpi][tmpj].r
 						tmpG += picture.grid[tmpi][tmpj].g
 						tmpB += picture.grid[tmpi][tmpj].b
