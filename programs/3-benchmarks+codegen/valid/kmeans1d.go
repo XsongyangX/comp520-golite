@@ -1,18 +1,12 @@
+//~Clusters generated from the following:
+//~	Normal(mu = 5, sigma^2 = 1)
+//~	Normal(mu = 10, sigma^2 = 1)
+//~	Normal(mu = 15, sigma^2 = 1)
 //~Result of clustering:
-//~	Cluster 0:
-//~		+1.230000e+000
-//~		+5.500000e-001
-//~		+2.430000e+000
-//~	Cluster 1:
-//~		+3.330000e+000
-//~		+7.670000e+000
-//~		+8.930000e+000
-//~	Cluster 2:
-//~		+1.000000e+001
-//~		+1.150000e+001
-//~		+1.370000e+001
-//~		+1.210000e+001
-//~		+1.130000e+001
+//~	Cluster 0: mu = +4.965751e+000 sigma^2 = +9.510358e-001
+//~	Cluster 1: mu = +1.007746e+001 sigma^2 = +8.855578e-001
+//~	Cluster 2: mu = +1.496014e+001 sigma^2 = +9.855990e-001
+//Expected runtime: 1.189s
 //A library of functions for the k-means algorithm on 1-dimensional vectors
 package main
 
@@ -1593,7 +1587,7 @@ func main() {
 	data = append(data, 4.467);
 	data = append(data, 11.52);
 	data = append(data, 14.84);
-	clustered = cluster1D(data, 2, 5);
+	clustered = cluster1D(data, 3, 1000);
 	print("Clusters generated from the following:\n\tNormal(mu = 5, sigma^2 = 1)\n\tNormal(mu = 10, sigma^2 = 1)\n\tNormal(mu = 15, sigma^2 = 1)");
 	print("Result of clustering:\n");
 	var variances[] float64;
