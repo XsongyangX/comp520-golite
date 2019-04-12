@@ -22,7 +22,7 @@ type cluster struct{
 };
 
 func absval(a float64) float64{
-	if(a < 0){
+	if(a < 0.0){
 		return -1.0 * a;
 	} else {
 		return a
