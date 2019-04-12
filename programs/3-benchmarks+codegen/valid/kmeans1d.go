@@ -28,6 +28,37 @@ func absval(a float64) float64{
 	}
 }
 
+func group(centers[] float64, data[] float64) []cluster {
+	var clusters[] cluster;
+	var dummyIndex int;
+	var dummyCluster cluster;
+	for i := 0; i < len(centers); i++ {
+		dummyCluster.center = centers[i];
+		clusters = append(clusters, dummyCluster);
+	}
+	for i := 0; i < len(data); i++ {
+		dummyIndex = 0;
+		for j := 0; j < len(clusters); j++ { 
+			if (absval(clusters[j].center - data[i]) < absval(clusters[dummyIndex].center - data[i])) {
+				dummyIndex = j;
+			}
+		}
+		clusters[dummyIndex].data = append(clusters[dummyIndex].data, data[i]);
+	}
+	return clusters;
+}
+
+func adjust(clusters[] cluster) []cluster {
+	var total float64;
+	for i := 0; i < len(clusters); i++ {
+		for j := 0; j < len(clusters[i].data); j++ {
+			total += clusters[i].data[j];
+		}
+		clusters[i].center = total / float64(len(clusters[i].data));
+	}
+	return clusters;
+}
+
 func cluster1D(data[] float64, nClusters, iter int) []cluster {
 	var arrCounter int = 0;
 	var clusters[] cluster;
@@ -55,38 +86,7 @@ func cluster1D(data[] float64, nClusters, iter int) []cluster {
 	}
 	return clusters;	
 }
-
-func group(centers[] float64, data[] float64) []cluster {
-	var clusters[] cluster;
-	var dummyIndex int;
-	var dummyCluster cluster;
-	for i := 0; i < len(centers); i++ {
-		dummyCluster.center = centers[i];
-		clusters = append(clusters, dummyCluster);
-	}
-	for i := 0; i < len(data); i++ {
-		dummyIndex = 0;
-		for j := 0; j < len(clusters); j++ { 
-			if (absval(clusters[j].center - data[i]) < absval(clusters[dummyIndex].center - data[i])) {
-				dummyIndex = j;
-			}
-		}
-		clusters[dummyIndex].data = append(clusters[dummyIndex].data, data[i]);
-	}
-	return clusters;
-}  
-
-func adjust(clusters[] cluster) []cluster {
-	var total float64;
-	for i := 0; i < len(clusters); i++ {
-		for j := 0; j < len(clusters[i].data); j++ {
-			total += clusters[i].data[j];
-		}
-		clusters[i].center = total / float64(len(clusters[i].data));
-	}
-	return clusters;
-}
-
+  
 
 func main() {
 	var clustered []cluster;
