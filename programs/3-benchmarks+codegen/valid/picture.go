@@ -84,7 +84,7 @@ func blur(picture Image, radius int) Image {
 
 func main() {
 	var pic Image;
-	pic = makeImage(3, 3);
+	pic = makeImage(50, 50);
 	pic.grid[0][0] = makePixel(8, 16, 17);
 	pic.grid[0][1] = makePixel(19, 15, 3);
 	pic.grid[0][2] = makePixel(1, 12, 4);
