@@ -256,9 +256,8 @@ void elementCheck(EXP *e, symTable *table, int depth)
 		case notExp:
 		case posExp:
 		case negExp:
-			elementCheck(e->val.binary.rhs, table, depth);
-			return;
 		case parExp:
+			elementCheck(e->val.binary.rhs, table, depth);
 			return;
 		case eqExp:
 		case neqExp:
@@ -328,6 +327,7 @@ void elementCheck(EXP *e, symTable *table, int depth)
 			return;
 		case invocExp:
 			elementCheck(e->val.binary.lhs, table, depth);
+			elementCheck(e->val.binary.rhs, table, depth);
 			return;
 		case appendExp:
 			//elementCheck(e->val.binary.lhs, table, depth);
@@ -337,6 +337,7 @@ void elementCheck(EXP *e, symTable *table, int depth)
 			elementCheck(e->val.binary.rhs, table, depth);
 			return;
 		case uxorExp:
+			elementCheck(e->val.binary.rhs, table, depth);
 			return;
 		case funcBlockExp:
 			tmp = e->val.fnblock.fn->params->val.fnCallBlock;
@@ -640,7 +641,21 @@ bool structCompatible(SYMBOL *sym1, SYMBOL *sym2)
 		}
 		else if(strcmp(tName1, "struct") == 0 || strcmp(tName2, "struct") == 0)
 		{
-			if(!structCompatible(tmp1, tmp2))
+			TYPE *tmpt1, *tmpt2;
+			tmpt1 = tmp1->t; tmpt2 = tmp2->t;
+			while(tmpt1->gType == sliceType || tmpt1->gType == arrayType)
+			{
+				tmpt1 = tmpt1->val.arg;
+			}
+			while(tmpt2->gType == sliceType || tmpt2->gType == arrayType)
+			{
+				tmpt2 = tmpt2->val.arg;
+			}
+			if(strcmp(tmpt1->name, "struct") != 0 && strcmp(tmpt1->name, tmpt2->name) == 0)
+			{
+
+			}
+			else if(!structCompatible(tmp1, tmp2))
 			{
 				return false;
 			}
@@ -2427,6 +2442,11 @@ void topLevelType(DECLARATION *decl, symTable *table)
 					char *tMods = getTypeModifiers(tmp);
 					char *name = malloc(128);
 					strcpy(name, "struct ");
+					SYMBOL *tmp2 = makeSymbol_Copy(tmp);
+					tmp2->bindingName = malloc(128); strcpy(tmp2->bindingName, tmp->bindingName);
+					tmp2->next = table->bindingsList;
+					table->bindingsList = tmp2;
+					table->bindingsSize++;
 					if(strlen(tMods) == 0 || *tMods != '[')
 					{
 						prettyTabular(0);
@@ -2442,11 +2462,6 @@ void topLevelType(DECLARATION *decl, symTable *table)
 						printf("};\n");
 					}
 					
-					SYMBOL *tmp2 = makeSymbol_Copy(tmp);
-					tmp2->bindingName = malloc(128); strcpy(tmp2->bindingName, tmp->bindingName);
-					tmp2->next = table->bindingsList;
-					table->bindingsList = tmp2;
-					table->bindingsSize++;
 					tmp->bindingName = strcat(name, tmp->bindingName);
 					
 				}
@@ -2561,6 +2576,13 @@ void codegenFor(STATEMENT *stmt, int depth)
 	printf("{\n");
 	prettyTabular(depth+1);
 	codegenStatement(stmt->val.conditional.optDecl, depth+1);
+	if(stmt->val.conditional.condition != NULL)
+	{
+
+		lookForPlusString(stmt->val.conditional.condition, depth+1);
+		appendCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
+		elementCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
+	}
 	prettyTabular(depth+1);
 	printf("while (");
 	if(stmt->val.conditional.condition == NULL)
@@ -2568,9 +2590,6 @@ void codegenFor(STATEMENT *stmt, int depth)
 		printf("1){\n");
 	}
 	else{
-		lookForPlusString(stmt->val.conditional.condition, depth+1);
-		appendCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
-		elementCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
 		codegenExpression(stmt->val.conditional.condition, stmt->localScope);
 		printf("){\n");
 	}
@@ -2624,6 +2643,12 @@ void codegenFor(STATEMENT *stmt, int depth)
 void codegenWhile(STATEMENT *stmt, int depth)
 {
 	int bFlag = 0;
+	if(stmt->val.conditional.condition != NULL)
+	{
+		lookForPlusString(stmt->val.conditional.condition, depth+1);
+		appendCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
+		elementCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
+	}
 	prettyTabular(depth);
 	printf("while(");
 	if(stmt->val.conditional.condition == NULL)
@@ -2631,9 +2656,6 @@ void codegenWhile(STATEMENT *stmt, int depth)
 		printf("1){\n");
 	}
 	else{
-		lookForPlusString(stmt->val.conditional.condition, depth+1);
-		appendCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
-		elementCheck(stmt->val.conditional.condition, stmt->localScope, depth+1);
 		codegenExpression(stmt->val.conditional.condition, stmt->localScope);
 		printf("){\n");
 	}
