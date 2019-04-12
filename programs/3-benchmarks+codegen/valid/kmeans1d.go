@@ -1588,7 +1588,7 @@ func main() {
 	data = append(data, 11.52);
 	data = append(data, 14.84);
 	clustered = cluster1D(data, 3, 1000);
-	print("Clusters generated from the following:\n\tNormal(mu = 5, sigma^2 = 1)\n\tNormal(mu = 10, sigma^2 = 1)\n\tNormal(mu = 15, sigma^2 = 1)");
+	print("Clusters generated from the following:\n\tNormal(mu = 5, sigma^2 = 1)\n\tNormal(mu = 10, sigma^2 = 1)\n\tNormal(mu = 15, sigma^2 = 1)\n");
 	print("Result of clustering:\n");
 	var variances[] float64;
 	var means[] float64;
