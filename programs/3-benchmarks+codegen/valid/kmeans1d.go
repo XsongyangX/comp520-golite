@@ -13,6 +13,7 @@
 //~		+1.370000e+001
 //~		+1.210000e+001
 //~		+1.130000e+001
+//A library of functions for the k-means algorithm on 1-dimensional vectors
 package main
 
 type cluster struct{
