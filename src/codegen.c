@@ -430,7 +430,7 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 					}
 					else if(strcmp(tName, "float64") == 0)
 					{
-						printf("float *val;\n");
+						printf("double *val;\n");
 					}
 					else if(strcmp(tName, "rune") == 0)
 					{
@@ -499,7 +499,7 @@ void genStructureHelper(char *tName, char *tMods, SYMBOL *sym, int depth, char *
 					}
 					else if(strcmp(tName, "float64") == 0)
 					{
-						printf("float val[%d];\n", size);
+						printf("double val[%d];\n", size);
 					}
 					else if(strcmp(tName, "rune") == 0)
 					{
@@ -568,7 +568,7 @@ void codegenStructHelper(SYMBOL *field, int depth, symTable *table)
 		}
 		else if(strcmp(tName, "float64") == 0)
 		{
-			printf("float %s;\n", field->bindingName);
+			printf("double %s;\n", field->bindingName);
 		}
 		else if(strcmp(tName, "rune") == 0)
 		{
@@ -881,7 +881,7 @@ void codegenVarDecl(DECLARATION *decl, symTable *table, int depth)
 				}
 			}
 			else if (strcmp(tName, "float64") == 0){
-				printf("float %s;\n", tmp->bindingName);
+				printf("double %s;\n", tmp->bindingName);
 				if(table->next->next != NULL){
 					printf("%s = ", tmp->bindingName);
 					if(decl->val.right != NULL)
@@ -1093,7 +1093,7 @@ void codegenFuncDeclArgs(SYMBOL *args, symTable *table)
 			}
 			else if(strcmp(tName, "float64") == 0)
 			{
-				printf("float %s", args->bindingName);
+				printf("double %s", args->bindingName);
 			}
 			else if(strcmp(tName, "rune") == 0)
 			{
@@ -1161,7 +1161,7 @@ void codegenFuncHeader(DECLARATION *decl, symTable *table, int depth)
 			}
 			else if(strcmp(tName, "float64") == 0)
 			{
-				printf("float %s(", tmp->bindingName);
+				printf("double %s(", tmp->bindingName);
 			}
 			else if(strcmp(tName, "rune") == 0)
 			{
@@ -1244,7 +1244,7 @@ void codegenFuncDecl(DECLARATION *decl, symTable *table, int depth)
 			}
 			else if(strcmp(tName, "float64") == 0)
 			{
-				printf("float %s(", tmp->bindingName);
+				printf("double %s(", tmp->bindingName);
 			}
 			else if(strcmp(tName, "rune") == 0)
 			{
@@ -1728,7 +1728,7 @@ void sliceAppendHelper(EXP *root, symTable *table, int depth)
 		printf("%s.val = malloc(sizeof(struct %s)*%s.cap);\n", newName, findExistingBinding(tmp, table), newName);
 	else{
 		tName = getTypeName(tmp);
-		if(strcmp(tName, "float64") == 0) printf("%s.val = malloc(sizeof(float)*%s.cap);\n", newName, newName);
+		if(strcmp(tName, "float64") == 0) printf("%s.val = malloc(sizeof(double)*%s.cap);\n", newName, newName);
 		else if(strcmp(tName, "rune") == 0)printf("%s.val = malloc(sizeof(char)*%s.cap);\n", newName, newName);
 		else if(strcmp(tName, "string") == 0) printf("%s.val = malloc(sizeof(int)*%s.cap);\n", newName, newName);
 		else printf("%s.val = malloc(sizeof(%s)*%s.cap);\n", newName, tName, newName);
@@ -2000,7 +2000,7 @@ void codegenAssign(STATEMENT *stmt, int depth){
 		else if(strcmp(tName, "float64") == 0)
 		{
 			prettyTabular(depth);
-			printf("float %s = ", tmpSym->bindingName);
+			printf("double %s = ", tmpSym->bindingName);
 			codegenExpression(stmt->val.assignment.value, stmt->localScope);
 			printf(";\n");
 		}
@@ -2052,7 +2052,7 @@ void codegenAssign(STATEMENT *stmt, int depth){
 			else if(strcmp(tName, "float64") == 0)
 			{
 				prettyTabular(depth);
-				printf("float %s = ", tmpSym->bindingName);
+				printf("double %s = ", tmpSym->bindingName);
 				codegenExpression(stmt->val.assignment.value, stmt->localScope);
 				printf(";\n");
 			}
@@ -2251,7 +2251,7 @@ void codegenQuickDecl(STATEMENT *stmt, int depth){
 			//tMods = getTypeModifiers(stmt->val.assignment.identifier->symTypeRef);
 			if(strcmp(tName, "float64") == 0)
 			{
-				printf("float %s = %s;\n",stmt->val.assignment.identifier->symTypeRef->bindingName, stmt->val.assignment.value->symTypeRef->bindingName);
+				printf("double %s = %s;\n",stmt->val.assignment.identifier->symTypeRef->bindingName, stmt->val.assignment.value->symTypeRef->bindingName);
 			}
 			else if(strcmp(tName, "string") == 0)
 			{
@@ -2464,7 +2464,7 @@ void codegenProgram(PROGRAM *p, FILE *fp){
 	printf("#include <math.h>\n");
 	printf("#include <stdbool.h>\n");
 	printf("char *my_itoa(int a){ char *tmp=malloc(16); sprintf(tmp, \"%%d\", a); return tmp;}\n");
-	printf("char *ftoa(float a){ char *tmp = malloc(32); sprintf(tmp, \"%%+1.6e\", a); return tmp;}\n");
+	printf("char *ftoa(double a){ char *tmp = malloc(32); sprintf(tmp, \"%%+1.6e\", a); return tmp;}\n");
 	printf("char *ctoa(char a){ char *tmp = malloc(2); tmp[0] = a; tmp[1] = '\\0'; return tmp;}\n");
 	DECLARATION *tmpDecl = p->declList;
 	topLevelType(tmpDecl, p->globalScope);
@@ -2531,7 +2531,7 @@ void codegenPrint(EXP *e, symTable *table, bool hasNewline, int depth)
 	{
 		prettyTabular(depth);
 		tName = getNewBinding();
-		printf("float %s = ", tName);
+		printf("double %s = ", tName);
 		codegenExpression(tmpe, table);
 		printf("; int %sexp = 0;\n while(%s >= 10.0 || %s <= -10.0){ %s= %s/10.0; %sexp++;} \nwhile(%s < 1.0 && %s > -1.0 && %s != 0.0){%s*=10.0; %sexp--;}", tName, tName, tName, tName, tName, tName, tName, tName, tName, tName, tName);
 		prettyTabular(depth);
