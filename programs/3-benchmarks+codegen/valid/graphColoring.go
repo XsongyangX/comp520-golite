@@ -1,4 +1,5 @@
 //~false
+//A small library for two-coloring graphs
 package main
 
 type node struct{
