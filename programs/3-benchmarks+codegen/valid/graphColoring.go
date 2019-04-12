@@ -1,4 +1,5 @@
 //~false
+//Expected run time: 1.474s
 //A small library for two-coloring graphs
 package main
 
