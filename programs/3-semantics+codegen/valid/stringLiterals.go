@@ -8,9 +8,15 @@
 //~[\]^_`
 //~abcdefghijklmnopqrstuvwxyz
 //~{|}~
+//~
+//~
+//~
 //~
 //~
-//~        \'
+//~
+//~	
+//~
+//~\'
 /* Valid strings */
 package main
 
@@ -36,6 +42,20 @@ func main() {
 	s = "{|}~"
 	println(s)
 
-	s = "\a\b\f\n\r\t\v\\'"
+	s = "\a"
+	println(s)
+	s = "\b"
+	println(s)
+	s = "\f"
+	println(s)
+	s = "\n"
+	println(s) 
+	s = "\r"
+	println(s) 
+	s = "\t"
+	println(s) 
+	s = "\v"
+	println(s)
+	s = "\\'"
 	println(s)
 }
