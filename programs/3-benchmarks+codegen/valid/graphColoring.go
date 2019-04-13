@@ -1,5 +1,5 @@
 //~false
-//&1.474s
+//&0.005s
 //A small library for two-coloring graphs
 package main
 
