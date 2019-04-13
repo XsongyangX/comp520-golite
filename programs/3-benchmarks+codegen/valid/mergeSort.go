@@ -1,6 +1,6 @@
 //~The first 10 elements: 0 1 2 3 4 5 6 7 8 9 
-//&4.982s
-/* Performs merge sort on a slice of 2.5 million elements 
+//&0.018s
+/* Performs merge sort on a slice of 2.5 million elements (5s run time on standard compiler's generated executable 
 The starting slice is already ordered, but in the opposite order. */
 // Size of input reduced for debugging
 package main
