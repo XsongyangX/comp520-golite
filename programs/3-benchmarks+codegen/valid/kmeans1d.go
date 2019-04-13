@@ -1599,12 +1599,12 @@ func main() {
 		for j:=0; j < len(clustered[i].data); j++ {
 			tempMu += clustered[i].data[j] 
 		}
-		tempMu /= len(clustered[i].data);
+		tempMu /= float64(len(clustered[i].data));
 		means = append(means, tempMu);
 		for j:=0; j < len(clustered[i].data); j++ {
 			tempSigma += (clustered[i].data[j] - tempMu) * (clustered[i].data[j] - tempMu);
 		}
-		tempSigma /= len(clustered[i].data);
+		tempSigma /= float64(len(clustered[i].data));
 		variances = append(variances, tempSigma);
 	}
 	for i:=0; i < len(clustered); i++ { 
