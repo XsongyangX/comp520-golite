@@ -24,7 +24,7 @@ done
 
 echo -n -e "\033[93m"
 echo "  Building compiler"
-echo "============================="
+echo "====================================="
 echo -e -n "\033[0m"
 
 if [ ! -f build.sh ]
@@ -52,14 +52,22 @@ RESULTS=()
 for DIR_PHASE in programs-solution/*/
 do
 	PHASE=$(basename $DIR_PHASE)
-	PHASE_NUM=${PHASE%-*}
 	PHASE_NAME=${PHASE#*-}
-	PREV_PHASE_NUM=`expr $PHASE_NUM - 1`
-	PREV_PHASE=`ls programs-solution | grep $PREV_PHASE_NUM-`
-	PREV_PHASE_NAME=${PREV_PHASE#*-}
-	PREV_MODE=${PREV_PHASE_NAME#*+}
+	PHASE_NAME=${PHASE_NAME%~*}
 	MODE=${PHASE_NAME#*+}
+
+	if [[ $PHASE == *"~"* ]]
+	then
+		PREV_PHASE_NAME=${PHASE#*~}
+		PREV_MODE=${PREV_PHASE_NAME}
+	else
+		PREV_PHASE_NAME=
+		PREV_PHASE_NAME=
+		PREV_MODE=
+	fi
+
 	PHASE_NAME="${PHASE_NAME^}"
+	PREV_PHASE_NAME="${PREV_PHASE_NAME^}"
 
 	for DIR_TYPE in $DIR_PHASE*/
 	do
@@ -72,14 +80,19 @@ do
 			CONF_OUTPUT="OK"
 		else
 			CONF_STATUS=1
-			CONF_OUTPUT="Error: "
+			CONF_OUTPUT="Error:"
 		fi
 
 		if [ "$(ls -A -I ".gitignore" $DIR_TYPE)" ]
 		then
 			echo -e "\033[93m"
-			echo "  $PHASE_NAME $TYPE"
-			echo "============================="
+			echo -n "  $PHASE_NAME $TYPE"
+			if [[ ! -z $PREV_PHASE_NAME ]]
+			then
+				echo -n " (Requires $PREV_PHASE_NAME)"
+			fi
+			echo ""
+			echo "====================================="
 			echo -e -n "\033[0m"
 
 			COUNT=0
@@ -109,7 +122,7 @@ do
 						STATUS=-1
 					fi
 
-					if [[ $OUTPUT != "OK" || $STATUS != 0 ]]
+					if [[ $OUTPUT != "OK"* || $STATUS != 0 ]]
 					then
 						PREV_SUCCESS=0
 					fi
@@ -172,10 +185,12 @@ do
 						echo -n "$TEST: "
 					fi
 					echo "$OUTPUT" | tr -d '\n'
-					echo -n -e " \033[0;${STATUS_COLOUR}m[$STATUS_TEXT]\033[0m"
-					if [ ! -z "$VERIFY_OUTPUT" ]
+					if [ -z "$VERIFY_OUTPUT" ]
 					then
-						echo -e -n "\n$VERIFY_OUTPUT" | sed 's/^/  /'
+						echo -n -e " \033[0;${STATUS_COLOUR}m[$STATUS_TEXT]\033[0m"
+					else
+						echo
+						echo -n "$VERIFY_OUTPUT" | sed 's/^/  /'
 					fi
 
 					if [ $LOG -eq 1 ]
@@ -212,7 +227,7 @@ done
 
 echo -e "\033[93m"
 echo "  Overall"
-echo "============================="
+echo "====================================="
 echo -e "\033[0m"
 
 for i in ${!RESULTS[*]}; do
